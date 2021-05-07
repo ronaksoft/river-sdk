@@ -52,82 +52,104 @@ func (d *repoUsers) getUser(alloc *store.Allocator, b *bolt.Bucket, userID int64
 	return u, nil
 }
 
-func (d *repoUsers) SaveContact(contact *msg.ContactUser, lastSeen int64) error {
+func (d *repoUsers) saveContact(alloc *store.Allocator, tx *bolt.Tx, contact *msg.ContactUser, lastSeen int64) error {
+	b := tx.Bucket(bucketContacts)
+	err := b.Put(
+		alloc.Gen(contact.ID),
+		alloc.Marshal(contact),
+	)
+	if err != nil {
+		return err
+	}
+	err = d.index.Update(func(tx *buntdb.Tx) error {
+		_, _, err := tx.Set(
+			fmt.Sprintf("%s.%d", prefixContacts, contact.ID),
+			tools.Int64ToStr(lastSeen),
+			nil,
+		)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *repoUsers) DeleteContact(userID int64) {
 	alloc := store.NewAllocator()
 	defer alloc.ReleaseAll()
 
-	return d.db.Update(func(tx *bolt.Tx) error {
+	_ = d.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketContacts)
-		err := b.Put(
-			alloc.Gen(contact.ID),
-			alloc.Marshal(contact),
-		)
-		if err != nil {
-			return err
-		}
-		err = d.index.Update(func(tx *buntdb.Tx) error {
-			_, _, err := tx.Set(
-				fmt.Sprintf("%s.%d", prefixContacts, contact.ID),
-				tools.Int64ToStr(lastSeen),
-				nil,
-			)
+		_ = b.Delete(alloc.Gen(userID))
+		_ = d.index.Update(func(tx *buntdb.Tx) error {
+			_, err := tx.Delete(fmt.Sprintf("%s.%d", prefixContacts, userID))
 			return err
 		})
-		if err != nil {
-			return err
-		}
 		return nil
 	})
+
 }
 
-func (d *repoUsers) SaveUser(user *msg.User) error {
+func (d *repoUsers) SaveUser(users ...*msg.User) error {
 	alloc := store.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b1 := tx.Bucket(bucketUsers)
-		err := b1.Put(
-			alloc.Gen(user.ID),
-			alloc.Marshal(user),
-		)
-		if err != nil {
-			return err
-		}
-
-		b2 := tx.Bucket(bucketContacts)
-		v1 := b2.Get(alloc.Gen(user.ID))
-		if len(v1) > 0 {
-			err = d.index.Update(func(tx *buntdb.Tx) error {
-				_, _, err := tx.Set(
-					fmt.Sprintf("%s.%d", prefixContacts, user.ID),
-					tools.Int64ToStr(user.LastSeen),
-					nil,
-				)
-				return err
-			})
+		for _, user := range users {
+			err := b1.Put(alloc.Gen(user.ID), alloc.Marshal(user))
 			if err != nil {
 				return err
+			}
+
+			b2 := tx.Bucket(bucketContacts)
+			v1 := b2.Get(alloc.Gen(user.ID))
+			if len(v1) > 0 {
+				err = d.index.Update(func(tx *buntdb.Tx) error {
+					_, _, err := tx.Set(
+						fmt.Sprintf("%s.%d", prefixContacts, user.ID),
+						tools.Int64ToStr(user.LastSeen),
+						nil,
+					)
+					return err
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 		return nil
 	})
 }
 
-func (d *repoUsers) Delete(teamID int64, peerID int64, peerType int32) error {
+func (d *repoUsers) SaveAllContacts(newContacts *msg.ContactsMany) error {
+	newContactsMap := make(map[int64]int64, len(newContacts.ContactUsers))
+	for idx := range newContacts.Users {
+		newContactsMap[newContacts.ContactUsers[idx].ID] = newContacts.Users[idx].LastSeen
+	}
+	oldContacts, err := d.ReadAllContacts()
+	if err == nil {
+		oldContactsMap := make(map[int64]bool, len(oldContacts.ContactUsers))
+		for idx := range oldContacts.ContactUsers {
+			oldContactsMap[oldContacts.ContactUsers[idx].ID] = true
+		}
+		for userID := range oldContactsMap {
+			if _, ok := newContactsMap[userID]; !ok {
+				d.DeleteContact(userID)
+			}
+		}
+	}
+
 	alloc := store.NewAllocator()
 	defer alloc.ReleaseAll()
-
-	return d.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketContacts)
-		err := b.Delete(alloc.Gen(teamID, peerID, peerType))
-		if err != nil {
-			return err
+	err = d.db.Update(func(tx *bolt.Tx) error {
+		for _, cu := range newContacts.ContactUsers {
+			err = d.saveContact(alloc, tx, cu, newContactsMap[cu.ID])
 		}
-		return d.index.Update(func(tx *buntdb.Tx) error {
-			_, _ = tx.Delete(fmt.Sprintf("%s.%d.%d.%d", prefixContacts, teamID, peerID, peerType))
-			return nil
-		})
+		return nil
 	})
+	return nil
 }
 
 func (d *repoUsers) ReadAllContacts() (*msg.ContactsMany, error) {

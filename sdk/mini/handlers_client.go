@@ -147,7 +147,7 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da *Delega
 	}
 
 	reqBuff, _ := x.Marshal()
-	r.networkCtrl.HttpCommand(
+	r.network.HttpCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(x.RandomID),
@@ -185,7 +185,7 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation,
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
 	defer cancelFunc()
-	res, err := r.networkCtrl.SendHttp(ctx, envelope)
+	res, err := r.network.SendHttp(ctx, envelope)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +265,7 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 	}
 	reqBuf := pools.Buffer.FromProto(req)
 	defer pools.Buffer.Put(reqBuf)
-	r.networkCtrl.HttpCommand(
+	r.network.HttpCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_FileSavePart,
 			RequestID:   tools.RandomUint64(0),

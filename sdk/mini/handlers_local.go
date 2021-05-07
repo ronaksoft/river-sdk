@@ -28,7 +28,7 @@ func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, da *DelegateAda
 
 	req.RandomID = domain.SequentialUniqueID()
 	requestBytes, _ := req.Marshal()
-	r.networkCtrl.HttpCommand(
+	r.network.HttpCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(req.RandomID),
@@ -51,7 +51,7 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da *DelegateAd
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		r.networkCtrl.HttpCommand(in, da.OnTimeout, da.OnComplete)
+		r.network.HttpCommand(in, da.OnTimeout, da.OnComplete)
 		return
 	}
 

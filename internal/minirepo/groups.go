@@ -31,18 +31,20 @@ func newGroup(r *repository) *repoGroups {
 	return rd
 }
 
-func (d *repoGroups) Save(group *msg.Group) error {
+func (d *repoGroups) Save(groups ...*msg.Group) error {
 	alloc := store.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketGroups)
-		err := b.Put(
-			alloc.Gen(group.TeamID, group.ID),
-			alloc.Marshal(group),
-		)
-		if err != nil {
-			return err
+		for _, group := range groups {
+			err := b.Put(
+				alloc.Gen(group.TeamID, group.ID),
+				alloc.Marshal(group),
+			)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})

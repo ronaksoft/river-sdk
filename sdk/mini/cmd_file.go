@@ -56,7 +56,7 @@ func (r *River) FileDownloadThumbnail(clusterID int32, fileID int64, accessHash 
 		envelop.Fill(uint64(domain.SequentialUniqueID()), msg.C_FileGet, req)
 		filePath := path.Join(repo.DirCache, fmt.Sprintf("%d%d%s", fileID, clusterID, ".jpg"))
 
-		res, err := r.networkCtrl.SendHttp(nil, envelop)
+		res, err := r.network.SendHttp(nil, envelop)
 		if err != nil {
 			return err
 		}

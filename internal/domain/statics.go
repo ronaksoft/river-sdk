@@ -300,6 +300,10 @@ func SequentialUniqueID() int64 {
 	return res
 }
 
+func NextRequestID() uint64 {
+	return uint64(SequentialUniqueID())
+}
+
 // CalculateContactsImportHash crc32 of phones
 func CalculateContactsImportHash(req *msg.ContactsImport) uint64 {
 	phoneContacts := make(map[string]*msg.PhoneContact)

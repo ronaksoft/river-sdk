@@ -40,29 +40,31 @@ func newDialog(r *repository) *repoDialogs {
 	return rd
 }
 
-func (d *repoDialogs) Save(dialog *msg.Dialog) error {
+func (d *repoDialogs) Save(dialogs ...*msg.Dialog) error {
 	alloc := store.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketDialogs)
-		err := b.Put(
-			alloc.Gen(dialog.TeamID, dialog.PeerID, dialog.PeerType),
-			alloc.Marshal(dialog),
-		)
-		if err != nil {
-			return err
-		}
-		err = d.index.Update(func(tx *buntdb.Tx) error {
-			_, _, err := tx.Set(
-				fmt.Sprintf("%s.%d.%d.%d", prefixDialogs, dialog.TeamID, dialog.PeerID, dialog.PeerType),
-				tools.Int64ToStr(dialog.TopMessageID),
-				nil,
+		for _, dialog := range dialogs {
+			err := b.Put(
+				alloc.Gen(dialog.TeamID, dialog.PeerID, dialog.PeerType),
+				alloc.Marshal(dialog),
 			)
-			return err
-		})
-		if err != nil {
-			return err
+			if err != nil {
+				return err
+			}
+			err = d.index.Update(func(tx *buntdb.Tx) error {
+				_, _, err := tx.Set(
+					fmt.Sprintf("%s.%d.%d.%d", prefixDialogs, dialog.TeamID, dialog.PeerID, dialog.PeerType),
+					tools.Int64ToStr(dialog.TopMessageID),
+					nil,
+				)
+				return err
+			})
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})

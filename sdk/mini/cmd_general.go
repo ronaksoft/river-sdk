@@ -2,13 +2,13 @@ package mini
 
 import (
 	"context"
-	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -23,7 +23,7 @@ import (
 
 // AppKill must be called when app is closed
 func (r *River) AppKill() {
-	r.networkCtrl.Stop()
+	r.network.Stop()
 }
 
 // AppStart must be called when app is started
@@ -34,61 +34,40 @@ func (r *River) AppStart() error {
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
 	// Update Authorizations
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)
+	r.network.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)
 
 	// Start Controllers
-	r.networkCtrl.Start()
+	r.network.Start()
 
 	domain.StartTime = time.Now()
 	domain.WindowLog = func(txt string) {}
 	logs.Info("MiniRiver Started")
 
-	err := r.GetServerTime()
+	err := r.syncServerTime()
 	if err != nil {
 		logs.Warn("MiniRiver got error on get server time", zap.Error(err))
 	}
 
+	if r.getLastUpdateID() == 0 {
+		// run in sync for the first time
+		wg := sync.WaitGroup{}
+		wg.Add(2)
+		go func() {
+			r.syncContacts()
+			wg.Done()
+		}()
+		go func() {
+			r.syncDialogs()
+			wg.Done()
+		}()
+		wg.Wait()
+	} else {
+		// run in background
+		go r.syncContacts()
+		go r.syncDialogs()
+	}
+
 	return nil
-}
-
-func (r *River) GetServerTime() (err error) {
-	logs.Info("SyncCtrl call GetServerTime")
-	timeReq := &msg.SystemGetServerTime{}
-	timeReqBytes, _ := timeReq.Marshal()
-	r.networkCtrl.HttpCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_SystemGetServerTime,
-			RequestID:   uint64(domain.SequentialUniqueID()),
-			Message:     timeReqBytes,
-		},
-		func() {
-			err = domain.ErrRequestTimeout
-		},
-		func(m *rony.MessageEnvelope) {
-			switch m.Constructor {
-			case msg.C_SystemServerTime:
-				x := new(msg.SystemServerTime)
-				err = x.Unmarshal(m.Message)
-				if err != nil {
-					logs.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
-					return
-				}
-				clientTime := time.Now().Unix()
-				serverTime := x.Timestamp
-				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
-
-				logs.Debug("SyncCtrl received SystemServerTime",
-					zap.Int64("ServerTime", serverTime),
-					zap.Int64("ClientTime", clientTime),
-					zap.Duration("Difference", domain.TimeDelta),
-				)
-			case rony.C_Error:
-				logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
-				err = domain.ParseServerError(m.Message)
-			}
-		},
-	)
-	return
 }
 
 // ExecuteCommand is a wrapper function to pass the request to the queueController, to be passed to networkController for final
@@ -172,7 +151,7 @@ func executeRemoteCommand(
 
 	ctx, cf := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
 	defer cf()
-	res, err := r.networkCtrl.SendHttp(ctx, req)
+	res, err := r.network.SendHttp(ctx, req)
 	if res == nil {
 		res = &rony.MessageEnvelope{}
 		if err != nil {
