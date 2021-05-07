@@ -608,6 +608,22 @@ func (ctrl *Controller) updateGroupAdmins(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 	return res, nil
 }
 
+func (ctrl *Controller) updateGroupAdminOnly(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateGroupAdminOnly{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Debug("SyncCtrl applies UpdateGroupAdminOnly",
+		zap.Int64("GroupID", x.GroupID),
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
+	res := []*msg.UpdateEnvelope{u}
+	return res, nil
+}
+
 func (ctrl *Controller) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
 	x := new(msg.UpdateAccountPrivacy)
 	err := x.Unmarshal(u.Update)

@@ -89,6 +89,7 @@ func NewSyncController(config Config) *Controller {
 		msg.C_UpdateDraftMessage:          ctrl.updateDraftMessage,
 		msg.C_UpdateDraftMessageCleared:   ctrl.updateDraftMessageCleared,
 		msg.C_UpdateGroupAdmins:           ctrl.updateGroupAdmins,
+		msg.C_UpdateGroupAdminOnly:        ctrl.updateGroupAdminOnly,
 		msg.C_UpdateGroupParticipantAdmin: ctrl.updateGroupParticipantAdmin,
 		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
 		msg.C_UpdateLabelDeleted:          ctrl.updateLabelDeleted,

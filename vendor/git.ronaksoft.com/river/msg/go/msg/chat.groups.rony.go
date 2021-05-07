@@ -288,6 +288,48 @@ func (x *GroupsToggleAdmins) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_GroupsToggleAdmins, x)
 }
 
+const C_GroupsToggleAdminOnly int64 = 3440147323
+
+type poolGroupsToggleAdminOnly struct {
+	pool sync.Pool
+}
+
+func (p *poolGroupsToggleAdminOnly) Get() *GroupsToggleAdminOnly {
+	x, ok := p.pool.Get().(*GroupsToggleAdminOnly)
+	if !ok {
+		x = &GroupsToggleAdminOnly{}
+	}
+	return x
+}
+
+func (p *poolGroupsToggleAdminOnly) Put(x *GroupsToggleAdminOnly) {
+	if x == nil {
+		return
+	}
+	x.GroupID = 0
+	x.AdminOnly = false
+	p.pool.Put(x)
+}
+
+var PoolGroupsToggleAdminOnly = poolGroupsToggleAdminOnly{}
+
+func (x *GroupsToggleAdminOnly) DeepCopy(z *GroupsToggleAdminOnly) {
+	z.GroupID = x.GroupID
+	z.AdminOnly = x.AdminOnly
+}
+
+func (x *GroupsToggleAdminOnly) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *GroupsToggleAdminOnly) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *GroupsToggleAdminOnly) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_GroupsToggleAdminOnly, x)
+}
+
 const C_GroupsUpdateAdmin int64 = 1345991011
 
 type poolGroupsUpdateAdmin struct {
@@ -627,6 +669,7 @@ func init() {
 	registry.RegisterConstructor(3172322223, "GroupsDeleteUser")
 	registry.RegisterConstructor(2986704909, "GroupsGetFull")
 	registry.RegisterConstructor(1581076909, "GroupsToggleAdmins")
+	registry.RegisterConstructor(3440147323, "GroupsToggleAdminOnly")
 	registry.RegisterConstructor(1345991011, "GroupsUpdateAdmin")
 	registry.RegisterConstructor(2624284907, "GroupsUploadPhoto")
 	registry.RegisterConstructor(176771682, "GroupsRemovePhoto")
