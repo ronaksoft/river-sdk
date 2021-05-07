@@ -124,6 +124,9 @@ func (d *repoUsers) SaveUser(users ...*msg.User) error {
 }
 
 func (d *repoUsers) SaveAllContacts(newContacts *msg.ContactsMany) error {
+	if !newContacts.Modified {
+		return nil
+	}
 	newContactsMap := make(map[int64]int64, len(newContacts.ContactUsers))
 	for idx := range newContacts.Users {
 		newContactsMap[newContacts.ContactUsers[idx].ID] = newContacts.Users[idx].LastSeen

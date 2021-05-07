@@ -56,10 +56,12 @@ func (r *River) syncServerTime() (err error) {
 	return
 }
 
-func (r *River) syncUpdateState() (updateID int64, err error) {
+func (r *River) syncUpdateState() (updated bool, err error) {
 	req := rony.PoolMessageEnvelope.Get()
 	defer rony.PoolMessageEnvelope.Put(req)
 	req.Fill(domain.NextRequestID(), msg.C_UpdateGetState, &msg.UpdateGetState{})
+
+	currentUpdateID := r.getLastUpdateID()
 	r.network.HttpCommand(
 		req,
 		func() {
@@ -74,7 +76,9 @@ func (r *River) syncUpdateState() (updateID int64, err error) {
 					logs.Error("MiniRiver couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 					return
 				}
-				updateID = x.UpdateID
+				if x.UpdateID > currentUpdateID {
+					updated = true
+				}
 				err = r.setLastUpdateID(x.UpdateID)
 				if err != nil {
 					logs.Error("MiniRiver couldn't save LastUpdateID to the database", zap.Error(err))
@@ -128,6 +132,13 @@ func (r *River) syncDialogs() {
 		offset    int32 = 0
 	)
 
+	updated, err := r.syncUpdateState()
+	if err != nil {
+		logs.Warn("MiniRiver got error on UpdateSync", zap.Error(err))
+	}
+	if !updated {
+		return
+	}
 	for keepGoing {
 		req := rony.PoolMessageEnvelope.Get()
 		req.Fill(domain.NextRequestID(), msg.C_MessagesGetDialogs, &msg.MessagesGetDialogs{
