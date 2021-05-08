@@ -526,7 +526,7 @@ func printClientSearchResult(envelope *rony.MessageEnvelope) {
 	bufUsers := new(bytes.Buffer)
 	tableUsers := tablewriter.NewWriter(bufUsers)
 	tableUsers.SetHeader([]string{
-		"userID", "FirstName", "LastName", "Username", "Photo", "LastSeen",
+		"userID", "FirstName", "LastName", "Username", "LastSeen",
 	})
 	for _, x := range x.Users {
 		tableUsers.Append([]string{
@@ -534,7 +534,6 @@ func printClientSearchResult(envelope *rony.MessageEnvelope) {
 			fmt.Sprintf("%s", x.FirstName),
 			fmt.Sprintf("%s", x.LastName),
 			x.Username,
-			fmt.Sprintf("%d", x.Photo.PhotoID),
 			fmt.Sprintf("%s", time.Unix(x.LastSeen, 0).Format(time.RFC822)),
 		})
 	}

@@ -250,10 +250,9 @@ func (d *repoUsers) Search(phrase string, limit int) []*msg.User {
 		_ = b.ForEach(func(k, v []byte) error {
 			u := &msg.User{}
 			_ = u.Unmarshal(v)
-			if strings.Contains(
-				strings.ToLower(u.FirstName), phrase) || strings.Contains(strings.ToLower(u.LastName), phrase) || strings.Contains(strings.ToLower(u.Username),
-				phrase,
-			) {
+			if strings.Contains(strings.ToLower(u.FirstName), phrase) ||
+				strings.Contains(strings.ToLower(u.LastName), phrase) ||
+				strings.Contains(strings.ToLower(u.Username), phrase) {
 				users = append(users, u)
 				limit--
 			}
