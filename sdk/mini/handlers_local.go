@@ -57,14 +57,17 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da *DelegateAd
 
 	mUsers := domain.MInt64B{}
 	mGroups := domain.MInt64B{}
-	mMessages := domain.MInt64B{}
 	for _, dialog := range res.Dialogs {
-		if dialog.PeerType == int32(msg.PeerType_PeerUser) {
+		switch msg.PeerType(dialog.PeerType) {
+		case msg.PeerType_PeerUser, msg.PeerType_PeerExternalUser:
 			if dialog.PeerID != 0 {
 				mUsers[dialog.PeerID] = true
 			}
+		case msg.PeerType_PeerGroup:
+			if dialog.PeerID != 0 {
+				mGroups[dialog.PeerID] = true
+			}
 		}
-		mMessages[dialog.TopMessageID] = true
 	}
 
 	res.Groups, _ = minirepo.Groups.ReadMany(domain.GetTeamID(in), mGroups.ToArray()...)
