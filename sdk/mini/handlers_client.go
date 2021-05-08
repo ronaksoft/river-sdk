@@ -7,6 +7,7 @@ import (
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
@@ -298,4 +299,12 @@ func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da *DelegateAd
 		return
 	}
 
+	res := &msg.ClientSearchResult{}
+	res.Users = minirepo.Users.Search(req.Text, int(req.Limit))
+	res.MatchedUsers = res.Users
+	res.Groups = minirepo.Groups.Search(req.Text, int(req.Limit))
+	res.MatchedGroups = res.Groups
+
+	out.Fill(in.RequestID, msg.C_ClientSearchResult, res)
+	da.OnComplete(out)
 }

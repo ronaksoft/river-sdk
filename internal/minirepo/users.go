@@ -8,6 +8,7 @@ import (
 	"github.com/ronaksoft/rony/store"
 	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
+	"strings"
 )
 
 /*
@@ -237,4 +238,28 @@ func (d *repoUsers) ReadMany(userIDs ...int64) ([]*msg.User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func (d *repoUsers) Search(phrase string, limit int) []*msg.User {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	users := make([]*msg.User, 0, limit)
+	_ = d.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketUsers)
+		_ = b.ForEach(func(k, v []byte) error {
+			u := &msg.User{}
+			_ = u.Unmarshal(v)
+			if strings.Contains(u.FirstName, phrase) || strings.Contains(u.LastName, phrase) || strings.Contains(u.Username, phrase) {
+				users = append(users, u)
+				limit--
+			}
+			if limit < 0 {
+				return domain.ErrLimitReached
+			}
+			return nil
+		})
+		return nil
+	})
+	return users
 }

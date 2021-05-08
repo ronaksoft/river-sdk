@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/boltdb/bolt"
 	"github.com/ronaksoft/rony/store"
+	"strings"
 )
 
 /*
@@ -104,4 +105,28 @@ func (d *repoGroups) ReadMany(teamID int64, groupIDs ...int64) ([]*msg.Group, er
 		return nil, err
 	}
 	return groups, nil
+}
+
+func (d *repoGroups) Search(phrase string, limit int) []*msg.Group {
+	alloc := store.NewAllocator()
+	defer alloc.ReleaseAll()
+
+	groups := make([]*msg.Group, 0, limit)
+	_ = d.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketGroups)
+		_ = b.ForEach(func(k, v []byte) error {
+			g := &msg.Group{}
+			_ = g.Unmarshal(v)
+			if strings.Contains(g.Title, phrase) {
+				groups = append(groups, g)
+				limit--
+			}
+			if limit < 0 {
+				return domain.ErrLimitReached
+			}
+			return nil
+		})
+		return nil
+	})
+	return groups
 }
