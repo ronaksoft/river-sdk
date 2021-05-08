@@ -297,4 +297,5 @@ func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da *DelegateAd
 		da.OnComplete(out)
 		return
 	}
+
 }
