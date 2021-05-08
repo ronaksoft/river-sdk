@@ -171,7 +171,7 @@ func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, timeoutCB doma
 		for _, userContact := range userContacts {
 			matchedUserIDs[userContact.ID] = true
 		}
-		nonContacts = repo.Users.SearchNonContacts(searchPhrase)
+		nonContacts = repo.Users.SearchNonContacts(domain.GetTeamID(in), searchPhrase)
 		for _, userContact := range nonContacts {
 			matchedUserIDs[userContact.ID] = true
 		}
