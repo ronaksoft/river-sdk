@@ -538,5 +538,5 @@ func printClientSearchResult(envelope *rony.MessageEnvelope) {
 		})
 	}
 	tableUsers.Render()
-
+	_Shell.Println("\r\n" + bufUsers.String())
 }
