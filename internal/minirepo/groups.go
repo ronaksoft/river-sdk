@@ -117,7 +117,7 @@ func (d *repoGroups) Search(phrase string, limit int) []*msg.Group {
 		_ = b.ForEach(func(k, v []byte) error {
 			g := &msg.Group{}
 			_ = g.Unmarshal(v)
-			if strings.Contains(g.Title, phrase) {
+			if strings.Contains(strings.ToLower(g.Title), phrase) {
 				groups = append(groups, g)
 				limit--
 			}

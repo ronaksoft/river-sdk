@@ -106,6 +106,7 @@ func main() {
 			ServerHostPort:         serverHostPort,
 			DbPath:                 _DbPath,
 			DbID:                   _DbID,
+			MainDelegate:           new(MainDelegate),
 			LogLevel:               int(zapcore.DebugLevel),
 			DocumentAudioDirectory: "./_files/audio",
 			DocumentVideoDirectory: "./_files/video",

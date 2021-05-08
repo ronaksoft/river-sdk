@@ -20,6 +20,7 @@ func init() {
 	Mini.AddCmd(MiniAccountGetTeams)
 	Mini.AddCmd(MiniMessageSendMediaToSelf)
 	Mini.AddCmd(MiniContactsGet)
+	Mini.AddCmd(MiniClientSearch)
 }
 
 var Mini = &ishell.Cmd{
@@ -66,6 +67,23 @@ var MiniContactsGet = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := new(RequestDelegate)
 		if reqID, err := _MiniSDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+
+	},
+}
+
+var MiniClientSearch = &ishell.Cmd{
+	Name: "ClientSearch",
+	Func: func(c *ishell.Context) {
+		req := msg.ClientGlobalSearch{}
+		req.Text = fnGetString(c, "Phrase:")
+		req.Limit = 10
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _MiniSDK.ExecuteCommand(msg.C_ClientGlobalSearch, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID

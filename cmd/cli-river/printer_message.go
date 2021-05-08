@@ -33,6 +33,7 @@ func init() {
 		msg.C_AuthRecalled:         printAuthRecalled,
 		msg.C_AuthSentCode:         printAuthSentCode,
 		msg.C_ClientPendingMessage: printClientPendingMessage,
+		msg.C_ClientSearchResult:   printClientSearchResult,
 		msg.C_ContactsImported:     printContactsImported,
 		msg.C_ContactsMany:         printContactsMany,
 		msg.C_Dialog:               printDialog,
@@ -518,4 +519,25 @@ func printAccountPassword(envelope *rony.MessageEnvelope) {
 	_Shell.Println("SrpB:", hex.EncodeToString(x.SrpB))
 	_Shell.Println("SrpID:", x.SrpID)
 	_Shell.Println("Hint:", x.Hint)
+}
+func printClientSearchResult(envelope *rony.MessageEnvelope) {
+	x := &msg.ClientSearchResult{}
+	x.Unmarshal(envelope.Message)
+	bufUsers := new(bytes.Buffer)
+	tableUsers := tablewriter.NewWriter(bufUsers)
+	tableUsers.SetHeader([]string{
+		"userID", "FirstName", "LastName", "Username", "Photo", "LastSeen",
+	})
+	for _, x := range x.Users {
+		tableUsers.Append([]string{
+			fmt.Sprintf("%d", x.ID),
+			fmt.Sprintf("%s", x.FirstName),
+			fmt.Sprintf("%s", x.LastName),
+			x.Username,
+			fmt.Sprintf("%d", x.Photo.PhotoID),
+			fmt.Sprintf("%s", time.Unix(x.LastSeen, 0).Format(time.RFC822)),
+		})
+	}
+	tableUsers.Render()
+
 }

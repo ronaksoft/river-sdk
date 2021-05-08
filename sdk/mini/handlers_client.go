@@ -300,9 +300,9 @@ func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da *DelegateAd
 	}
 
 	res := &msg.ClientSearchResult{}
-	res.Users = minirepo.Users.Search(req.Text, int(req.Limit))
+	res.Users = minirepo.Users.Search(strings.ToLower(req.Text), int(req.Limit))
 	res.MatchedUsers = res.Users
-	res.Groups = minirepo.Groups.Search(req.Text, int(req.Limit))
+	res.Groups = minirepo.Groups.Search(strings.ToLower(req.Text), int(req.Limit))
 	res.MatchedGroups = res.Groups
 
 	out.Fill(in.RequestID, msg.C_ClientSearchResult, res)
