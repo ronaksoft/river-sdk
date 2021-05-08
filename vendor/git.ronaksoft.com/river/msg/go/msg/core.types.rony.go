@@ -427,6 +427,7 @@ func (p *poolDialog) Put(x *Dialog) {
 	x.Draft = nil
 	x.PinnedMessageID = 0
 	x.ActiveCallID = 0
+	x.ReadOnly = false
 	p.pool.Put(x)
 }
 
@@ -461,6 +462,7 @@ func (x *Dialog) DeepCopy(z *Dialog) {
 	}
 	z.PinnedMessageID = x.PinnedMessageID
 	z.ActiveCallID = x.ActiveCallID
+	z.ReadOnly = x.ReadOnly
 }
 
 func (x *Dialog) Marshal() ([]byte, error) {

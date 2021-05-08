@@ -620,6 +620,15 @@ func (ctrl *Controller) updateGroupAdminOnly(u *msg.UpdateEnvelope) ([]*msg.Upda
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
+	group, _ := repo.Groups.Get(x.GroupID)
+	if group != nil {
+		dialog, _ := repo.Dialogs.Get(group.TeamID, group.ID, int32(msg.PeerType_PeerGroup))
+		if dialog != nil {
+			dialog.ReadOnly = repo.Groups.HasFlag(group.Flags, msg.GroupFlags_GroupFlagsAdminOnly) && !repo.Groups.HasFlag(group.Flags, msg.GroupFlags_GroupFlagsAdmin)
+			_ = repo.Dialogs.Save(dialog)
+		}
+	}
+
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }

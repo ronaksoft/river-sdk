@@ -241,15 +241,13 @@ func (d *repoUsers) ReadMany(userIDs ...int64) ([]*msg.User, error) {
 }
 
 func (d *repoUsers) Search(phrase string, limit int) []*msg.User {
-	alloc := store.NewAllocator()
-	defer alloc.ReleaseAll()
-
 	users := make([]*msg.User, 0, limit)
 	_ = d.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketUsers)
 		_ = b.ForEach(func(k, v []byte) error {
 			u := &msg.User{}
 			_ = u.Unmarshal(v)
+			fmt.Println(u.FirstName, u.LastName, u.Username, phrase)
 			if strings.Contains(strings.ToLower(u.FirstName), phrase) ||
 				strings.Contains(strings.ToLower(u.LastName), phrase) ||
 				strings.Contains(strings.ToLower(u.Username), phrase) {
