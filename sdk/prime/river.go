@@ -411,6 +411,9 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 
 	for _, update := range updateContainer.Updates {
 		logs.UpdateLog(update.UpdateID, update.Constructor)
+		if update.Constructor == msg.C_UpdatePhoneCall {
+			r.callCtrl.ParseUpdate(update)
+		}
 	}
 
 	outOfSync := false
