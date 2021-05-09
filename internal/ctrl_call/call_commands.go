@@ -12,6 +12,11 @@ import (
 	"sync"
 )
 
+type teamInput struct {
+	teamID     int64
+	teamAccess uint64
+}
+
 type CallAPI interface {
 	Init(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, err error)
 	Request(peer *msg.InputPeer, randomID int64, initiator bool, participants []*msg.PhoneParticipantSDP, callID int64, batch bool) (res *msg.PhoneCall, err error)
@@ -23,15 +28,20 @@ type CallAPI interface {
 	GetParticipant(peer *msg.InputPeer, callID int64) (res *msg.PhoneParticipants, err error)
 	UpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.InputUser, admin bool) (res *msg.Bool, err error)
 	SendUpdate(peer *msg.InputPeer, callID int64, participants []*msg.InputUser, action msg.PhoneCallAction, actionData []byte, instant bool) (res *msg.Bool, err error)
+
+	SetTempTeamInput(teamId int64, teamAccess uint64)
 }
 
 func NewCallAPI() CallAPI {
 	return &callAPI{
 		networkCtrl: nil,
 		queueCtrl:   nil,
-		teamID:      0,
-		teamAccess:  0,
-		deviceType:  msg.CallDeviceType_CallDeviceUnknown,
+		teamInput: teamInput{
+			teamID:     domain.GetCurrTeamID(),
+			teamAccess: domain.GetCurrTeamAccess(),
+		},
+		deviceType:    msg.CallDeviceType_CallDeviceUnknown,
+		tempTeamInput: nil,
 	}
 }
 
@@ -39,9 +49,10 @@ type callAPI struct {
 	networkCtrl *networkCtrl.Controller
 	queueCtrl   *queueCtrl.Controller
 
-	teamID     int64
-	teamAccess int64
+	teamInput  teamInput
 	deviceType msg.CallDeviceType
+
+	tempTeamInput *teamInput
 }
 
 func (c *callAPI) Init(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, err error) {
@@ -81,7 +92,7 @@ func (c *callAPI) Init(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneInitCall, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneInitCall, reqBytes, timeoutCallback, successCallback, true)
 	wg.Wait()
 	return
 }
@@ -128,7 +139,7 @@ func (c *callAPI) Request(peer *msg.InputPeer, randomID int64, initiator bool, p
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneRequestCall, reqBytes, timeoutCallback, successCallback, !batch)
+	c.executeRemoteCommand(msg.C_PhoneRequestCall, reqBytes, timeoutCallback, successCallback, !batch)
 	wg.Wait()
 	return
 }
@@ -173,7 +184,7 @@ func (c *callAPI) Accept(peer *msg.InputPeer, callID int64, participants []*msg.
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneAcceptCall, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneAcceptCall, reqBytes, timeoutCallback, successCallback, true)
 	wg.Wait()
 	return
 }
@@ -218,7 +229,7 @@ func (c *callAPI) Reject(peer *msg.InputPeer, callID int64, reason msg.DiscardRe
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneDiscardCall, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneDiscardCall, reqBytes, timeoutCallback, successCallback, true)
 	wg.Wait()
 	return
 }
@@ -261,7 +272,7 @@ func (c *callAPI) Join(peer *msg.InputPeer, callID int64) (res *msg.PhonePartici
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneJoinCall, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneJoinCall, reqBytes, timeoutCallback, successCallback, true)
 	wg.Wait()
 	return
 }
@@ -305,7 +316,7 @@ func (c *callAPI) AddParticipant(peer *msg.InputPeer, callID int64, participants
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneAddParticipant, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneAddParticipant, reqBytes, timeoutCallback, successCallback, true)
 	wg.Wait()
 	return
 }
@@ -350,15 +361,15 @@ func (c *callAPI) RemoveParticipant(peer *msg.InputPeer, callID int64, participa
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneRemoveParticipant, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneRemoveParticipant, reqBytes, timeoutCallback, successCallback, true)
 	wg.Wait()
 	return
 }
 
 func (c *callAPI) GetParticipant(peer *msg.InputPeer, callID int64) (res *msg.PhoneParticipants, err error) {
 	req := msg.PhoneGetParticipants{
-		Peer:         peer,
-		CallID:       callID,
+		Peer:   peer,
+		CallID: callID,
 	}
 
 	reqBytes, err := req.Marshal()
@@ -393,7 +404,7 @@ func (c *callAPI) GetParticipant(peer *msg.InputPeer, callID int64) (res *msg.Ph
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneGetParticipants, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneGetParticipants, reqBytes, timeoutCallback, successCallback, true)
 	wg.Wait()
 	return
 }
@@ -438,7 +449,7 @@ func (c *callAPI) UpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneUpdateAdmin, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneUpdateAdmin, reqBytes, timeoutCallback, successCallback, true)
 	wg.Wait()
 	return
 }
@@ -484,13 +495,19 @@ func (c *callAPI) SendUpdate(peer *msg.InputPeer, callID int64, participants []*
 		}
 	}
 
-	c.executeRemoteCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), msg.C_PhoneUpdateCall, reqBytes, timeoutCallback, successCallback, instant)
+	c.executeRemoteCommand(msg.C_PhoneUpdateCall, reqBytes, timeoutCallback, successCallback, instant)
 	wg.Wait()
 	return
 }
 
+func (c *callAPI) SetTempTeamInput(teamId int64, teamAccess uint64) {
+	c.tempTeamInput = &teamInput{
+		teamID:     teamId,
+		teamAccess: teamAccess,
+	}
+}
+
 func (c *callAPI) executeRemoteCommand(
-	teamID int64, teamAccess uint64,
 	constructor int64, commandBytes []byte,
 	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	instant bool) {
@@ -499,6 +516,13 @@ func (c *callAPI) executeRemoteCommand(
 	)
 
 	requestID := uint64(domain.SequentialUniqueID())
+	teamID := c.teamInput.teamID
+	teamAccess := c.teamInput.teamAccess
+	if c.tempTeamInput != nil {
+		teamID = c.tempTeamInput.teamID
+		teamAccess = c.tempTeamInput.teamAccess
+		c.tempTeamInput = nil
+	}
 
 	// If the constructor is a realtime command, then just send it to the server
 	if instant {
