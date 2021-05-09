@@ -32,9 +32,6 @@ func main() {
 
 	// Initialize Shell
 	_Shell = ishell.New()
-	loadCommands(
-		Account, Auth, Bot, Contact, Debug, File, Gif, Group, Init, Label, Message, Mini, SDK, System, Team, User, WallPaper,
-	)
 
 	_Shell.Println("============================")
 	_Shell.Println("## River CLI Console ##")
@@ -66,6 +63,7 @@ func main() {
 	}
 
 	serverHostPort := "river.ronaksoftware.com"
+	sdkMode := "prime"
 
 	switch len(os.Args) {
 	case 2:
@@ -81,68 +79,98 @@ func main() {
 		default:
 			serverHostPort = os.Args[1]
 		}
-	}
-
-	_SDK = &riversdk.River{}
-	_SDK.SetConfig(&riversdk.RiverConfig{
-		ServerHostPort:         serverHostPort,
-		DbPath:                 _DbPath,
-		DbID:                   _DbID,
-		MainDelegate:           new(MainDelegate),
-		FileDelegate:           new(FileDelegate),
-		LogLevel:               int(zapcore.InfoLevel),
-		DocumentAudioDirectory: "./_files/audio",
-		DocumentVideoDirectory: "./_files/video",
-		DocumentPhotoDirectory: "./_files/photo",
-		DocumentFileDirectory:  "./_files/file",
-		DocumentCacheDirectory: "./_files/cache",
-		LogDirectory:           "./_files/logs",
-		ConnInfo:               connInfo,
-	})
-
-	_MiniSDK = &mini.River{}
-	_MiniSDK.SetConfig(&mini.RiverConfig{
-		ServerHostPort:         serverHostPort,
-		DbPath:                 _DbPath,
-		DbID:                   _DbID,
-		LogLevel:               int(zapcore.InfoLevel),
-		DocumentAudioDirectory: "./_files/audio",
-		DocumentVideoDirectory: "./_files/video",
-		DocumentPhotoDirectory: "./_files/photo",
-		DocumentFileDirectory:  "./_files/file",
-		DocumentCacheDirectory: "./_files/cache",
-		LogDirectory:           "./_files/logs",
-		ConnInfo: &mini.RiverConnection{
-			AuthID:  connInfo.AuthID,
-			AuthKey: connInfo.AuthKey,
-			UserID:  connInfo.UserID,
-		},
-	})
-
-	err = _SDK.AppStart()
-	if err != nil {
-		panic(err)
-	}
-	err = _MiniSDK.AppStart()
-	if err != nil {
-		panic(err)
-	}
-
-	_SDK.StartNetwork("")
-	if _SDK.ConnInfo.AuthID == 0 {
-		if err := _SDK.CreateAuthKey(); err != nil {
-			_Shell.Println("CreateAuthKey::", err.Error())
+	case 3:
+		switch strings.ToLower(os.Args[1]) {
+		case "mini":
+			sdkMode = "mini"
+		default:
+		}
+		switch strings.ToLower(os.Args[2]) {
+		case "production":
+			serverHostPort = "edge.river.im"
+		case "staging":
+			serverHostPort = "river.ronaksoftware.com"
+		case "local":
+			serverHostPort = "localhost"
+		case "local2":
+			serverHostPort = "localhost:81"
+		default:
+			serverHostPort = os.Args[1]
 		}
 	}
 
-	if _SDK.ConnInfo.UserID != 0 {
-		req := &msg.MessagesGetDialogs{
-			Offset: 0,
-			Limit:  500,
+	switch sdkMode {
+	case "mini":
+		_MiniSDK = &mini.River{}
+		_MiniSDK.SetConfig(&mini.RiverConfig{
+			ServerHostPort:         serverHostPort,
+			DbPath:                 _DbPath,
+			DbID:                   _DbID,
+			MainDelegate:           new(MainDelegate),
+			LogLevel:               int(zapcore.DebugLevel),
+			DocumentAudioDirectory: "./_files/audio",
+			DocumentVideoDirectory: "./_files/video",
+			DocumentPhotoDirectory: "./_files/photo",
+			DocumentFileDirectory:  "./_files/file",
+			DocumentCacheDirectory: "./_files/cache",
+			LogDirectory:           "./_files/logs",
+			ConnInfo: &mini.RiverConnection{
+				AuthID:  connInfo.AuthID,
+				AuthKey: connInfo.AuthKey[:],
+				UserID:  connInfo.UserID,
+			},
+		})
+
+		err = _MiniSDK.AppStart()
+		if err != nil {
+			panic(err)
 		}
-		reqBytes, _ := req.Marshal()
-		delegate := new(RequestDelegate)
-		_, _ = _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, delegate)
+
+		loadCommands(
+			Mini,
+		)
+
+	default:
+		_SDK = &riversdk.River{}
+		_SDK.SetConfig(&riversdk.RiverConfig{
+			ServerHostPort:         serverHostPort,
+			DbPath:                 _DbPath,
+			DbID:                   _DbID,
+			MainDelegate:           new(MainDelegate),
+			FileDelegate:           new(FileDelegate),
+			LogLevel:               int(zapcore.InfoLevel),
+			DocumentAudioDirectory: "./_files/audio",
+			DocumentVideoDirectory: "./_files/video",
+			DocumentPhotoDirectory: "./_files/photo",
+			DocumentFileDirectory:  "./_files/file",
+			DocumentCacheDirectory: "./_files/cache",
+			LogDirectory:           "./_files/logs",
+			ConnInfo:               connInfo,
+		})
+		err = _SDK.AppStart()
+		if err != nil {
+			panic(err)
+		}
+		_SDK.StartNetwork("")
+		if _SDK.ConnInfo.AuthID == 0 {
+			if err := _SDK.CreateAuthKey(); err != nil {
+				_Shell.Println("CreateAuthKey::", err.Error())
+			}
+		}
+
+		if _SDK.ConnInfo.UserID != 0 {
+			req := &msg.MessagesGetDialogs{
+				Offset: 0,
+				Limit:  500,
+			}
+			reqBytes, _ := req.Marshal()
+			delegate := new(RequestDelegate)
+			_, _ = _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, delegate)
+		}
+		loadCommands(
+			Account, Auth, Bot, Contact, Debug, File, Gif, Group, Init, Label, Message, Mini, SDK, System, Team, User, WallPaper,
+		)
+
 	}
 
 	_Shell.Run()

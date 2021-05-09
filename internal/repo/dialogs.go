@@ -293,6 +293,7 @@ func (r *repoDialogs) CountDialogs(teamID int64) int32 {
 	_ = st.Orchestrate(context.Background())
 	return cnt
 }
+
 func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, 7)
 	err := badgerView(func(txn *badger.Txn) error {

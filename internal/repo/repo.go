@@ -12,6 +12,7 @@ import (
 	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -57,15 +58,15 @@ type repository struct {
 	peerSearch bleve.Index
 }
 
-func MustInitRepo(dbPath string, lowMemory bool) {
-	err := InitRepo(dbPath, lowMemory)
+func MustInit(dbPath string, lowMemory bool) {
+	err := Init(dbPath, lowMemory)
 	if err != nil {
 		panic(err)
 	}
 }
 
-// InitRepo initialize repo singleton
-func InitRepo(dbPath string, lowMemory bool) error {
+// Init initialize repo singleton
+func Init(dbPath string, lowMemory bool) error {
 	if ctx == nil {
 		singleton.Lock()
 		err := repoSetDB(dbPath, lowMemory)
@@ -102,8 +103,9 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 
 	_ = os.MkdirAll(dbPath, os.ModePerm)
 	// Initialize BadgerDB
-	_ = os.MkdirAll(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/")), os.ModePerm)
-	badgerOpts := badger.DefaultOptions(fmt.Sprintf("%s/badger", strings.TrimRight(dbPath, "/"))).
+	badgerPath := filepath.Join(dbPath, "badger")
+	_ = os.MkdirAll(badgerPath, os.ModePerm)
+	badgerOpts := badger.DefaultOptions(badgerPath).
 		WithLogger(nil)
 	if lowMemory {
 		badgerOpts = badgerOpts.
@@ -129,7 +131,8 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	}
 
 	// Initialize BuntDB Indexer
-	_ = os.MkdirAll(fmt.Sprintf("%s/bunty", strings.TrimRight(dbPath, "/")), os.ModePerm)
+	buntPath := filepath.Join(dbPath, "bunty")
+	_ = os.MkdirAll(buntPath, os.ModePerm)
 	if buntIndex, err := buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/"))); err != nil {
 		logs.Fatal("Context::repoSetDB()->bunt Open()", zap.Error(err))
 	} else {

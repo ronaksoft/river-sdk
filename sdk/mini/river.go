@@ -6,8 +6,10 @@ import (
 	networkCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_network"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"strings"
 )
@@ -81,7 +83,7 @@ type River struct {
 	localCommands map[int64]LocalHandler
 
 	// Internal Controllers
-	networkCtrl *networkCtrl.Controller
+	network *networkCtrl.Controller
 
 	// Delegates
 	mainDelegate MainDelegate
@@ -124,21 +126,21 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// Initialize Network Controller
-	r.networkCtrl = networkCtrl.New(
+	r.network = networkCtrl.New(
 		networkCtrl.Config{
 			WebsocketEndpoint: fmt.Sprintf("ws://%s", conf.ServerHostPort),
 			HttpEndpoint:      fmt.Sprintf("http://%s", conf.ServerHostPort),
 			CountryCode:       conf.CountryCode,
 		},
 	)
-	r.networkCtrl.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {}
-	r.networkCtrl.OnGeneralError = r.onGeneralError
-	r.networkCtrl.OnMessage = r.onReceivedMessage
-	r.networkCtrl.OnUpdate = r.onReceivedUpdate
-	r.networkCtrl.OnWebsocketConnect = r.onNetworkConnect
+	r.network.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {}
+	r.network.OnGeneralError = r.onGeneralError
+	r.network.OnMessage = r.onReceivedMessage
+	r.network.OnUpdate = r.onReceivedUpdate
+	r.network.OnWebsocketConnect = r.onNetworkConnect
 
 	// Initialize FileController
-	repo.Files.SetRootFolders(
+	repo.SetRootFolders(
 		conf.DocumentAudioDirectory,
 		conf.DocumentFileDirectory,
 		conf.DocumentPhotoDirectory,
@@ -177,13 +179,32 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {}
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]LocalHandler{
 		msg.C_ClientSendMessageMedia: r.clientSendMessageMedia,
+		msg.C_ClientGlobalSearch:     r.clientGlobalSearch,
 		msg.C_MessagesSendMedia:      r.messagesSendMedia,
+		msg.C_MessagesGetDialogs:     r.messagesGetDialogs,
+		msg.C_ContactsGet:            r.contactsGet,
 	}
+}
+
+func (r *River) setLastUpdateID(updateID int64) error {
+	return minirepo.General.SaveInt64(tools.S2B(domain.SkUpdateID), updateID)
+}
+
+func (r *River) getLastUpdateID() int64 {
+	return minirepo.General.GetInt64(tools.S2B(domain.SkUpdateID))
+}
+
+func (r *River) setContactsHash(h uint32) error {
+	return minirepo.General.SaveUInt32(tools.S2B(domain.SkContactsGetHash), h)
+}
+
+func (r *River) getContactsHash() uint32 {
+	return minirepo.General.GetUInt32(tools.S2B(domain.SkContactsGetHash))
 }
 
 // RiverConnection connection info
 type RiverConnection struct {
 	AuthID  int64
-	AuthKey [256]byte
+	AuthKey []byte
 	UserID  int64
 }

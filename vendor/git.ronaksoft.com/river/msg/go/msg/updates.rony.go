@@ -1100,6 +1100,52 @@ func (x *UpdateGroupAdmins) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_UpdateGroupAdmins, x)
 }
 
+const C_UpdateGroupAdminOnly int64 = 691550776
+
+type poolUpdateGroupAdminOnly struct {
+	pool sync.Pool
+}
+
+func (p *poolUpdateGroupAdminOnly) Get() *UpdateGroupAdminOnly {
+	x, ok := p.pool.Get().(*UpdateGroupAdminOnly)
+	if !ok {
+		x = &UpdateGroupAdminOnly{}
+	}
+	return x
+}
+
+func (p *poolUpdateGroupAdminOnly) Put(x *UpdateGroupAdminOnly) {
+	if x == nil {
+		return
+	}
+	x.UCount = 0
+	x.UpdateID = 0
+	x.GroupID = 0
+	x.AdminOnly = false
+	p.pool.Put(x)
+}
+
+var PoolUpdateGroupAdminOnly = poolUpdateGroupAdminOnly{}
+
+func (x *UpdateGroupAdminOnly) DeepCopy(z *UpdateGroupAdminOnly) {
+	z.UCount = x.UCount
+	z.UpdateID = x.UpdateID
+	z.GroupID = x.GroupID
+	z.AdminOnly = x.AdminOnly
+}
+
+func (x *UpdateGroupAdminOnly) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *UpdateGroupAdminOnly) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *UpdateGroupAdminOnly) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_UpdateGroupAdminOnly, x)
+}
+
 const C_UpdateGroupPhoto int64 = 367193154
 
 type poolUpdateGroupPhoto struct {
@@ -3103,6 +3149,7 @@ func init() {
 	registry.RegisterConstructor(2489941844, "UpdateGroupParticipantDeleted")
 	registry.RegisterConstructor(1813022164, "UpdateGroupParticipantAdmin")
 	registry.RegisterConstructor(694155405, "UpdateGroupAdmins")
+	registry.RegisterConstructor(691550776, "UpdateGroupAdminOnly")
 	registry.RegisterConstructor(367193154, "UpdateGroupPhoto")
 	registry.RegisterConstructor(2991403048, "UpdateReadMessagesContents")
 	registry.RegisterConstructor(2359297647, "UpdateAuthorizationReset")

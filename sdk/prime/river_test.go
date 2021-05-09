@@ -59,7 +59,7 @@ func init() {
 	})
 	_River = r
 
-	_ = repo.InitRepo(fmt.Sprintf("%s/%s.db", "./_data", "test"), false)
+	repo.MustInit(fmt.Sprintf("%s/%s.db", "./_data", "test"), false)
 }
 
 type ConnInfoDelegates struct{}
@@ -117,6 +117,9 @@ func (d *MainDelegateDummy) ShowLoggerAlert() {}
 func (d *MainDelegateDummy) AddLog(txt string) {}
 
 func (d *MainDelegateDummy) AppUpdate(version string, available, force bool) {}
+
+func (d *MainDelegateDummy) DataSynced(dialogs, contacts, gifs bool) {
+}
 
 type RequestDelegateDummy struct{}
 

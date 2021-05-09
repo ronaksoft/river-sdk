@@ -244,7 +244,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, t
 					ctrl.GetAllDialogs(waitGroup, teamID, teamAccess, offset+limit, limit)
 				} else {
 					waitGroup.Done()
-					forceUpdateUI(ctrl, true, false, false)
+					ctrl.dataSyncCallback(true, false, false)
 				}
 			}
 		},
@@ -303,7 +303,7 @@ func (ctrl *Controller) GetAllTopPeers(
 					ctrl.GetAllTopPeers(waitGroup, teamID, teamAccess, cat, offset+limit, limit)
 				} else {
 					waitGroup.Done()
-					forceUpdateUI(ctrl, true, false, false)
+					ctrl.dataSyncCallback(true, false, false)
 				}
 			}
 		},

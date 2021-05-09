@@ -183,12 +183,17 @@ func (ctrl *Controller) executor(req request) {
 		}
 	case res := <-reqCB.ResponseChannel:
 		switch req.MessageEnvelope.Constructor {
-		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
+		case msg.C_MessagesSend, msg.C_MessagesSendMedia, msg.C_MessagesForward:
 			switch res.Constructor {
 			case rony.C_Error:
 				errMsg := &rony.Error{}
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeAlreadyExists && errMsg.Items == msg.ErrItemRandomID {
+					pm, _ := repo.PendingMessages.GetByRandomID(int64(req.ID))
+					if pm != nil {
+						_ = repo.PendingMessages.Delete(pm.ID)
+					}
+				} else if errMsg.Code == msg.ErrCodeAccess && errMsg.Items == "NON_TEAM_MEMBER" {
 					pm, _ := repo.PendingMessages.GetByRandomID(int64(req.ID))
 					if pm != nil {
 						_ = repo.PendingMessages.Delete(pm.ID)

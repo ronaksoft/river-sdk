@@ -43,8 +43,8 @@ var (
 )
 
 func init() {
-	_ = repo.InitRepo("./_hdd/_db", true)
-	repo.Files.SetRootFolders(
+	repo.MustInit("./_hdd/_db", true)
+	repo.SetRootFolders(
 		"_hdd/_data/audio", "_hdd/_data/file", "_hdd/_data/photo",
 		"_hdd/_data/video", "_hdd/_data/cache",
 	)

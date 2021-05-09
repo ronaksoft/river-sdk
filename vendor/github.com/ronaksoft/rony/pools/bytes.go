@@ -2,6 +2,7 @@ package pools
 
 import (
 	"google.golang.org/protobuf/proto"
+	"io"
 	"sync"
 )
 
@@ -87,7 +88,17 @@ func (p *byteSlicePool) GetLen(n int) []byte {
 }
 
 type ByteBuffer struct {
-	b []byte
+	ri int
+	b  []byte
+}
+
+func (bb *ByteBuffer) Read(p []byte) (n int, err error) {
+	if bb.ri >= len(bb.b)-1 {
+		return 0, io.EOF
+	}
+	n = copy(p, bb.b[bb.ri:])
+	bb.ri += n
+	return n, nil
 }
 
 func newByteBuffer(n, c int) *ByteBuffer {
@@ -98,7 +109,8 @@ func newByteBuffer(n, c int) *ByteBuffer {
 }
 
 func (bb *ByteBuffer) Reset() {
-	bb.b = bb.b[:0]
+	bb.ri = 0
+	bb.b = bb.b[:bb.ri]
 }
 
 func (bb *ByteBuffer) Bytes() *[]byte {
@@ -116,12 +128,22 @@ func (bb *ByteBuffer) Fill(data []byte, start, end int) {
 	copy(bb.b[start:end], data)
 }
 
-func (bb *ByteBuffer) Copy(data []byte) {
+func (bb *ByteBuffer) CopyFrom(data []byte) {
 	copy(bb.b, data)
 }
 
-func (bb *ByteBuffer) Append(data []byte) {
+func (bb *ByteBuffer) CopyTo(data []byte) []byte {
+	copy(data, bb.b)
+	return data
+}
+
+func (bb *ByteBuffer) AppendFrom(data []byte) {
 	bb.b = append(bb.b, data...)
+}
+
+func (bb *ByteBuffer) AppendTo(data []byte) []byte {
+	data = append(data, bb.b...)
+	return data
 }
 
 func (bb *ByteBuffer) Len() int {
@@ -205,7 +227,7 @@ func (p *byteBufferPool) FromProto(m proto.Message) *ByteBuffer {
 
 func (p *byteBufferPool) FromBytes(b []byte) *ByteBuffer {
 	buf := p.GetCap(len(b))
-	buf.Append(b)
+	buf.AppendFrom(b)
 	return buf
 }
 

@@ -1,13 +1,14 @@
 module git.ronaksoft.com/river/sdk
 
 require (
-	git.ronaksoft.com/river/msg v0.0.0-20210501075913-a7882bfa73f0
+	git.ronaksoft.com/river/msg v0.0.0-20210508062555-8a785d7d4246
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
 	github.com/blevesearch/bleve v1.0.14
+	github.com/boltdb/bolt v1.3.1
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2
@@ -27,18 +28,19 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/ronaksoft/rony v0.6.52
+	github.com/ronaksoft/rony v0.6.57
 	github.com/siongui/instago v0.0.0-20200627103523-54424cb565ea
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.1
 	github.com/tidwall/buntdb v1.1.7
 	github.com/tinylib/msgp v1.1.2 // indirect
-	github.com/valyala/fasthttp v1.22.0
+	github.com/valyala/fasthttp v1.24.0
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	github.com/willf/bitset v1.1.11 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6 // indirect
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect

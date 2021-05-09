@@ -17,6 +17,21 @@ func fnGetString(c *ishell.Context, prompt string) string {
 	return x
 }
 
+func fnGetBool(c *ishell.Context, prompt string) bool {
+	del := false
+	for {
+		c.Print(prompt, ": (0 = false , >=1 : true)")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 32)
+		if err == nil {
+			del = id > 0
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return del
+}
+
 func fnGetPhone(c *ishell.Context) string {
 	c.Print("Phone: ")
 	phone := c.ReadLine()

@@ -148,70 +148,6 @@ func (x *ClientUpdateMessagesDeleted) GetMessageIDs() []int64 {
 	return nil
 }
 
-// ClientUpdateDialogsSynced
-type ClientUpdateSynced struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Dialogs  bool `protobuf:"varint,1,opt,name=Dialogs,proto3" json:"Dialogs,omitempty"`
-	Contacts bool `protobuf:"varint,2,opt,name=Contacts,proto3" json:"Contacts,omitempty"`
-	Gifs     bool `protobuf:"varint,3,opt,name=Gifs,proto3" json:"Gifs,omitempty"`
-}
-
-func (x *ClientUpdateSynced) Reset() {
-	*x = ClientUpdateSynced{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_client_updates_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ClientUpdateSynced) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ClientUpdateSynced) ProtoMessage() {}
-
-func (x *ClientUpdateSynced) ProtoReflect() protoreflect.Message {
-	mi := &file_client_updates_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ClientUpdateSynced.ProtoReflect.Descriptor instead.
-func (*ClientUpdateSynced) Descriptor() ([]byte, []int) {
-	return file_client_updates_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ClientUpdateSynced) GetDialogs() bool {
-	if x != nil {
-		return x.Dialogs
-	}
-	return false
-}
-
-func (x *ClientUpdateSynced) GetContacts() bool {
-	if x != nil {
-		return x.Contacts
-	}
-	return false
-}
-
-func (x *ClientUpdateSynced) GetGifs() bool {
-	if x != nil {
-		return x.Gifs
-	}
-	return false
-}
-
 var File_client_updates_proto protoreflect.FileDescriptor
 
 var file_client_updates_proto_rawDesc = []byte{
@@ -237,12 +173,6 @@ var file_client_updates_proto_rawDesc = []byte{
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x50, 0x65, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65,
 	0x12, 0x1e, 0x0a, 0x0a, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x49, 0x44, 0x73, 0x18, 0x03,
 	0x20, 0x03, 0x28, 0x03, 0x52, 0x0a, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x49, 0x44, 0x73,
-	0x22, 0x5e, 0x0a, 0x12, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x53, 0x79, 0x6e, 0x63, 0x65, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x73,
-	0x12, 0x1a, 0x0a, 0x08, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x63, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x08, 0x52, 0x08, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x63, 0x74, 0x73, 0x12, 0x12, 0x0a, 0x04,
-	0x47, 0x69, 0x66, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x47, 0x69, 0x66, 0x73,
 	0x42, 0x08, 0x5a, 0x06, 0x2e, 0x2f, 0x3b, 0x6d, 0x73, 0x67, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x33,
 }
@@ -259,17 +189,16 @@ func file_client_updates_proto_rawDescGZIP() []byte {
 	return file_client_updates_proto_rawDescData
 }
 
-var file_client_updates_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_client_updates_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_client_updates_proto_goTypes = []interface{}{
 	(*ClientUpdatePendingMessageDelivery)(nil), // 0: msg.ClientUpdatePendingMessageDelivery
 	(*ClientUpdateMessagesDeleted)(nil),        // 1: msg.ClientUpdateMessagesDeleted
-	(*ClientUpdateSynced)(nil),                 // 2: msg.ClientUpdateSynced
-	(*UserMessage)(nil),                        // 3: msg.UserMessage
-	(*ClientPendingMessage)(nil),               // 4: msg.ClientPendingMessage
+	(*UserMessage)(nil),                        // 2: msg.UserMessage
+	(*ClientPendingMessage)(nil),               // 3: msg.ClientPendingMessage
 }
 var file_client_updates_proto_depIdxs = []int32{
-	3, // 0: msg.ClientUpdatePendingMessageDelivery.Messages:type_name -> msg.UserMessage
-	4, // 1: msg.ClientUpdatePendingMessageDelivery.PendingMessage:type_name -> msg.ClientPendingMessage
+	2, // 0: msg.ClientUpdatePendingMessageDelivery.Messages:type_name -> msg.UserMessage
+	3, // 1: msg.ClientUpdatePendingMessageDelivery.PendingMessage:type_name -> msg.ClientPendingMessage
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -309,18 +238,6 @@ func file_client_updates_proto_init() {
 				return nil
 			}
 		}
-		file_client_updates_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientUpdateSynced); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -328,7 +245,7 @@ func file_client_updates_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_client_updates_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

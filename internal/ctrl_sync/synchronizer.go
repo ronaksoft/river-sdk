@@ -31,6 +31,7 @@ type Config struct {
 	SyncStatusChangeCB domain.SyncStatusChangeCallback
 	UpdateReceivedCB   domain.UpdateReceivedCallback
 	AppUpdateCB        domain.AppUpdateCallback
+	DataSyncedCB       domain.DataSyncedCallback
 }
 
 // Controller cache received data from server to client DB
@@ -51,6 +52,7 @@ type Controller struct {
 	syncStatusChangeCallback domain.SyncStatusChangeCallback
 	updateReceivedCallback   domain.UpdateReceivedCallback
 	appUpdateCallback        domain.AppUpdateCallback
+	dataSyncCallback         domain.DataSyncedCallback
 }
 
 // NewSyncController create new instance
@@ -76,12 +78,18 @@ func NewSyncController(config Config) *Controller {
 	}
 	ctrl.appUpdateCallback = config.AppUpdateCB
 
+	if config.DataSyncedCB == nil {
+		config.DataSyncedCB = func(dialogs, contacts, gifs bool) {}
+	}
+	ctrl.dataSyncCallback = config.DataSyncedCB
+
 	ctrl.updateAppliers = map[int64]domain.UpdateApplier{
 		msg.C_UpdateAccountPrivacy:        ctrl.updateAccountPrivacy,
 		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
 		msg.C_UpdateDraftMessage:          ctrl.updateDraftMessage,
 		msg.C_UpdateDraftMessageCleared:   ctrl.updateDraftMessageCleared,
 		msg.C_UpdateGroupAdmins:           ctrl.updateGroupAdmins,
+		msg.C_UpdateGroupAdminOnly:        ctrl.updateGroupAdminOnly,
 		msg.C_UpdateGroupParticipantAdmin: ctrl.updateGroupParticipantAdmin,
 		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
 		msg.C_UpdateLabelDeleted:          ctrl.updateLabelDeleted,
@@ -221,21 +229,6 @@ func (ctrl *Controller) Sync() {
 		}
 		return nil, nil
 	})
-}
-func forceUpdateUI(ctrl *Controller, dialogs, contacts, gifs bool) {
-	update := &msg.ClientUpdateSynced{
-		Dialogs:  dialogs,
-		Contacts: contacts,
-		Gifs:     gifs,
-	}
-	updateEnvelope := &msg.UpdateEnvelope{
-		Constructor: msg.C_ClientUpdateSynced,
-		UpdateID:    0,
-		Timestamp:   tools.TimeUnix(),
-	}
-	updateEnvelope.Update, _ = update.Marshal()
-	// call external handler
-	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateEnvelope, updateEnvelope)
 }
 func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
@@ -712,7 +705,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 	if successCB != nil && out != nil {
 		successCB(out)
 	} else {
-		forceUpdateUI(ctrl, false, true, false)
+		ctrl.dataSyncCallback(false, true, false)
 	}
 	return
 }

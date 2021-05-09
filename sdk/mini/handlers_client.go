@@ -7,6 +7,7 @@ import (
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
@@ -88,13 +89,13 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da *Delega
 	x := &msg.MessagesSendMedia{
 		Peer:       reqMedia.Peer,
 		ClearDraft: reqMedia.ClearDraft,
-		MediaType:  reqMedia.MediaType,
 		RandomID:   tools.RandomInt64(0),
 		ReplyTo:    reqMedia.ReplyTo,
 	}
 
 	if fileLocation != nil {
 		// File already uploaded
+		x.MediaType = msg.InputMediaType_InputMediaTypeDocument
 		doc := &msg.InputMediaDocument{
 			Caption:    reqMedia.Caption,
 			Attributes: reqMedia.Attributes,
@@ -122,6 +123,7 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da *Delega
 			return
 		}
 		// File just uploaded
+		x.MediaType = msg.InputMediaType_InputMediaTypeUploadedDocument
 		doc := &msg.InputMediaUploadedDocument{
 			MimeType:   reqMedia.FileMIME,
 			Attributes: reqMedia.Attributes,
@@ -145,7 +147,7 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da *Delega
 	}
 
 	reqBuff, _ := x.Marshal()
-	r.networkCtrl.HttpCommand(
+	r.network.HttpCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(x.RandomID),
@@ -183,7 +185,7 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation,
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
 	defer cancelFunc()
-	res, err := r.networkCtrl.SendHttp(ctx, envelope)
+	res, err := r.network.SendHttp(ctx, envelope)
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +265,7 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 	}
 	reqBuf := pools.Buffer.FromProto(req)
 	defer pools.Buffer.Put(reqBuf)
-	r.networkCtrl.HttpCommand(
+	r.network.HttpCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_FileSavePart,
 			RequestID:   tools.RandomUint64(0),
@@ -287,4 +289,22 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 		},
 	)
 	return err
+}
+
+func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da *DelegateAdapter) {
+	req := &msg.ClientGlobalSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+
+	res := &msg.ClientSearchResult{}
+	res.Users = minirepo.Users.Search(strings.ToLower(req.Text), int(req.Limit))
+	res.MatchedUsers = append(res.MatchedUsers, res.Users...)
+	res.Groups = minirepo.Groups.Search(strings.ToLower(req.Text), int(req.Limit))
+	res.MatchedGroups = append(res.MatchedGroups, res.Groups...)
+
+	out.Fill(in.RequestID, msg.C_ClientSearchResult, res)
+	da.OnComplete(out)
 }

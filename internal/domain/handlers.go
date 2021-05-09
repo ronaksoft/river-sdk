@@ -11,6 +11,9 @@ type UpdateReceivedCallback func(constructor int64, msg []byte)
 // AppUpdateCallback will be called to inform client of any update available
 type AppUpdateCallback func(version string, updateAvailable bool, force bool)
 
+// DataSyncedCallback will be called to inform client of update of synced data
+type DataSyncedCallback func(dialogs, contacts, gifs bool)
+
 // OnConnectCallback networkController callback/delegate on websocket dial success
 type OnConnectCallback func() error
 

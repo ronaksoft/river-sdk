@@ -1,3 +1,3 @@
 ##!/usr/bin/env bash
 
-gomobile bind -target=ios -trimpath -o=$RIVER_IOS_PATH/riversdk.framework git.ronaksoft.com/river/sdk/sdk/prime
+CGO_ENABLED=0 gomobile bind -target=ios -trimpath -o=$RIVER_IOS_PATH/riversdk.framework git.ronaksoft.com/river/sdk/sdk/prime

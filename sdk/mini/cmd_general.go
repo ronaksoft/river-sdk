@@ -4,12 +4,12 @@ import (
 	"context"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	"git.ronaksoft.com/river/sdk/internal/repo"
-	"git.ronaksoft.com/river/sdk/internal/salt"
+	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -23,44 +23,52 @@ import (
 */
 
 // AppKill must be called when app is closed
-func (r *River) AppKill() {}
+func (r *River) AppKill() {
+	r.network.Stop()
+}
 
 // AppStart must be called when app is started
 func (r *River) AppStart() error {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
-	logs.Info("Mini River Starting")
+	logs.Info("MiniRiver Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
-	// Initialize DB replaced with ORM
-	err := repo.InitRepo(r.dbPath, true)
-	if err != nil {
-		return err
-	}
-
-	repo.SetSelfUserID(r.ConnInfo.UserID)
-
-	confBytes, _ := repo.System.LoadBytes("SysConfig")
-	if confBytes != nil {
-		domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
-		err := domain.SysConfig.Unmarshal(confBytes)
-		if err != nil {
-			logs.Warn("We could not unmarshal SysConfig", zap.Error(err))
-		}
-	}
+	minirepo.MustInit(r.dbPath)
 
 	// Update Authorizations
-	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-
-	// Update the current salt
-	salt.UpdateSalt()
+	r.network.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey)
 
 	// Start Controllers
-	r.networkCtrl.Start()
+	r.network.Start()
 
 	domain.StartTime = time.Now()
 	domain.WindowLog = func(txt string) {}
-	logs.Info("River Started")
+	logs.Info("MiniRiver Started")
+
+	err := r.syncServerTime()
+	if err != nil {
+		logs.Warn("MiniRiver got error on get server time", zap.Error(err))
+	}
+
+	if r.getLastUpdateID() == 0 {
+		// run in sync for the first time
+		wg := sync.WaitGroup{}
+		wg.Add(2)
+		go func() {
+			r.syncContacts()
+			wg.Done()
+		}()
+		go func() {
+			r.syncDialogs()
+			wg.Done()
+		}()
+		wg.Wait()
+	} else {
+		// run in background
+		go r.syncContacts()
+		go r.syncDialogs()
+	}
 
 	return nil
 }
@@ -146,7 +154,7 @@ func executeRemoteCommand(
 
 	ctx, cf := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
 	defer cf()
-	res, err := r.networkCtrl.SendHttp(ctx, req)
+	res, err := r.network.SendHttp(ctx, req)
 	if res == nil {
 		res = &rony.MessageEnvelope{}
 		if err != nil {
@@ -157,4 +165,8 @@ func executeRemoteCommand(
 	}
 
 	da.OnComplete(res)
+}
+
+func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
+	domain.SetCurrentTeam(teamID, uint64(teamAccessHash))
 }

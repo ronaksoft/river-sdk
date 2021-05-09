@@ -113,52 +113,7 @@ func (x *ClientUpdateMessagesDeleted) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientUpdateMessagesDeleted, x)
 }
 
-const C_ClientUpdateSynced int64 = 4244270269
-
-type poolClientUpdateSynced struct {
-	pool sync.Pool
-}
-
-func (p *poolClientUpdateSynced) Get() *ClientUpdateSynced {
-	x, ok := p.pool.Get().(*ClientUpdateSynced)
-	if !ok {
-		x = &ClientUpdateSynced{}
-	}
-	return x
-}
-
-func (p *poolClientUpdateSynced) Put(x *ClientUpdateSynced) {
-	if x == nil {
-		return
-	}
-	x.Dialogs = false
-	x.Contacts = false
-	x.Gifs = false
-	p.pool.Put(x)
-}
-
-var PoolClientUpdateSynced = poolClientUpdateSynced{}
-
-func (x *ClientUpdateSynced) DeepCopy(z *ClientUpdateSynced) {
-	z.Dialogs = x.Dialogs
-	z.Contacts = x.Contacts
-	z.Gifs = x.Gifs
-}
-
-func (x *ClientUpdateSynced) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientUpdateSynced) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientUpdateSynced) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientUpdateSynced, x)
-}
-
 func init() {
 	registry.RegisterConstructor(3828722061, "ClientUpdatePendingMessageDelivery")
 	registry.RegisterConstructor(3060926862, "ClientUpdateMessagesDeleted")
-	registry.RegisterConstructor(4244270269, "ClientUpdateSynced")
 }

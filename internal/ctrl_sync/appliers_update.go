@@ -121,7 +121,7 @@ func (ctrl *Controller) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 				if attr.Type == msg.DocumentAttributeType_AttributeTypeAnimated {
 					if repo.Gifs.IsSaved(xx.Doc.ClusterID, xx.Doc.ID) {
 						_ = repo.Gifs.UpdateLastAccess(xx.Doc.ClusterID, xx.Doc.ID, x.Message.CreatedOn)
-						forceUpdateUI(ctrl, false, false, true)
+						ctrl.dataSyncCallback(false, false, true)
 					}
 				}
 			}
@@ -603,6 +603,31 @@ func (ctrl *Controller) updateGroupAdmins(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 		zap.Int64("GroupID", x.GroupID),
 		zap.Int64("UpdateID", x.UpdateID),
 	)
+
+	res := []*msg.UpdateEnvelope{u}
+	return res, nil
+}
+
+func (ctrl *Controller) updateGroupAdminOnly(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := &msg.UpdateGroupAdminOnly{}
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Debug("SyncCtrl applies UpdateGroupAdminOnly",
+		zap.Int64("GroupID", x.GroupID),
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
+	group, _ := repo.Groups.Get(x.GroupID)
+	if group != nil {
+		dialog, _ := repo.Dialogs.Get(group.TeamID, group.ID, int32(msg.PeerType_PeerGroup))
+		if dialog != nil {
+			dialog.ReadOnly = repo.Groups.HasFlag(group.Flags, msg.GroupFlags_GroupFlagsAdminOnly) && !repo.Groups.HasFlag(group.Flags, msg.GroupFlags_GroupFlagsAdmin)
+			_ = repo.Dialogs.Save(dialog)
+		}
+	}
 
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil

@@ -19,7 +19,7 @@ const (
 	RetryLimit    = 6
 )
 
-var ErrNActionNotFound = errors.New("action not found")
+var ErrActionNotFound = errors.New("action not found")
 
 type UpdatePhoneCall struct {
 	msg.UpdatePhoneCall
@@ -174,7 +174,7 @@ func parseCallAction(constructor msg.PhoneCallAction, data []byte) (out interfac
 		}
 		return out, nil
 	}
-	return nil, ErrNActionNotFound
+	return nil, ErrActionNotFound
 }
 
 type callController struct {
@@ -192,6 +192,11 @@ func (c *callController) ToggleAudio(enable bool) {
 
 }
 
+func (c *callController) TryReconnect(connId int32) {
+
+}
+
 func (c *callController) CallStart(peer *msg.InputPeer, participants []*msg.InputUser, callID int64) {
+	c.peer = peer
 
 }

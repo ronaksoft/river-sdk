@@ -16,6 +16,7 @@ import (
 	"github.com/monnand/dhkx"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"math/big"
 	"runtime"
@@ -413,15 +414,20 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 					}
 					// r.ConnInfo.AuthKey = serverDhKey.Bytes()
 					copy(r.ConnInfo.AuthKey[:], serverDhKey.Bytes())
-					authKeyHash, _ := domain.Sha256(r.ConnInfo.AuthKey[:])
+
+					// authKeyHash, _ := domain.Sha256(r.ConnInfo.AuthKey[:])
+					var authKeyHash [32]byte
+					tools.MustSha256(r.ConnInfo.AuthKey[:], authKeyHash[:0])
 					r.ConnInfo.AuthID = int64(binary.LittleEndian.Uint64(authKeyHash[24:32]))
 
-					var secret []byte
+					var (
+						secret     []byte
+						secretHash [32]byte
+					)
 					secret = append(secret, q2Internal.SecretNonce...)
 					secret = append(secret, byte(msg.InitAuthCompleted_OK))
 					secret = append(secret, authKeyHash[:8]...)
-					secretHash, _ := domain.Sha256(secret)
-
+					tools.MustSha256(secret, secretHash[:0])
 					if x.SecretHash != binary.LittleEndian.Uint64(secretHash[24:32]) {
 						fmt.Println(x.SecretHash, binary.LittleEndian.Uint64(secretHash[24:32]))
 						err = domain.ErrSecretNonceMismatch
@@ -668,7 +674,7 @@ func (r *River) AppStart() error {
 	messageHole.Init()
 
 	// Initialize DB replaced with ORM
-	err := repo.InitRepo(r.dbPath, r.optimizeForLowMemory)
+	err := repo.Init(r.dbPath, r.optimizeForLowMemory)
 	if err != nil {
 		return err
 	}

@@ -231,6 +231,7 @@ func (x *ClientGetMediaHistory) GetMinID() int64 {
 
 // ClientSendMessageMedia
 // @Function
+// @Returns: ClientPendingMessage
 type ClientSendMessageMedia struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2222,6 +2223,7 @@ func (*ClientGetFrequentReactions) Descriptor() ([]byte, []int) {
 	return file_client_proto_rawDescGZIP(), []int{26}
 }
 
+// ClientFrequentReactions
 type ClientFrequentReactions struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

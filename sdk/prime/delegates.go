@@ -10,6 +10,7 @@ type MainDelegate interface {
 	ShowLoggerAlert()
 	AddLog(text string)
 	AppUpdate(version string, updateAvailable, force bool)
+	DataSynced(dialogs, contacts, gifs bool)
 }
 
 type FileDelegate interface {

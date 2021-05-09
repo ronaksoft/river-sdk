@@ -521,3 +521,12 @@ func (r *repoGroups) ReIndex() error {
 	})
 
 }
+
+func (r *repoGroups) HasFlag(flags []msg.GroupFlags, flag msg.GroupFlags) bool {
+	for _, f := range flags {
+		if f == flag {
+			return true
+		}
+	}
+	return false
+}

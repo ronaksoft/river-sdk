@@ -128,6 +128,22 @@ var ToggleAdmins = &ishell.Cmd{
 	},
 }
 
+var ToggleAdminOnly = &ishell.Cmd{
+	Name: "ToggleAdminOnly",
+	Func: func(c *ishell.Context) {
+		req := msg.GroupsToggleAdminOnly{}
+		req.GroupID = fnGetGroupID(c)
+		req.AdminOnly = fnGetBool(c, "AdminOnly")
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_GroupsToggleAdminOnly, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 var GroupUploadPhoto = &ishell.Cmd{
 	Name: "UploadPhoto",
 	Func: func(c *ishell.Context) {
@@ -162,6 +178,7 @@ func init() {
 	Group.AddCmd(GetFull)
 	Group.AddCmd(UpdateAdmin)
 	Group.AddCmd(ToggleAdmins)
+	Group.AddCmd(ToggleAdminOnly)
 	Group.AddCmd(GroupUploadPhoto)
 	Group.AddCmd(GroupRemovePhoto)
 }

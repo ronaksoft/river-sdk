@@ -171,7 +171,7 @@ func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, timeoutCB doma
 		for _, userContact := range userContacts {
 			matchedUserIDs[userContact.ID] = true
 		}
-		nonContacts = repo.Users.SearchNonContacts(searchPhrase)
+		nonContacts = repo.Users.SearchNonContacts(domain.GetTeamID(in), searchPhrase)
 		for _, userContact := range nonContacts {
 			matchedUserIDs[userContact.ID] = true
 		}
@@ -186,10 +186,7 @@ func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, timeoutCB doma
 	searchResults.Users = users
 	searchResults.Groups = groups
 	searchResults.MatchedUsers = matchedUsers
-
-	out.RequestID = in.RequestID
-	out.Constructor = msg.C_ClientSearchResult
-	out.Message, _ = searchResults.Marshal()
+	out.Fill(in.RequestID, msg.C_ClientSearchResult, searchResults)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -212,9 +209,7 @@ func (r *River) clientContactSearch(in, out *rony.MessageEnvelope, timeoutCB dom
 	}
 	users.Users, _ = repo.Users.GetMany(userIDs)
 
-	out.Constructor = msg.C_UsersMany
-	out.RequestID = in.RequestID
-	out.Message, _ = users.Marshal()
+	out.Fill(in.RequestID, msg.C_UsersMany, users)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -228,9 +223,7 @@ func (r *River) clientGetCachedMedia(in, out *rony.MessageEnvelope, timeoutCB do
 
 	res := repo.Files.GetCachedMedia(domain.GetTeamID(in))
 
-	out.Constructor = msg.C_ClientCachedMediaInfo
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
+	out.Fill(in.RequestID, msg.C_ClientCachedMediaInfo, res)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -250,10 +243,10 @@ func (r *River) clientClearCachedMedia(in, out *rony.MessageEnvelope, timeoutCB 
 		repo.Files.ClearCache()
 	}
 
-	res := msg.Bool{Result: true}
-	out.Constructor = msg.C_Bool
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
+	res := &msg.Bool{
+		Result: true,
+	}
+	out.Fill(in.RequestID, msg.C_Bool, res)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -288,16 +281,13 @@ func (r *River) clientGetAllDownloadedMedia(in, out *rony.MessageEnvelope, timeo
 	users, _ := repo.Users.GetMany(userIDs.ToArray())
 	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
 
-	res := msg.MessagesMany{
+	res := &msg.MessagesMany{
 		Messages:   msgs,
 		Users:      users,
 		Groups:     groups,
 		Continuous: false,
 	}
-
-	out.Constructor = msg.C_MessagesMany
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
+	out.Fill(in.RequestID, msg.C_MessagesMany, res)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -317,9 +307,7 @@ func (r *River) clientGetLastBotKeyboard(in, out *rony.MessageEnvelope, timeoutC
 		return
 	}
 
-	out.Constructor = msg.C_UserMessage
-	out.RequestID = in.RequestID
-	out.Message, _ = lastKeyboardMsg.Marshal()
+	out.Fill(in.RequestID, msg.C_UserMessage, lastKeyboardMsg)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -348,15 +336,12 @@ func (r *River) clientGetRecentSearch(in, out *rony.MessageEnvelope, timeoutCB d
 	users, _ := repo.Users.GetMany(userIDs.ToArray())
 	groups, _ := repo.Groups.GetMany(groupIDs.ToArray())
 
-	res := msg.ClientRecentSearchMany{
+	res := &msg.ClientRecentSearchMany{
 		RecentSearches: recentSearches,
 		Users:          users,
 		Groups:         groups,
 	}
-
-	out.Constructor = msg.C_ClientRecentSearchMany
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
+	out.Fill(in.RequestID, msg.C_ClientRecentSearchMany, res)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -387,13 +372,10 @@ func (r *River) clientPutRecentSearch(in, out *rony.MessageEnvelope, timeoutCB d
 		return
 	}
 
-	res := msg.Bool{
+	res := &msg.Bool{
 		Result: true,
 	}
-
-	out.Constructor = msg.C_Bool
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
+	out.Fill(in.RequestID, msg.C_Bool, res)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -413,13 +395,10 @@ func (r *River) clientRemoveAllRecentSearches(in, out *rony.MessageEnvelope, tim
 		return
 	}
 
-	res := msg.Bool{
+	res := &msg.Bool{
 		Result: true,
 	}
-
-	out.Constructor = msg.C_Bool
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
+	out.Fill(in.RequestID, msg.C_Bool, res)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -439,13 +418,10 @@ func (r *River) clientRemoveRecentSearch(in, out *rony.MessageEnvelope, timeoutC
 		return
 	}
 
-	res := msg.Bool{
+	res := &msg.Bool{
 		Result: true,
 	}
-
-	out.Constructor = msg.C_Bool
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
+	out.Fill(in.RequestID, msg.C_Bool, res)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 
@@ -465,14 +441,12 @@ func (r *River) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB d
 		return
 	}
 
-	res := msg.ClientTeamCounters{
+	res := &msg.ClientTeamCounters{
 		UnreadCount:  int64(unreadCount),
 		MentionCount: int64(mentionCount),
 	}
 
-	out.Constructor = msg.C_ClientTeamCounters
-	out.RequestID = in.RequestID
-	out.Message, _ = res.Marshal()
+	out.Fill(in.RequestID, msg.C_ClientTeamCounters, res)
 	uiexec.ExecSuccessCB(successCB, out)
 }
 

@@ -178,7 +178,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.networkCtrl.OnWebsocketConnect = r.onNetworkConnect
 
 	// Initialize FileController
-	repo.Files.SetRootFolders(
+	repo.SetRootFolders(
 		conf.DocumentAudioDirectory,
 		conf.DocumentFileDirectory,
 		conf.DocumentPhotoDirectory,

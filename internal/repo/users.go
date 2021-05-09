@@ -449,7 +449,7 @@ func (r *repoUsers) SearchContacts(teamID int64, searchPhrase string) ([]*msg.Co
 	return contactUsers, phoneContacts
 }
 
-func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
+func (r *repoUsers) SearchNonContacts(teamID int64, searchPhrase string) []*msg.ContactUser {
 	contactUsers := make([]*msg.ContactUser, 0, 100)
 	if r.peerSearch == nil {
 		return contactUsers
@@ -461,7 +461,9 @@ func (r *repoUsers) SearchNonContacts(searchPhrase string) []*msg.ContactUser {
 		qs = append(qs, bleve.NewPrefixQuery(term), bleve.NewMatchQuery(term))
 	}
 	t2 := bleve.NewDisjunctionQuery(qs...)
-	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
+	t3 := bleve.NewTermQuery(fmt.Sprintf("%d", z.AbsInt64(teamID)))
+	t3.SetField("team_id")
+	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2, t3))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 
 	_ = badgerView(func(txn *badger.Txn) error {

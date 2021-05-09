@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"github.com/ronaksoft/rony/tools"
+	. "github.com/smartystreets/goconvey/convey"
 	"math/big"
 	"testing"
 	"time"
@@ -34,9 +35,25 @@ func TestSplitPQ(t *testing.T) {
 }
 
 func TestGenerateMessageKey(t *testing.T) {
-	dhKey := tools.StrToByte(RandomID(100))
-	dhKey = append(dhKey, []byte("1234567890123456789012345678901234567890")...)
-	body := []byte("Hello It is Ehsan")
-	key := GenerateMessageKey(dhKey, body)
-	fmt.Println(key)
+	Convey("Generating MessageKey", t, func(c C) {
+		dhKey := tools.StrToByte(RandomID(256))
+		body := []byte("Hello It is Ehsan")
+		key := GenerateMessageKey(dhKey, body)
+		c.Println(key)
+	})
+
+}
+
+func TestEncrypt(t *testing.T) {
+	Convey("Encrypt/Decrypt Test", t, func(c C) {
+		dhKey := tools.StrToByte(RandomID(256))
+		body := []byte("Hello It is Ehsan")
+		key := GenerateMessageKey(dhKey, body)
+		encrypted, err := Encrypt(dhKey, body)
+		c.So(err, ShouldBeNil)
+		dec, err := Decrypt(dhKey, key, encrypted)
+		c.So(err, ShouldBeNil)
+		c.So(dec, ShouldResemble, body)
+	})
+
 }

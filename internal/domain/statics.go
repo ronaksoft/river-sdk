@@ -6,10 +6,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/sha256"
-	"crypto/sha512"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"github.com/nyaruka/phonenumbers"
+	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
 	"hash/crc32"
 	"io"
@@ -136,15 +136,19 @@ func SplitPQ(pq *big.Int) (p1, p2 *big.Int) {
 // Message Key is: _Sha512(DHKey[100:140], InternalHeader, Payload)[32:64]
 func GenerateMessageKey(dhKey, plain []byte) []byte {
 	// Message Key is: _Sha512(DHKey[100:140], InternalHeader, Payload)[32:64]
-	keyBuffer := make([]byte, 40+len(plain))
+	msgKey := make([]byte, 32)
+	keyBuffer := pools.Bytes.GetLen(40 + len(plain))
+	defer pools.Bytes.Put(keyBuffer)
+
 	copy(keyBuffer, dhKey[100:140])
 	copy(keyBuffer[40:], plain)
-	if k, err := Sha512(keyBuffer); err != nil {
+	var sh512 [64]byte
+	err := tools.Sha512(keyBuffer, sh512[:0])
+	if err != nil {
 		return nil
-	} else {
-		return k[32:64]
-
 	}
+	copy(msgKey, sh512[32:64])
+	return msgKey
 }
 
 // Encrypt ...
@@ -155,31 +159,48 @@ func GenerateMessageKey(dhKey, plain []byte) []byte {
 func Encrypt(dhKey, plain []byte) (encrypted []byte, err error) {
 	// Message Key is: _Sha512(DHKey[100:140], InternalHeader, Payload)[32:64]
 	msgKey := GenerateMessageKey(dhKey, plain)
+	var (
+		iv, key       [72]byte
+		aesIV, aesKey [64]byte
+	)
 
 	// AES IV: _Sha512 (DHKey[180:220], MessageKey)[:32]
-	iv := make([]byte, 72)
-	copy(iv, dhKey[180:220])
+	copy(iv[:], dhKey[180:220])
 	copy(iv[40:], msgKey)
-	aesIV, err := Sha512(iv)
+	err = tools.Sha512(iv[:], aesIV[:0])
 	if err != nil {
 		return nil, err
 	}
 
 	// AES KEY: _Sha512 (MessageKey, DHKey[170:210])[:32]
-	key := make([]byte, 72)
-	copy(key, msgKey)
+	copy(key[:], msgKey)
 	copy(key[32:], dhKey[170:210])
-	aesKey, err := Sha512(key)
+	err = tools.Sha512(key[:], aesKey[:0])
 	if err != nil {
 		return nil, err
 	}
 
-	return AES256GCMEncrypt(
+	return aes256GCMEncrypt(
 		aesKey[:32],
 		aesIV[:12],
 		plain,
 	)
+}
+func aes256GCMEncrypt(key, iv []byte, msg []byte) ([]byte, error) {
+	var block cipher.Block
+	if b, err := aes.NewCipher(key); err != nil {
+		return nil, err
+	} else {
+		block = b
+	}
 
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+	encrypted := pools.Bytes.GetCap(len(msg) + aesGCM.Overhead())
+	encrypted = aesGCM.Seal(encrypted[:0], iv, msg, nil)
+	return encrypted, nil
 }
 
 // Decrypt ...
@@ -187,84 +208,52 @@ func Encrypt(dhKey, plain []byte) (encrypted []byte, err error) {
 // 1. AES IV: _Sha512 (dhKey[180:220], MessageKey)[:12]
 // 2. AES KEY: _Sha512 (MessageKey, dhKey[170:210])[:32]
 func Decrypt(dhKey, msgKey, encrypted []byte) (plain []byte, err error) {
+	var (
+		iv, key       [72]byte
+		aesIV, aesKey [64]byte
+	)
+
 	// AES IV: _Sha512 (DHKey[180:220], MessageKey)[:32]
-	iv := make([]byte, 72)
-	copy(iv, dhKey[180:220])
+	copy(iv[:], dhKey[180:220])
 	copy(iv[40:], msgKey)
-	aesIV, err := Sha512(iv)
+	err = tools.Sha512(iv[:], aesIV[:0])
 	if err != nil {
 		return nil, err
 	}
 
 	// AES KEY: _Sha512 (MessageKey, DHKey[170:210])[:32]
-	key := make([]byte, 72)
-	copy(key, msgKey)
+	copy(key[:], msgKey)
 	copy(key[32:], dhKey[170:210])
-	aesKey, err := Sha512(key)
+	err = tools.Sha512(key[:], aesKey[:0])
 	if err != nil {
 		return nil, err
 	}
 
-	return AES256GCMDecrypt(
+	return aes256GCMDecrypt(
 		aesKey[:32],
 		aesIV[:12],
 		encrypted,
 	)
 }
-
-// AES256GCMEncrypt encrypts the msg according with key and iv
-func AES256GCMEncrypt(key, iv []byte, msg []byte) ([]byte, error) {
+func aes256GCMDecrypt(key, iv []byte, msg []byte) ([]byte, error) {
 	var block cipher.Block
 	if b, err := aes.NewCipher(key); err != nil {
 		return nil, err
 	} else {
 		block = b
 	}
-	var encrypted []byte
-	if aesGCM, err := cipher.NewGCM(block); err != nil {
-		return nil, err
-	} else {
-		encrypted = aesGCM.Seal(msg[:0], iv, msg, nil)
-	}
-	return encrypted, nil
-}
 
-// AES256GCMDecrypt decrypts the msg according with key and iv
-func AES256GCMDecrypt(key, iv []byte, msg []byte) ([]byte, error) {
-	var block cipher.Block
-	if b, err := aes.NewCipher(key); err != nil {
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
 		return nil, err
-	} else {
-		block = b
 	}
-	var decrypted []byte
-	if aesGCM, err := cipher.NewGCM(block); err != nil {
+	decrypted := pools.Bytes.GetCap(len(msg))
+	decrypted, err = aesGCM.Open(decrypted[:0], iv, msg, nil)
+	if err != nil {
 		return nil, err
-	} else {
-		decrypted, err = aesGCM.Open(nil, iv, msg, nil)
-		if err != nil {
-			return nil, err
-		}
 	}
+
 	return decrypted, nil
-}
-
-// Sha256 returns a 32bytes array which is sha256(in)
-func Sha256(in []byte) ([]byte, error) {
-	h := sha256.New()
-	if _, err := h.Write(in); err != nil {
-		return nil, err
-	}
-	return h.Sum(nil), nil
-}
-
-// Sha512 returns a 64bytes array which is sha512(in)
-func Sha512(in []byte) ([]byte, error) {
-	h := sha512.New()
-	if _, err := h.Write(in); err != nil {
-		return nil, err
-	}
-	return h.Sum(nil), nil
 }
 
 // RandomUint64 produces a pseudo-random unsigned number
@@ -309,6 +298,10 @@ func SequentialUniqueID() int64 {
 		atomic.StoreInt64(&uniqueCounter, 0)
 	}
 	return res
+}
+
+func NextRequestID() uint64 {
+	return uint64(SequentialUniqueID())
 }
 
 // CalculateContactsImportHash crc32 of phones
