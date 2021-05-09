@@ -532,10 +532,11 @@ func (c *callAPI) executeRemoteCommand(
 		c.tempTeamInput = nil
 	}
 
+	header := domain.TeamHeader(teamID, teamAccess)
 	// If the constructor is a realtime command, then just send it to the server
 	if instant {
 		c.networkCtrl.WebsocketCommand(&rony.MessageEnvelope{
-			Header:      domain.TeamHeader(teamID, teamAccess),
+			Header:      header,
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
@@ -543,7 +544,7 @@ func (c *callAPI) executeRemoteCommand(
 	} else {
 		c.queueCtrl.EnqueueCommand(
 			&rony.MessageEnvelope{
-				Header:      domain.TeamHeader(teamID, teamAccess),
+				Header:      header,
 				Constructor: constructor,
 				RequestID:   requestID,
 				Message:     commandBytes,
