@@ -71,33 +71,33 @@ func (c *callController) ParseUpdate(update *msg.UpdateEnvelope) {
 		case msg.PhoneCallAction_PhoneCallRequested:
 			c.callRequested(data)
 		case msg.PhoneCallAction_PhoneCallAccepted:
-			//
+			c.callAccepted(data)
 		case msg.PhoneCallAction_PhoneCallDiscarded:
-			//
+			c.callDiscarded(data)
 		case msg.PhoneCallAction_PhoneCallIceExchange:
-			//
+			c.iceExchange(data)
 		case msg.PhoneCallAction_PhoneCallMediaSettingsChanged:
-			//
+			c.mediaSettingsUpdate(data)
 		case msg.PhoneCallAction_PhoneCallSDPOffer:
-			//
+			c.sdpOfferUpdated(data)
 		case msg.PhoneCallAction_PhoneCallSDPAnswer:
-			//
+			c.sdpAnswerUpdated(data)
 		case msg.PhoneCallAction_PhoneCallAck:
-			//
+			c.callAcknowledged(data)
 		case msg.PhoneCallAction_PhoneCallParticipantAdded:
-			//
+			c.participantAdded(data)
 		case msg.PhoneCallAction_PhoneCallParticipantRemoved:
-			//
+			c.participantRemoved(data)
 		case msg.PhoneCallAction_PhoneCallAdminUpdated:
-			//
+			c.adminUpdated(data)
 		case msg.PhoneCallAction_PhoneCallJoinRequested:
-			//
+			c.joinRequested(data)
 		case msg.PhoneCallAction_PhoneCallScreenShare:
-			//
+			c.screenShareUpdated(data)
 		case msg.PhoneCallAction_PhoneCallPicked:
-			//
+			c.callPicked(data)
 		case msg.PhoneCallAction_PhoneCallRestarted:
-			//
+			c.callRestarted(data)
 		}
 	}()
 }
@@ -121,5 +121,75 @@ func (c *callController) CallStart(peer *msg.InputPeer, participants []*msg.Inpu
 
 func (c *callController) callRequested(in interface{}) {
 	data := in.(*msg.PhoneActionRequested)
+	fmt.Println(data)
+}
+
+func (c *callController) callAccepted(in interface{}) {
+	data := in.(*msg.PhoneActionAccepted)
+	fmt.Println(data)
+}
+
+func (c *callController) callDiscarded(in interface{}) {
+	data := in.(*msg.PhoneActionDiscarded)
+	fmt.Println(data)
+}
+
+func (c *callController) iceExchange(in interface{}) {
+	data := in.(*msg.PhoneActionIceExchange)
+	fmt.Println(data)
+}
+
+func (c *callController) mediaSettingsUpdate(in interface{}) {
+	data := in.(*msg.PhoneActionMediaSettingsUpdated)
+	fmt.Println(data)
+}
+
+func (c *callController) sdpOfferUpdated(in interface{}) {
+	data := in.(*msg.PhoneActionSDPOffer)
+	fmt.Println(data)
+}
+
+func (c *callController) sdpAnswerUpdated(in interface{}) {
+	data := in.(*msg.PhoneActionSDPAnswer)
+	fmt.Println(data)
+}
+
+func (c *callController) callAcknowledged(in interface{}) {
+	data := in.(*msg.PhoneActionAck)
+	fmt.Println(data)
+}
+
+func (c *callController) participantAdded(in interface{}) {
+	data := in.(*msg.PhoneActionParticipantAdded)
+	fmt.Println(data)
+}
+
+func (c *callController) participantRemoved(in interface{}) {
+	data := in.(*msg.PhoneActionParticipantRemoved)
+	fmt.Println(data)
+}
+
+func (c *callController) adminUpdated(in interface{}) {
+	data := in.(*msg.PhoneActionAdminUpdated)
+	fmt.Println(data)
+}
+
+func (c *callController) joinRequested(in interface{}) {
+	data := in.(*msg.PhoneActionJoinRequested)
+	fmt.Println(data)
+}
+
+func (c *callController) screenShareUpdated(in interface{}) {
+	data := in.(*msg.PhoneActionScreenShare)
+	fmt.Println(data)
+}
+
+func (c *callController) callPicked(in interface{}) {
+	data := in.(*msg.PhoneActionPicked)
+	fmt.Println(data)
+}
+
+func (c *callController) callRestarted(in interface{}) {
+	data := in.(*msg.PhoneActionRestarted)
 	fmt.Println(data)
 }
