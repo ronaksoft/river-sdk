@@ -29,6 +29,7 @@ type CallAPI interface {
 	UpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.InputUser, admin bool) (res *msg.Bool, err error)
 	SendUpdate(peer *msg.InputPeer, callID int64, participants []*msg.InputUser, action msg.PhoneCallAction, actionData []byte, instant bool) (res *msg.Bool, err error)
 
+	SetTeamInput(teamId int64, teamAccess uint64)
 	SetTempTeamInput(teamId int64, teamAccess uint64)
 }
 
@@ -498,6 +499,13 @@ func (c *callAPI) SendUpdate(peer *msg.InputPeer, callID int64, participants []*
 	c.executeRemoteCommand(msg.C_PhoneUpdateCall, reqBytes, timeoutCallback, successCallback, instant)
 	wg.Wait()
 	return
+}
+
+func (c *callAPI) SetTeamInput(teamId int64, teamAccess uint64) {
+	c.teamInput = teamInput{
+		teamID:     teamId,
+		teamAccess: teamAccess,
+	}
 }
 
 func (c *callAPI) SetTempTeamInput(teamId int64, teamAccess uint64) {
