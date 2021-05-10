@@ -70,26 +70,7 @@ func NewSyncController(config Config) *Controller {
 	ctrl.appUpdateCallback = config.AppUpdateCB
 
 	ctrl.updateAppliers = map[int64]domain.UpdateApplier{}
-	ctrl.messageAppliers = map[int64]domain.MessageApplier{
-		msg.C_AuthAuthorization:    ctrl.authAuthorization,
-		msg.C_AuthSentCode:         ctrl.authSentCode,
-		msg.C_BotResults:           ctrl.botResults,
-		msg.C_ContactsImported:     ctrl.contactsImported,
-		msg.C_ContactsMany:         ctrl.contactsMany,
-		msg.C_ContactsTopPeers:     ctrl.contactsTopPeers,
-		msg.C_GroupFull:            ctrl.groupFull,
-		msg.C_LabelItems:           ctrl.labelItems,
-		msg.C_LabelsMany:           ctrl.labelsMany,
-		msg.C_MessagesDialogs:      ctrl.messagesDialogs,
-		msg.C_MessagesMany:         ctrl.messagesMany,
-		msg.C_MessagesReactionList: ctrl.reactionList,
-		msg.C_SavedGifs:            ctrl.savedGifs,
-		msg.C_SystemConfig:         ctrl.systemConfig,
-		msg.C_TeamMembers:          ctrl.teamMembers,
-		msg.C_TeamsMany:            ctrl.teamsMany,
-		msg.C_UsersMany:            ctrl.usersMany,
-		msg.C_WallPapersMany:       ctrl.wallpapersMany,
-	}
+	ctrl.messageAppliers = map[int64]domain.MessageApplier{}
 	return ctrl
 }
 

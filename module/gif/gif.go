@@ -28,5 +28,10 @@ func New() *gif {
 			msg.C_GifSave:     r.gifSave,
 		},
 	)
+	r.RegisterMessageAppliers(
+		map[int64]domain.MessageApplier{
+			msg.C_SavedGifs: r.savedGifs,
+		},
+	)
 	return r
 }

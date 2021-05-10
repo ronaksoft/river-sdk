@@ -36,5 +36,11 @@ func New() *team {
 			msg.C_UpdateTeamMemberStatus:  r.updateTeamMemberStatus,
 		},
 	)
+	r.RegisterMessageAppliers(
+		map[int64]domain.MessageApplier{
+			msg.C_TeamMembers: r.teamMembers,
+			msg.C_TeamsMany:   r.teamsMany,
+		},
+	)
 	return r
 }

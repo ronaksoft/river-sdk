@@ -26,5 +26,10 @@ func New() *system {
 			msg.C_SystemGetConfig: r.systemGetConfig,
 		},
 	)
+	r.RegisterMessageAppliers(
+		map[int64]domain.MessageApplier{
+			msg.C_SystemConfig: r.systemConfig,
+		},
+	)
 	return r
 }

@@ -12,6 +12,8 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"git.ronaksoft.com/river/sdk/module"
 	"git.ronaksoft.com/river/sdk/module/account"
+	"git.ronaksoft.com/river/sdk/module/auth"
+	"git.ronaksoft.com/river/sdk/module/bot"
 	"git.ronaksoft.com/river/sdk/module/contact"
 	"git.ronaksoft.com/river/sdk/module/gif"
 	"git.ronaksoft.com/river/sdk/module/group"
@@ -21,6 +23,7 @@ import (
 	"git.ronaksoft.com/river/sdk/module/system"
 	"git.ronaksoft.com/river/sdk/module/team"
 	"git.ronaksoft.com/river/sdk/module/user"
+	"git.ronaksoft.com/river/sdk/module/wallpaper"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
@@ -164,19 +167,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 
-	r.registerModule(
-		account.New(),
-		contact.New(),
-		gif.New(),
-		group.New(),
-		label.New(),
-		message.New(),
-		search.New(),
-		system.New(),
-		team.New(),
-		user.New(),
-	)
-
 	r.delegates = make(map[uint64]RequestDelegate)
 	r.mainDelegate = conf.MainDelegate
 	r.fileDelegate = conf.FileDelegate
@@ -245,13 +235,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	})
 
 	// Initialize queueController
-	if q, err := queueCtrl.New(r.fileCtrl, r.networkCtrl, r.dbPath); err != nil {
-		logs.Fatal("We couldn't initialize MessageQueue",
-			zap.String("Error", err.Error()),
-		)
-	} else {
-		r.queueCtrl = q
-	}
+	r.queueCtrl = queueCtrl.New(r.fileCtrl, r.networkCtrl, r.dbPath)
 
 	// Initialize Sync Controller
 	r.syncCtrl = syncCtrl.NewSyncController(
@@ -271,6 +255,12 @@ func (r *River) SetConfig(conf *RiverConfig) {
 				}
 			},
 		},
+	)
+
+	r.registerModule(
+		account.New(), auth.New(), bot.New(), contact.New(),
+		gif.New(), group.New(), label.New(), message.New(),
+		search.New(), system.New(), team.New(), user.New(), wallpaper.New(),
 	)
 
 	// Initialize River Connection

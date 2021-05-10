@@ -33,5 +33,12 @@ func New() *contact {
 			msg.C_ClientContactSearch:  r.clientContactSearch,
 		},
 	)
+	r.RegisterMessageAppliers(
+		map[int64]domain.MessageApplier{
+			msg.C_ContactsImported: r.contactsImported,
+			msg.C_ContactsMany:     r.contactsMany,
+			msg.C_ContactsTopPeers: r.contactsTopPeers,
+		},
+	)
 	return r
 }

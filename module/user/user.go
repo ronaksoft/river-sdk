@@ -34,5 +34,10 @@ func New() *user {
 			msg.C_UpdateUserPhoto:   r.updateUserPhoto,
 		},
 	)
+	r.RegisterMessageAppliers(
+		map[int64]domain.MessageApplier{
+			msg.C_UsersMany: r.usersMany,
+		},
+	)
 	return r
 }

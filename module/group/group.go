@@ -40,5 +40,10 @@ func New() *group {
 			msg.C_UpdateGroupPhoto:            r.updateGroupPhoto,
 		},
 	)
+	r.RegisterMessageAppliers(
+		map[int64]domain.MessageApplier{
+			msg.C_GroupFull: r.groupFull,
+		},
+	)
 	return r
 }

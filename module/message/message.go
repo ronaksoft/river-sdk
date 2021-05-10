@@ -47,20 +47,29 @@ func New() *message {
 			msg.C_ClientGetLastBotKeyboard:   r.clientGetLastBotKeyboard,
 		},
 	)
-	r.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{
-		msg.C_UpdateDialogPinned:         r.updateDialogPinned,
-		msg.C_UpdateDraftMessage:         r.updateDraftMessage,
-		msg.C_UpdateDraftMessageCleared:  r.updateDraftMessageCleared,
-		msg.C_UpdateMessageEdited:        r.updateMessageEdited,
-		msg.C_UpdateMessageID:            r.updateMessageID,
-		msg.C_UpdateMessagePinned:        r.updateMessagePinned,
-		msg.C_UpdateMessagesDeleted:      r.updateMessagesDeleted,
-		msg.C_UpdateNewMessage:           r.updateNewMessage,
-		msg.C_UpdateNotifySettings:       r.updateNotifySettings,
-		msg.C_UpdateReaction:             r.updateReaction,
-		msg.C_UpdateReadHistoryInbox:     r.updateReadHistoryInbox,
-		msg.C_UpdateReadHistoryOutbox:    r.updateReadHistoryOutbox,
-		msg.C_UpdateReadMessagesContents: r.updateReadMessagesContents,
-	})
+	r.RegisterUpdateAppliers(
+		map[int64]domain.UpdateApplier{
+			msg.C_UpdateDialogPinned:         r.updateDialogPinned,
+			msg.C_UpdateDraftMessage:         r.updateDraftMessage,
+			msg.C_UpdateDraftMessageCleared:  r.updateDraftMessageCleared,
+			msg.C_UpdateMessageEdited:        r.updateMessageEdited,
+			msg.C_UpdateMessageID:            r.updateMessageID,
+			msg.C_UpdateMessagePinned:        r.updateMessagePinned,
+			msg.C_UpdateMessagesDeleted:      r.updateMessagesDeleted,
+			msg.C_UpdateNewMessage:           r.updateNewMessage,
+			msg.C_UpdateNotifySettings:       r.updateNotifySettings,
+			msg.C_UpdateReaction:             r.updateReaction,
+			msg.C_UpdateReadHistoryInbox:     r.updateReadHistoryInbox,
+			msg.C_UpdateReadHistoryOutbox:    r.updateReadHistoryOutbox,
+			msg.C_UpdateReadMessagesContents: r.updateReadMessagesContents,
+		},
+	)
+	r.RegisterMessageAppliers(
+		map[int64]domain.MessageApplier{
+			msg.C_MessagesDialogs:      r.messagesDialogs,
+			msg.C_MessagesMany:         r.messagesMany,
+			msg.C_MessagesReactionList: r.reactionList,
+		},
+	)
 	return r
 }

@@ -38,5 +38,11 @@ func New() *label {
 			msg.C_UpdateLabelSet:          r.updateLabelSet,
 		},
 	)
+	r.RegisterMessageAppliers(
+		map[int64]domain.MessageApplier{
+			msg.C_LabelItems: r.labelItems,
+			msg.C_LabelsMany: r.labelsMany,
+		},
+	)
 	return r
 }
