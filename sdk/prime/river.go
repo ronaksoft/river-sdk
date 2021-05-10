@@ -163,7 +163,18 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 
-	r.registerModules()
+	r.registerModule(
+		account.New(),
+		contact.New(),
+		gif.New(),
+		group.New(),
+		label.New(),
+		message.New(),
+		search.New(),
+		system.New(),
+		team.New(),
+		user.New(),
+	)
 
 	r.delegates = make(map[uint64]RequestDelegate)
 	r.mainDelegate = conf.MainDelegate
@@ -679,23 +690,12 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 	return
 }
 
-func (r *River) registerModules() {
-	r.registerModule(account.New())
-	r.registerModule(contact.New())
-	r.registerModule(gif.New())
-	r.registerModule(group.New())
-	r.registerModule(label.New())
-	r.registerModule(message.New())
-	r.registerModule(search.New())
-	r.registerModule(system.New())
-	r.registerModule(team.New())
-	r.registerModule(user.New())
-}
-
-func (r *River) registerModule(m module.Module) {
-	m.Init(r)
-	for c, h := range m.LocalHandlers() {
-		r.localCommands[c] = h
+func (r *River) registerModule(modules ...module.Module) {
+	for _, m := range modules {
+		m.Init(r)
+		for c, h := range m.LocalHandlers() {
+			r.localCommands[c] = h
+		}
 	}
 }
 
