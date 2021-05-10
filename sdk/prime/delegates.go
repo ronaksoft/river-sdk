@@ -32,6 +32,13 @@ type RequestDelegate interface {
 	Flags() int32
 }
 
+type CallDelegate interface {
+	OnUpdate(constructor int64, b []byte)
+	CloseConnection(connId int32)
+	GetAnswerSDP(connId int32) []byte
+	GetOfferSDP(connId int32) []byte
+}
+
 // Request Flags
 const (
 	RequestServerForced int32 = 1 << iota
