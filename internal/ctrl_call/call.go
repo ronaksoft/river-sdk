@@ -194,7 +194,7 @@ func (c *callController) initCallParticipants(callID int64, participants []*msg.
 	}
 }
 
-func (c *callController) initConnections(peer *msg.InputPeer, callID int64, initiator bool, request *UpdatePhoneCall) (err error) {
+func (c *callController) initConnections(peer *msg.InputPeer, callID int64, initiator bool, request *UpdatePhoneCall) (res *msg.PhoneCall, err error) {
 	currUserConnId, callInfo := c.getConnId(callID, c.userID)
 	if callInfo == nil {
 		err = ErrInvalidCallId
@@ -202,20 +202,97 @@ func (c *callController) initConnections(peer *msg.InputPeer, callID int64, init
 	}
 
 	currentUserConnId := *currUserConnId
-
 	callWaitGroup := &sync.WaitGroup{}
+	callResults := []*msg.PhoneParticipantSDP{}
+
 	acceptWaitGroup := &sync.WaitGroup{}
-	sdp := struct{}{}
+	acceptResults := []*msg.PhoneCall{}
+	mu := &sync.RWMutex{}
+
+	sdp := &msg.PhoneActionSDPOffer{}
 	requestConnId := int32(-1024)
 
-	initAnswerConnection := func(connId int32) {
-		c.initConnections()
+	initAnswerConnection := func(connId int32) (res *msg.PhoneCall, innerErr error) {
+		sdpOffer, innerErr := c.initConnection(true, connId, sdp)
+		if innerErr != nil {
+			return
+		}
+
+		p := callInfo.participants[connId]
+		phoneParticipant := &msg.PhoneParticipantSDP{
+			ConnectionId: p.ConnectionId,
+			Peer:         p.Peer,
+			SDP:          sdpOffer.SDP,
+			Type:         sdpOffer.Type,
+		}
+
+		res, innerErr = c.callAPI.Accept(peer, callID, []*msg.PhoneParticipantSDP{phoneParticipant})
+		return
 	}
 
+	if request != nil {
+		sdpData := request.Data.(*msg.PhoneActionRequested)
+		sdp.SDP = sdpData.SDP
+		sdp.Type = sdpData.Type
+		reConnId, _ := c.getConnId(callID, request.UserID)
+		if reConnId != nil && callInfo.dialed {
+			requestConnId = *reConnId
+			return initAnswerConnection(requestConnId)
+		}
+	}
+
+	shouldCall := !callInfo.dialed
+	if shouldCall {
+		c.setCallInfoDialed(callID)
+	}
+
+	for _, participant := range callInfo.participants {
+		// Initialize connections only for greater connId,
+		// full mesh initialization will take place here
+		if requestConnId == participant.ConnectionId {
+			go func() {
+				acceptWaitGroup.Add(1)
+				phoneCall, innerRes := initAnswerConnection(requestConnId)
+				if innerRes == nil {
+					mu.Lock()
+					acceptResults = append(acceptResults, phoneCall)
+					mu.Unlock()
+				}
+				acceptWaitGroup.Done()
+			}()
+		} else if shouldCall && currentUserConnId < participant.ConnectionId {
+			go func(pConnId int32) {
+				callWaitGroup.Add(1)
+				sdpRes, innerErr := c.initConnection(false, pConnId, nil)
+				if innerErr == nil {
+					mu.Lock()
+					if participant, ok := callInfo.participants[pConnId]; ok {
+						callResults = append(callResults, &msg.PhoneParticipantSDP{
+							ConnectionId: participant.ConnectionId,
+							Peer:         participant.Peer,
+							SDP:          sdpRes.SDP,
+							Type:         sdpRes.Type,
+						})
+					}
+					mu.Unlock()
+				}
+				callWaitGroup.Done()
+			}(participant.ConnectionId)
+		}
+	}
+
+	callWaitGroup.Wait()
+	acceptWaitGroup.Wait()
+
+	for _, participantSDP := range callResults {
+		fmt.Println(participantSDP)
+		// retry here
+	}
+	_, _ = c.callUser(peer, initiator, callResults, c.activeCallID)
 	return
 }
 
-func (c *callController) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDPOffer) {
+func (c *callController) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDPOffer) (sdpAnswer *msg.PhoneActionSDPAnswer, err error) {
 	logs.Debug("[webrtc] init connection", zap.Int32("connId", connId))
 	// Client should check local stream
 	// otherwise panic
@@ -233,12 +310,66 @@ func (c *callController) initConnection(remote bool, connId int32, sdp *msg.Phon
 	// Client should initiate RTCPeerConnection with given server config
 	// TODO call delegate
 
+	rtcConnId := int64(0)
+
 	// Client should listen to icecandidate and send it to SDK
 	// TODO execute local command then call -> c.sendIceCandidate()
 
 	// Client should listen to iceconnectionstatechange and send it to SDK
 	// TODO call update handlers -> msg.CallUpdate_ConnectionStatusChanged
 	// TODO check all connected
+	// TODO checkDisconnection(connId, pc.iceConnectionState
+
+	// Client should listen to icecandidateerror and send it to SDK
+	// TODO checkDisconnection(connId, pc.iceConnectionState, true)
+
+	conn := &msg.CallConnection{
+		Accepted:            remote,
+		RTCPeerConnectionID: rtcConnId,
+		IceConnectionState:  "",
+		IceQueue:            nil,
+		IceServers:          nil,
+		Init:                false,
+		Reconnecting:        false,
+		ReconnectingTry:     false,
+		ScreenShareStreamID: 0,
+		StreamID:            0,
+		IntervalID:          0,
+		Try:                 0,
+	}
+
+	if pc, ok := c.peerConnections[connId]; !ok {
+		c.peerConnections[connId] = conn
+	} else {
+		conn = pc
+		conn.RTCPeerConnectionID = rtcConnId
+	}
+
+	// Client should listen to track and send it to SDK
+	conn.Init = true
+	conn.Reconnecting = false
+	// clear reconnect timeout
+
+	if remote {
+		if sdp != nil {
+			// TODO Client should setRemoteDescription(sdp)
+			// TODO Client should create answer
+			// TODO Client should setLocalDescription and pass it to SDK
+		} else {
+			err = ErrNoSDP
+			return
+		}
+	} else {
+		// TODO Client should create offer
+		// TODO Client should setLocalDescription and pass the offer to SDK
+	}
+	return
+}
+
+func (c *callController) callUser(peer *msg.InputPeer, initiator bool, phoneParticipants []*msg.PhoneParticipantSDP, callID int64) (res *msg.PhoneCall, err error) {
+	randomID := domain.RandomInt64(0)
+	res, err = c.callAPI.Request(peer, randomID, initiator, phoneParticipants, callID, false)
+	return
 }
 
 func (c *callController) sendIceCandidate(callID int64, candidate *msg.CallRTCIceCandidate, connId int32) (err error) {

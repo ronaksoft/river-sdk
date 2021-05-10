@@ -5,11 +5,14 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 )
 
-var ErrActionNotFound = errors.New("action not found")
-var ErrInvalidCallId = errors.New("invalid call id")
-var ErrInvalidConnId = errors.New("invalid conn id")
-var ErrInvalidPeerInput = errors.New("invalid peer input")
-var ErrNoActiveCall = errors.New("no active call")
+var (
+	ErrActionNotFound   = errors.New("action not found")
+	ErrInvalidCallId    = errors.New("invalid call id")
+	ErrInvalidConnId    = errors.New("invalid conn id")
+	ErrInvalidPeerInput = errors.New("invalid peer input")
+	ErrNoActiveCall     = errors.New("no active call")
+	ErrNoSDP            = errors.New("no sdp")
+)
 
 type UpdatePhoneCall struct {
 	*msg.UpdatePhoneCall
