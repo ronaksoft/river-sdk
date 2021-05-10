@@ -285,10 +285,15 @@ func (ctrl *Controller) GetAllTopPeers(
 				logs.Error("SyncCtrl got error response on ContactsGetTopPeers", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
-				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
+				switch {
+				case domain.CheckError(x, msg.ErrCodeUnavailable, msg.ErrItemUserID):
+					fallthrough
+				case domain.CheckError(x, msg.ErrCodeInvalid, msg.ErrItemAccessHash):
+					fallthrough
+				case domain.CheckErrorCode(x, msg.ErrCodeAccess):
 					waitGroup.Done()
 					return
-				} else if x.Code == msg.ErrCodeRateLimit {
+				case domain.CheckErrorCode(x, msg.ErrCodeRateLimit):
 					time.Sleep(time.Second * time.Duration(tools.StrToInt64(x.Items)))
 				}
 				ctrl.GetAllTopPeers(waitGroup, teamID, teamAccess, cat, offset, limit)
@@ -335,10 +340,15 @@ func (ctrl *Controller) GetLabels(waitGroup *sync.WaitGroup, teamID int64, teamA
 				logs.Error("SyncCtrl got error response on LabelsGet", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
-				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
+				switch {
+				case domain.CheckError(x, msg.ErrCodeUnavailable, msg.ErrItemUserID):
+					fallthrough
+				case domain.CheckError(x, msg.ErrCodeInvalid, msg.ErrItemAccessHash):
+					fallthrough
+				case domain.CheckErrorCode(x, msg.ErrCodeAccess):
 					waitGroup.Done()
 					return
-				} else if x.Code == msg.ErrCodeRateLimit {
+				case domain.CheckErrorCode(x, msg.ErrCodeRateLimit):
 					time.Sleep(time.Second * time.Duration(tools.StrToInt64(x.Items)))
 				}
 				ctrl.GetLabels(waitGroup, teamID, teamAccess)
