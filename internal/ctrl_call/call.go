@@ -348,6 +348,7 @@ func (c *callController) initConnection(remote bool, connId int32, sdp *msg.Phon
 	// Client should listen to track and send it to SDK
 	conn.Init = true
 	conn.Reconnecting = false
+	conn.ReconnectingTry = 0
 	// clear reconnect timeout
 
 	if remote {
@@ -451,7 +452,7 @@ func (c *callController) checkDisconnection(connId int32, state string, isIceErr
 		// TODO close connection with connID
 		c.peerConnections[connId].IceQueue = nil
 		c.peerConnections[connId].Reconnecting = true
-		//c.peerConnections[connId].ReconnectingTry = true
+		c.peerConnections[connId].ReconnectingTry++
 		if conn.ReconnectingTry <= ReconnectTry {
 			time.AfterFunc(time.Duration(ReconnectTimeout)*time.Millisecond, func() {
 				if _, ok := c.peerConnections[connId]; ok {

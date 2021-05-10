@@ -244,7 +244,7 @@ func (p *poolCallConnection) Put(x *CallConnection) {
 	x.IceServers = x.IceServers[:0]
 	x.Init = false
 	x.Reconnecting = false
-	x.ReconnectingTry = false
+	x.ReconnectingTry = 0
 	x.ScreenShareStreamID = 0
 	x.StreamID = 0
 	x.IntervalID = 0
