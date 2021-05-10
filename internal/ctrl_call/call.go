@@ -202,12 +202,11 @@ func (c *callController) initConnections(peer *msg.InputPeer, callID int64, init
 	}
 
 	currentUserConnId := *currUserConnId
-	callWaitGroup := &sync.WaitGroup{}
-	callResults := []*msg.PhoneParticipantSDP{}
-
-	acceptWaitGroup := &sync.WaitGroup{}
-	acceptResults := []*msg.PhoneCall{}
+	wg := &sync.WaitGroup{}
 	mu := &sync.RWMutex{}
+
+	callResults := []*msg.PhoneParticipantSDP{}
+	acceptResults := []*msg.PhoneCall{}
 
 	sdp := &msg.PhoneActionSDPOffer{}
 	requestConnId := int32(-1024)
@@ -250,7 +249,7 @@ func (c *callController) initConnections(peer *msg.InputPeer, callID int64, init
 		// Initialize connections only for greater connId,
 		// full mesh initialization will take place here
 		if requestConnId == participant.ConnectionId {
-			acceptWaitGroup.Add(1)
+			wg.Add(1)
 			go func() {
 				phoneCall, innerRes := initAnswerConnection(requestConnId)
 				if innerRes == nil {
@@ -258,10 +257,10 @@ func (c *callController) initConnections(peer *msg.InputPeer, callID int64, init
 					acceptResults = append(acceptResults, phoneCall)
 					mu.Unlock()
 				}
-				acceptWaitGroup.Done()
+				wg.Done()
 			}()
 		} else if shouldCall && currentUserConnId < participant.ConnectionId {
-			callWaitGroup.Add(1)
+			wg.Add(1)
 			go func(pConnId int32) {
 				sdpRes, innerErr := c.initConnection(false, pConnId, nil)
 				if innerErr == nil {
@@ -276,13 +275,12 @@ func (c *callController) initConnections(peer *msg.InputPeer, callID int64, init
 					}
 					mu.Unlock()
 				}
-				callWaitGroup.Done()
+				wg.Done()
 			}(participant.ConnectionId)
 		}
 	}
 
-	callWaitGroup.Wait()
-	acceptWaitGroup.Wait()
+	wg.Wait()
 
 	for _, participantSDP := range callResults {
 		fmt.Println(participantSDP)
