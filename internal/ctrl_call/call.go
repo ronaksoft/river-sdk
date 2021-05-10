@@ -250,8 +250,8 @@ func (c *callController) initConnections(peer *msg.InputPeer, callID int64, init
 		// Initialize connections only for greater connId,
 		// full mesh initialization will take place here
 		if requestConnId == participant.ConnectionId {
+			acceptWaitGroup.Add(1)
 			go func() {
-				acceptWaitGroup.Add(1)
 				phoneCall, innerRes := initAnswerConnection(requestConnId)
 				if innerRes == nil {
 					mu.Lock()
@@ -261,8 +261,8 @@ func (c *callController) initConnections(peer *msg.InputPeer, callID int64, init
 				acceptWaitGroup.Done()
 			}()
 		} else if shouldCall && currentUserConnId < participant.ConnectionId {
+			callWaitGroup.Add(1)
 			go func(pConnId int32) {
-				callWaitGroup.Add(1)
 				sdpRes, innerErr := c.initConnection(false, pConnId, nil)
 				if innerErr == nil {
 					mu.Lock()
