@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 )
 
@@ -32,4 +33,29 @@ func (r *team) teamEdit(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutC
 	}
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
+func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetTeamCounters{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.sdk.GetConnInfo().PickupUserID(), req.Team.ID, req.WithMutes)
+
+	if err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := &msg.ClientTeamCounters{
+		UnreadCount:  int64(unreadCount),
+		MentionCount: int64(mentionCount),
+	}
+
+	out.Fill(in.RequestID, msg.C_ClientTeamCounters, res)
+	uiexec.ExecSuccessCB(successCB, out)
 }

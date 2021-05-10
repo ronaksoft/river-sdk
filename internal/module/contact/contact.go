@@ -49,5 +49,6 @@ func (r *contact) LocalHandlers() map[int64]domain.LocalMessageHandler {
 		msg.C_ContactsGetTopPeers:  r.contactsGetTopPeers,
 		msg.C_ContactsImport:       r.contactsImport,
 		msg.C_ContactsResetTopPeer: r.contactsResetTopPeer,
+		msg.C_ClientContactSearch:  r.clientContactSearch,
 	}
 }

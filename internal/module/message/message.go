@@ -61,5 +61,8 @@ func (r *message) LocalHandlers() map[int64]domain.LocalMessageHandler {
 		msg.C_ClientGetFrequentReactions: r.clientGetFrequentReactions,
 		msg.C_ClientGetMediaHistory:      r.clientGetMediaHistory,
 		msg.C_ClientSendMessageMedia:     r.clientSendMessageMedia,
+		msg.C_ClientClearCachedMedia:     r.clientClearCachedMedia,
+		msg.C_ClientGetCachedMedia:       r.clientGetCachedMedia,
+		msg.C_ClientGetLastBotKeyboard:   r.clientGetLastBotKeyboard,
 	}
 }

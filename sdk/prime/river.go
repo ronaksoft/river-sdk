@@ -7,11 +7,13 @@ import (
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/module"
+	"git.ronaksoft.com/river/sdk/internal/module/account"
 	"git.ronaksoft.com/river/sdk/internal/module/contact"
 	"git.ronaksoft.com/river/sdk/internal/module/gif"
 	"git.ronaksoft.com/river/sdk/internal/module/group"
 	"git.ronaksoft.com/river/sdk/internal/module/label"
 	"git.ronaksoft.com/river/sdk/internal/module/message"
+	"git.ronaksoft.com/river/sdk/internal/module/search"
 	"git.ronaksoft.com/river/sdk/internal/module/team"
 	"git.ronaksoft.com/river/sdk/internal/module/user"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
@@ -160,7 +162,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 
-	r.registerCommandHandlers()
+	r.registerModules()
+
 	r.delegates = make(map[uint64]RequestDelegate)
 	r.mainDelegate = conf.MainDelegate
 	r.fileDelegate = conf.FileDelegate
@@ -676,11 +679,13 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 }
 
 func (r *River) registerModules() {
+	r.registerModule(account.New())
 	r.registerModule(contact.New())
 	r.registerModule(gif.New())
 	r.registerModule(group.New())
 	r.registerModule(label.New())
 	r.registerModule(message.New())
+	r.registerModule(search.New())
 	r.registerModule(team.New())
 	r.registerModule(user.New())
 }
@@ -689,25 +694,6 @@ func (r *River) registerModule(m module.Module) {
 	m.Init(r)
 	for c, h := range m.LocalHandlers() {
 		r.localCommands[c] = h
-	}
-}
-
-func (r *River) registerCommandHandlers() {
-	r.localCommands = map[int64]domain.LocalMessageHandler{
-
-		msg.C_ClientClearCachedMedia: r.clientClearCachedMedia,
-		msg.C_ClientContactSearch:    r.clientContactSearch,
-		msg.C_ClientGetCachedMedia:   r.clientGetCachedMedia,
-
-		msg.C_ClientGetLastBotKeyboard:      r.clientGetLastBotKeyboard,
-		msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
-		msg.C_ClientGetTeamCounters:         r.clientGetTeamCounters,
-		msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
-		msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,
-		msg.C_ClientRemoveAllRecentSearches: r.clientRemoveAllRecentSearches,
-		msg.C_ClientRemoveRecentSearch:      r.clientRemoveRecentSearch,
-
-		msg.C_SystemGetConfig: r.systemGetConfig,
 	}
 }
 

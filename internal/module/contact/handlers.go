@@ -8,6 +8,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
+	"strings"
 )
 
 /*
@@ -271,4 +272,27 @@ func (r *contact) contactsResetTopPeer(in, out *rony.MessageEnvelope, timeoutCB 
 	}
 
 	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+}
+
+func (r *contact) clientContactSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientContactSearch{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	searchPhrase := strings.ToLower(req.Text)
+	logs.Info("SearchContacts", zap.String("Phrase", searchPhrase))
+
+	users := &msg.UsersMany{}
+	contactUsers, _ := repo.Users.SearchContacts(domain.GetTeamID(in), searchPhrase)
+	userIDs := make([]int64, 0, len(contactUsers))
+	for _, contactUser := range contactUsers {
+		userIDs = append(userIDs, contactUser.ID)
+	}
+	users.Users, _ = repo.Users.GetMany(userIDs)
+
+	out.Fill(in.RequestID, msg.C_UsersMany, users)
+	uiexec.ExecSuccessCB(successCB, out)
 }

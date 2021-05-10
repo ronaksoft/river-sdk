@@ -1,4 +1,4 @@
-package team
+package search
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
@@ -19,7 +19,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-type team struct {
+type search struct {
 	queueCtrl   *queueCtrl.Controller
 	networkCtrl *networkCtrl.Controller
 	fileCtrl    *fileCtrl.Controller
@@ -27,11 +27,11 @@ type team struct {
 	sdk         module.SDK
 }
 
-func New() *team {
-	return &team{}
+func New() *search {
+	return &search{}
 }
 
-func (r *team) Init(sdk module.SDK) {
+func (r *search) Init(sdk module.SDK) {
 	r.sdk = sdk
 	r.networkCtrl = sdk.NetCtrl()
 	r.queueCtrl = sdk.QueueCtrl()
@@ -40,9 +40,12 @@ func (r *team) Init(sdk module.SDK) {
 
 }
 
-func (r *team) LocalHandlers() map[int64]domain.LocalMessageHandler {
+func (r *search) LocalHandlers() map[int64]domain.LocalMessageHandler {
 	return map[int64]domain.LocalMessageHandler{
-		msg.C_TeamEdit:              r.teamEdit,
-		msg.C_ClientGetTeamCounters: r.clientGetTeamCounters,
+		msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
+		msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
+		msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,
+		msg.C_ClientRemoveAllRecentSearches: r.clientRemoveAllRecentSearches,
+		msg.C_ClientRemoveRecentSearch:      r.clientRemoveRecentSearch,
 	}
 }

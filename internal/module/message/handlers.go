@@ -1149,3 +1149,60 @@ func (r *message) clientGetFrequentReactions(in, out *rony.MessageEnvelope, time
 	out.Fill(out.RequestID, msg.C_ClientFrequentReactions, res)
 	successCB(out)
 }
+
+func (r *message) clientGetCachedMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetCachedMedia{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	res := repo.Files.GetCachedMedia(domain.GetTeamID(in))
+
+	out.Fill(in.RequestID, msg.C_ClientCachedMediaInfo, res)
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *message) clientClearCachedMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientClearCachedMedia{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	if req.Peer != nil {
+		repo.Files.DeleteCachedMediaByPeer(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MediaTypes)
+	} else if len(req.MediaTypes) > 0 {
+		repo.Files.DeleteCachedMediaByMediaType(domain.GetTeamID(in), req.MediaTypes)
+	} else {
+		repo.Files.ClearCache()
+	}
+
+	res := &msg.Bool{
+		Result: true,
+	}
+	out.Fill(in.RequestID, msg.C_Bool, res)
+	uiexec.ExecSuccessCB(successCB, out)
+}
+
+func (r *message) clientGetLastBotKeyboard(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+	req := &msg.ClientGetLastBotKeyboard{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		successCB(out)
+		return
+	}
+
+	lastKeyboardMsg, _ := repo.Messages.GetLastBotKeyboard(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
+
+	if lastKeyboardMsg == nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: "message not found"})
+		successCB(out)
+		return
+	}
+
+	out.Fill(in.RequestID, msg.C_UserMessage, lastKeyboardMsg)
+	uiexec.ExecSuccessCB(successCB, out)
+}
