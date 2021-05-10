@@ -6,9 +6,13 @@ import (
 )
 
 var ErrActionNotFound = errors.New("action not found")
+var ErrInvalidCallId = errors.New("invalid call id")
+var ErrInvalidConnId = errors.New("invalid conn id")
+var ErrInvalidPeerInput = errors.New("invalid peer input")
+var ErrNoActiveCall = errors.New("no active call")
 
 type UpdatePhoneCall struct {
-	msg.UpdatePhoneCall
+	*msg.UpdatePhoneCall
 	Data interface{}
 }
 
@@ -27,22 +31,23 @@ type RTCIceCandidate struct {
 }
 
 type CallConnection struct {
-	Accepted bool
-	IceQueue []RTCIceCandidate
-	Interval interface{}
-	Try      int64
+	accepted bool
+	iceQueue []RTCIceCandidate
+	interval interface{}
+	try      int64
 }
 
 type CallInfo struct {
-	AcceptedParticipantIds []int64
-	AcceptedParticipants   []int
-	AllConnected           bool
-	Dialed                 bool
-	MediaSettings          msg.CallMediaSettings
-	ParticipantMap         map[int64]int64
-	Participants           map[int64]CallParticipant
-	RequestParticipantIds  []int64
-	Requests               []UpdatePhoneCall
+	acceptedParticipantIds []int64
+	acceptedParticipants   []int
+	allConnected           bool
+	dialed                 bool
+	mediaSettings          *msg.CallMediaSettings
+	participantMap         map[int64]int32
+	participants           map[int32]*CallParticipant
+	requestParticipantIds  []int64
+	requests               []*UpdatePhoneCall
+	iceServer              *msg.IceServer
 }
 
 func parseCallAction(constructor msg.PhoneCallAction, data []byte) (out interface{}, err error) {
