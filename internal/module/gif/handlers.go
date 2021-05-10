@@ -61,7 +61,7 @@ func (r *gif) gifSave(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCal
 	}
 	_ = repo.Gifs.UpdateLastAccess(cf.ClusterID, cf.FileID, domain.Now().Unix())
 
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *gif) gifDelete(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -77,7 +77,7 @@ func (r *gif) gifDelete(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutC
 		logs.Warn("We got error on deleting GIF document", zap.Error(err))
 	}
 
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -109,5 +109,5 @@ func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, timeoutCB domain.Timeou
 		enqueueSuccessCB = successCB
 	}
 
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, enqueueSuccessCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, enqueueSuccessCB, true)
 }

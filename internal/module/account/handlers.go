@@ -27,11 +27,11 @@ func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, timeoutCB
 		return
 	}
 
-	r.sdk.GetConnInfo().ChangeUsername(req.Username)
-	r.sdk.GetConnInfo().Save()
+	r.SDK().GetConnInfo().ChangeUsername(req.Username)
+	r.SDK().GetConnInfo().Save()
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -53,7 +53,7 @@ func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, timeoutCB
 		return
 	}
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -76,7 +76,7 @@ func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, timeout
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -96,7 +96,7 @@ func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, timeou
 	_ = repo.Dialogs.Save(dialog)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 
@@ -105,15 +105,15 @@ func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, timeoutCB do
 	_ = x.Unmarshal(in.Message)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 
-	user, err := repo.Users.Get(r.sdk.GetConnInfo().PickupUserID())
+	user, err := repo.Users.Get(r.SDK().GetConnInfo().PickupUserID())
 	if err != nil {
 		return
 	}
 
 	if user.Photo != nil && user.Photo.PhotoID == x.PhotoID {
-		_ = repo.Users.UpdatePhoto(r.sdk.GetConnInfo().PickupUserID(), &msg.UserPhoto{
+		_ = repo.Users.UpdatePhoto(r.SDK().GetConnInfo().PickupUserID(), &msg.UserPhoto{
 			PhotoBig:      &msg.FileLocation{},
 			PhotoSmall:    &msg.FileLocation{},
 			PhotoBigWeb:   &msg.WebLocation{},
@@ -122,7 +122,7 @@ func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, timeoutCB do
 		})
 	}
 
-	repo.Users.RemovePhotoGallery(r.sdk.GetConnInfo().PickupUserID(), x.PhotoID)
+	_ = repo.Users.RemovePhotoGallery(r.SDK().GetConnInfo().PickupUserID(), x.PhotoID)
 }
 
 func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -134,18 +134,18 @@ func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, timeoutCB 
 	}
 
 	// TODO : add connInfo Bio and save it too
-	r.sdk.GetConnInfo().ChangeFirstName(req.FirstName)
-	r.sdk.GetConnInfo().ChangeLastName(req.LastName)
-	r.sdk.GetConnInfo().ChangeBio(req.Bio)
+	r.SDK().GetConnInfo().ChangeFirstName(req.FirstName)
+	r.SDK().GetConnInfo().ChangeLastName(req.LastName)
+	r.SDK().GetConnInfo().ChangeBio(req.Bio)
 
-	r.sdk.GetConnInfo().Save()
+	r.SDK().GetConnInfo().Save()
 
-	_ = repo.Users.UpdateProfile(r.sdk.GetConnInfo().PickupUserID(),
-		req.FirstName, req.LastName, r.sdk.GetConnInfo().PickupUsername(), req.Bio, r.sdk.GetConnInfo().PickupPhone(),
+	_ = repo.Users.UpdateProfile(r.SDK().GetConnInfo().PickupUserID(),
+		req.FirstName, req.LastName, r.SDK().GetConnInfo().PickupUsername(), req.Bio, r.SDK().GetConnInfo().PickupPhone(),
 	)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -167,5 +167,5 @@ func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, timeoutCB doma
 		return
 	}
 
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
