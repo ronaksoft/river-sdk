@@ -1,9 +1,9 @@
-package user
+package team
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/module"
+	"git.ronaksoft.com/river/sdk/module"
 )
 
 /*
@@ -15,16 +15,16 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-type user struct {
+type team struct {
 	module.Base
 }
 
-func New() *user {
-	r := &user{}
+func New() *team {
+	r := &team{}
 	r.RegisterHandlers(
 		map[int64]domain.LocalMessageHandler{
-			msg.C_UsersGet:     r.usersGet,
-			msg.C_UsersGetFull: r.usersGetFull,
+			msg.C_TeamEdit:              r.teamEdit,
+			msg.C_ClientGetTeamCounters: r.clientGetTeamCounters,
 		},
 	)
 	return r

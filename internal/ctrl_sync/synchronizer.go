@@ -138,6 +138,23 @@ func NewSyncController(config Config) *Controller {
 	return ctrl
 }
 
+func (ctrl *Controller) RegisterUpdateApplier(constructor int64, ua domain.UpdateApplier) {
+	_, ok := ctrl.updateAppliers[constructor]
+	if ok {
+		panic(fmt.Sprintf("BUG!!::update applier already registered: %s", registry.ConstructorName(constructor)))
+	}
+	ctrl.updateAppliers[constructor] = ua
+}
+
+func (ctrl *Controller) RegisterMessageApplier(constructor int64, ma domain.MessageApplier) {
+	_, ok := ctrl.messageAppliers[constructor]
+	if ok {
+		panic(fmt.Sprintf("BUG!!::update applier already registered: %s", registry.ConstructorName(constructor)))
+	}
+	ctrl.messageAppliers[constructor] = ma
+
+}
+
 // watchDog
 // Checks if we have not received any updates since last watch tries to re-sync with server.
 func (ctrl *Controller) watchDog() {

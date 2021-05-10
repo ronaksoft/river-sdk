@@ -3,7 +3,7 @@ package label
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/module"
+	"git.ronaksoft.com/river/sdk/module"
 )
 
 /*
