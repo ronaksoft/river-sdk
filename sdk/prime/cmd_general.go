@@ -697,9 +697,6 @@ func (r *River) AppStart() error {
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
 	r.syncCtrl.SetUserID(r.ConnInfo.UserID)
 
-	// Load device token
-	r.loadDeviceToken()
-
 	// Update the current salt
 	salt.UpdateSalt()
 

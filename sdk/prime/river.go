@@ -6,6 +6,14 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/module"
+	"git.ronaksoft.com/river/sdk/internal/module/contact"
+	"git.ronaksoft.com/river/sdk/internal/module/gif"
+	"git.ronaksoft.com/river/sdk/internal/module/group"
+	"git.ronaksoft.com/river/sdk/internal/module/label"
+	"git.ronaksoft.com/river/sdk/internal/module/message"
+	"git.ronaksoft.com/river/sdk/internal/module/team"
+	"git.ronaksoft.com/river/sdk/internal/module/user"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/salt"
@@ -82,8 +90,6 @@ type RiverConfig struct {
 type River struct {
 	// Connection Info
 	ConnInfo *RiverConnection
-	// Device Token
-	DeviceToken *msg.AccountRegisterDevice
 
 	// localCommands can be satisfied by client cache
 	localCommands map[int64]domain.LocalMessageHandler
@@ -106,6 +112,26 @@ type River struct {
 	optimizeForLowMemory bool
 	resetQueueOnStartup  bool
 	sentryDSN            string
+}
+
+func (r *River) GetConnInfo() domain.RiverConfigurator {
+	return r.ConnInfo
+}
+
+func (r *River) SyncCtrl() *syncCtrl.Controller {
+	return r.syncCtrl
+}
+
+func (r *River) NetCtrl() *networkCtrl.Controller {
+	return r.networkCtrl
+}
+
+func (r *River) QueueCtrl() *queueCtrl.Controller {
+	return r.queueCtrl
+}
+
+func (r *River) FileCtrl() *fileCtrl.Controller {
+	return r.fileCtrl
 }
 
 // SetConfig must be called before any other function, otherwise it panics
@@ -235,19 +261,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Set current team
 	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
-}
-
-func (r *River) loadDeviceToken() {
-	r.DeviceToken = new(msg.AccountRegisterDevice)
-	str, err := repo.System.LoadString(domain.SkDeviceToken)
-	if err != nil {
-		logs.Info("We did not find device token")
-		return
-	}
-	err = json.Unmarshal([]byte(str), r.DeviceToken)
-	if err != nil {
-		logs.Warn("We couldn't unmarshal device token", zap.Error(err))
-	}
 }
 
 func (r *River) onNetworkConnect() (err error) {
@@ -662,20 +675,30 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 	return
 }
 
+func (r *River) registerModules() {
+	r.registerModule(contact.New())
+	r.registerModule(gif.New())
+	r.registerModule(group.New())
+	r.registerModule(label.New())
+	r.registerModule(message.New())
+	r.registerModule(team.New())
+	r.registerModule(user.New())
+}
+
+func (r *River) registerModule(m module.Module) {
+	m.Init(r)
+	for c, h := range m.LocalHandlers() {
+		r.localCommands[c] = h
+	}
+}
+
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]domain.LocalMessageHandler{
-		msg.C_AccountGetTeams:               r.accountsGetTeams,
-		msg.C_AccountRegisterDevice:         r.accountRegisterDevice,
-		msg.C_AccountRemovePhoto:            r.accountRemovePhoto,
-		msg.C_AccountSetNotifySettings:      r.accountSetNotifySettings,
-		msg.C_AccountUnregisterDevice:       r.accountUnregisterDevice,
-		msg.C_AccountUpdateProfile:          r.accountUpdateProfile,
-		msg.C_AccountUpdateUsername:         r.accountUpdateUsername,
-		msg.C_ClientClearCachedMedia:        r.clientClearCachedMedia,
-		msg.C_ClientContactSearch:           r.clientContactSearch,
-		msg.C_ClientGetCachedMedia:          r.clientGetCachedMedia,
-		msg.C_ClientGetFrequentReactions:    r.clientGetFrequentReactions,
-		msg.C_ClientGetMediaHistory:         r.clientGetMediaHistory,
+
+		msg.C_ClientClearCachedMedia: r.clientClearCachedMedia,
+		msg.C_ClientContactSearch:    r.clientContactSearch,
+		msg.C_ClientGetCachedMedia:   r.clientGetCachedMedia,
+
 		msg.C_ClientGetLastBotKeyboard:      r.clientGetLastBotKeyboard,
 		msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
 		msg.C_ClientGetTeamCounters:         r.clientGetTeamCounters,
@@ -683,49 +706,8 @@ func (r *River) registerCommandHandlers() {
 		msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,
 		msg.C_ClientRemoveAllRecentSearches: r.clientRemoveAllRecentSearches,
 		msg.C_ClientRemoveRecentSearch:      r.clientRemoveRecentSearch,
-		msg.C_ClientSendMessageMedia:        r.clientSendMessageMedia,
-		msg.C_ContactsAdd:                   r.contactsAdd,
-		msg.C_ContactsDelete:                r.contactsDelete,
-		msg.C_ContactsDeleteAll:             r.contactsDeleteAll,
-		msg.C_ContactsGet:                   r.contactsGet,
-		msg.C_ContactsGetTopPeers:           r.contactsGetTopPeers,
-		msg.C_ContactsImport:                r.contactsImport,
-		msg.C_ContactsResetTopPeer:          r.contactsResetTopPeer,
-		msg.C_GifDelete:                     r.gifDelete,
-		msg.C_GifGetSaved:                   r.gifGetSaved,
-		msg.C_GifSave:                       r.gifSave,
-		msg.C_GroupsAddUser:                 r.groupAddUser,
-		msg.C_GroupsDeleteUser:              r.groupDeleteUser,
-		msg.C_GroupsEditTitle:               r.groupsEditTitle,
-		msg.C_GroupsGetFull:                 r.groupsGetFull,
-		msg.C_GroupsRemovePhoto:             r.groupRemovePhoto,
-		msg.C_GroupsToggleAdmins:            r.groupToggleAdmin,
-		msg.C_GroupsUpdateAdmin:             r.groupUpdateAdmin,
-		msg.C_LabelsAddToMessage:            r.labelAddToMessage,
-		msg.C_LabelsDelete:                  r.labelsDelete,
-		msg.C_LabelsGet:                     r.labelsGet,
-		msg.C_LabelsListItems:               r.labelsListItems,
-		msg.C_LabelsRemoveFromMessage:       r.labelRemoveFromMessage,
-		msg.C_MessagesClearDraft:            r.messagesClearDraft,
-		msg.C_MessagesClearHistory:          r.messagesClearHistory,
-		msg.C_MessagesDelete:                r.messagesDelete,
-		msg.C_MessagesDeleteReaction:        r.messagesDeleteReaction,
-		msg.C_MessagesGet:                   r.messagesGet,
-		msg.C_MessagesGetDialog:             r.messagesGetDialog,
-		msg.C_MessagesGetDialogs:            r.messagesGetDialogs,
-		msg.C_MessagesGetHistory:            r.messagesGetHistory,
-		msg.C_MessagesReadContents:          r.messagesReadContents,
-		msg.C_MessagesReadHistory:           r.messagesReadHistory,
-		msg.C_MessagesSaveDraft:             r.messagesSaveDraft,
-		msg.C_MessagesSend:                  r.messagesSend,
-		msg.C_MessagesSendMedia:             r.messagesSendMedia,
-		msg.C_MessagesSendReaction:          r.messagesSendReaction,
-		msg.C_MessagesToggleDialogPin:       r.dialogTogglePin,
-		msg.C_MessagesTogglePin:             r.messagesTogglePin,
-		msg.C_SystemGetConfig:               r.systemGetConfig,
-		msg.C_TeamEdit:                      r.teamEdit,
-		msg.C_UsersGet:                      r.usersGet,
-		msg.C_UsersGetFull:                  r.usersGetFull,
+
+		msg.C_SystemGetConfig: r.systemGetConfig,
 	}
 }
 

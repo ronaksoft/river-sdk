@@ -1,7 +1,6 @@
 package riversdk
 
 import (
-	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
@@ -9,7 +8,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
-	"sort"
 	"strings"
 	"time"
 )
@@ -22,97 +20,6 @@ import (
    Auditor: Ehsan N. Moosa (E2)
    Copyright Ronak Software Group 2020
 */
-
-func (r *River) clientGetMediaHistory(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	req := &msg.ClientGetMediaHistory{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
-		return
-	}
-
-	messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit, req.Cat)
-	if len(messages) > 0 {
-		res := &msg.MessagesMany{
-			Messages: messages,
-			Users:    users,
-			Groups:   groups,
-		}
-
-		out.RequestID = in.RequestID
-		out.Constructor = msg.C_MessagesMany
-		out.Message, _ = res.Marshal()
-		uiexec.ExecSuccessCB(successCB, out)
-		return
-	}
-}
-
-func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	reqMedia := &msg.ClientSendMessageMedia{}
-	if err := reqMedia.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		uiexec.ExecSuccessCB(successCB, out)
-		return
-	}
-
-	// support IOS file path
-	if strings.HasPrefix(reqMedia.FilePath, "file://") {
-		reqMedia.FilePath = reqMedia.FilePath[7:]
-	}
-	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
-		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
-	}
-
-	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
-	fileID := domain.SequentialUniqueID()
-	msgID := -fileID
-	thumbID := int64(0)
-	reqMedia.FileUploadID = fmt.Sprintf("%d", fileID)
-	reqMedia.FileID = fileID
-	if reqMedia.ThumbFilePath != "" {
-		thumbID = domain.RandomInt63()
-		reqMedia.ThumbID = thumbID
-		reqMedia.ThumbUploadID = fmt.Sprintf("%d", thumbID)
-	}
-
-	checkSha256 := true
-	switch reqMedia.MediaType {
-	case msg.InputMediaType_InputMediaTypeUploadedDocument:
-		for _, attr := range reqMedia.Attributes {
-			if attr.Type == msg.DocumentAttributeType_AttributeTypeAudio {
-				x := &msg.DocumentAttributeAudio{}
-				_ = x.Unmarshal(attr.Data)
-				if x.Voice {
-					checkSha256 = false
-				}
-			}
-		}
-	default:
-		panic("Invalid MediaInputType")
-	}
-
-	h, _ := domain.CalculateSha256(reqMedia.FilePath)
-	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(
-		domain.GetTeamID(in), domain.GetTeamAccess(in), msgID, r.ConnInfo.UserID, fileID, fileID, thumbID, reqMedia, h,
-	)
-	if err != nil {
-		e := &rony.Error{
-			Code:  "n/a",
-			Items: "Failed to save to pendingMessages : " + err.Error(),
-		}
-		out.Fill(out.RequestID, rony.C_Error, e)
-		uiexec.ExecSuccessCB(successCB, out)
-		return
-	}
-
-	// 3. return to CallBack with pending message data : Done
-	out.Fill(out.RequestID, msg.C_ClientPendingMessage, pendingMessage)
-
-	// 4. Start the upload process
-	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID, checkSha256)
-
-	uiexec.ExecSuccessCB(successCB, out)
-}
 
 func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
 	req := &msg.ClientGlobalSearch{}
@@ -448,26 +355,4 @@ func (r *River) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB d
 
 	out.Fill(in.RequestID, msg.C_ClientTeamCounters, res)
 	uiexec.ExecSuccessCB(successCB, out)
-}
-
-func (r *River) clientGetFrequentReactions(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
-	reactions := domain.SysConfig.Reactions
-	logs.Info("Reactions", zap.Int("ReactionsCount", len(reactions)))
-
-	useCountsMap := make(map[string]uint32, len(reactions))
-
-	for _, r := range reactions {
-		useCount, _ := repo.Reactions.GetReactionUseCount(r)
-		useCountsMap[r] = useCount
-	}
-
-	sort.Slice(reactions, func(i, j int) bool {
-		return useCountsMap[reactions[i]] > useCountsMap[reactions[j]]
-	})
-
-	res := &msg.ClientFrequentReactions{
-		Reactions: reactions,
-	}
-	out.Fill(out.RequestID, msg.C_ClientFrequentReactions, res)
-	successCB(out)
 }
