@@ -61,7 +61,7 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, timeoutCB do
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		res.UpdateID = r.syncCtrl.GetUpdateID()
+		res.UpdateID = r.SDK().SyncCtrl().GetUpdateID()
 		out.Constructor = msg.C_MessagesDialogs
 		buff, err := res.Marshal()
 		logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
@@ -178,7 +178,7 @@ func (r *message) messagesGetDialog(in, out *rony.MessageEnvelope, timeoutCB dom
 	// if the localDB had no data send the request to server
 	if err != nil {
 		logs.Warn("We got error on repo GetDialog", zap.Error(err), zap.Int64("PeerID", req.Peer.ID))
-		r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 		return
 	}
 
@@ -207,14 +207,14 @@ func (r *message) messagesSend(in, out *rony.MessageEnvelope, timeoutCB domain.T
 		return
 	}
 
-	if req.Peer.ID == r.sdk.GetConnInfo().PickupUserID() {
+	if req.Peer.ID == r.SDK().GetConnInfo().PickupUserID() {
 		r.HandleDebugActions(req.Body)
 	}
 
 	// this will be used as next requestID
 	req.RandomID = domain.SequentialUniqueID()
 	msgID := -req.RandomID
-	res, err := repo.PendingMessages.Save(domain.GetTeamID(in), domain.GetTeamAccess(in), msgID, r.sdk.GetConnInfo().PickupUserID(), req)
+	res, err := repo.PendingMessages.Save(domain.GetTeamID(in), domain.GetTeamAccess(in), msgID, r.SDK().GetConnInfo().PickupUserID(), req)
 	if err != nil {
 		e := &rony.Error{
 			Code:  "n/a",
@@ -228,7 +228,7 @@ func (r *message) messagesSend(in, out *rony.MessageEnvelope, timeoutCB domain.T
 	requestBytes, _ := req.Marshal()
 
 	// using req randomID as requestID later in queue processing and network controller messageHandler
-	r.queueCtrl.EnqueueCommand(
+	r.SDK().QueueCtrl().EnqueueCommand(
 		&rony.MessageEnvelope{
 			Header:      in.Header,
 			Constructor: msg.C_MessagesSend,
@@ -312,7 +312,7 @@ func sendToSavedMessage(r *message, body string, entities ...*msg.MessageEntity)
 	req := &msg.MessagesSend{
 		RandomID: 0,
 		Peer: &msg.InputPeer{
-			ID:         r.sdk.GetConnInfo().PickupUserID(),
+			ID:         r.SDK().GetConnInfo().PickupUserID(),
 			Type:       msg.PeerType_PeerUser,
 			AccessHash: 0,
 		},
@@ -332,7 +332,7 @@ func sendMediaToSaveMessage(r *message, filePath string, filename string) {
 	attBytes, _ := attrFile.Marshal()
 	req := &msg.ClientSendMessageMedia{
 		Peer: &msg.InputPeer{
-			ID:         r.sdk.GetConnInfo().PickupUserID(),
+			ID:         r.SDK().GetConnInfo().PickupUserID(),
 			Type:       msg.PeerType_PeerUser,
 			AccessHash: 0,
 		},
@@ -444,7 +444,7 @@ func getMonitorStats(r *message) []byte {
 		"Download":         humanize.Bytes(uint64(s.TotalDownloadBytes)),
 		"LsmSize":          humanize.Bytes(uint64(lsmSize)),
 		"LogSize":          humanize.Bytes(uint64(logSize)),
-		"Version":          r.sdk.Version(),
+		"Version":          r.SDK().Version(),
 	}
 
 	b, _ := json.MarshalIndent(m, "", "  ")
@@ -491,12 +491,12 @@ func sendLogs(r *message) {
 	})
 }
 func getUpdateState(r *message) {
-	sendToSavedMessage(r, fmt.Sprintf("UpdateState is %d", r.syncCtrl.GetUpdateID()))
+	sendToSavedMessage(r, fmt.Sprintf("UpdateState is %d", r.SDK().SyncCtrl().GetUpdateID()))
 }
 func setUpdateState(r *message, updateID int64) {
 	sendToSavedMessage(r, fmt.Sprintf("UpdateState set to: %d", updateID))
-	_ = r.syncCtrl.SetUpdateID(updateID)
-	go r.syncCtrl.Sync()
+	_ = r.SDK().SyncCtrl().SetUpdateID(updateID)
+	go r.SDK().SyncCtrl().Sync()
 }
 
 func (r *message) messagesSendMedia(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -516,7 +516,7 @@ func (r *message) messagesSendMedia(in, out *rony.MessageEnvelope, timeoutCB dom
 		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		dbID := -req.RandomID
 
-		res, err := repo.PendingMessages.SaveMessageMedia(domain.GetTeamID(in), domain.GetTeamAccess(in), dbID, r.sdk.GetConnInfo().PickupUserID(), req)
+		res, err := repo.PendingMessages.SaveMessageMedia(domain.GetTeamID(in), domain.GetTeamAccess(in), dbID, r.SDK().GetConnInfo().PickupUserID(), req)
 		if err != nil {
 			e := &rony.Error{
 				Code:  "n/a",
@@ -537,7 +537,7 @@ func (r *message) messagesSendMedia(in, out *rony.MessageEnvelope, timeoutCB dom
 	}
 
 	requestBytes, _ := req.Marshal()
-	r.queueCtrl.EnqueueCommand(
+	r.SDK().QueueCtrl().EnqueueCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(req.RandomID),
@@ -565,10 +565,10 @@ func (r *message) messagesReadHistory(in, out *rony.MessageEnvelope, timeoutCB d
 	}
 
 	// update read inbox max id
-	_ = repo.Dialogs.UpdateReadInboxMaxID(r.sdk.GetConnInfo().PickupUserID(), domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	_ = repo.Dialogs.UpdateReadInboxMaxID(r.SDK().GetConnInfo().PickupUserID(), domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -590,7 +590,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB do
 	preSuccessCB := genGetHistoryCB(successCB, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
 
 	// We are Offline/Disconnected
-	if !r.networkCtrl.Connected() {
+	if !r.SDK().NetCtrl().Connected() {
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
 		if len(messages) > 0 {
 			pendingMessages := repo.PendingMessages.GetByPeer(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
@@ -616,7 +616,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB do
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
-			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
@@ -630,7 +630,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB do
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
-			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
@@ -644,7 +644,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, timeoutCB do
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 			)
-			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
@@ -726,7 +726,7 @@ func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, timeout
 	}
 
 	// We are Offline/Disconnected
-	if !r.networkCtrl.Connected() {
+	if !r.SDK().NetCtrl().Connected() {
 		messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID, req.Limit, req.Cat)
 		if len(messages) > 0 {
 			fillMessagesMany(out, messages, users, groups, in.RequestID, successCB)
@@ -749,7 +749,7 @@ func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, timeout
 			zap.Int64("TopMsgID", dialog.TopMessageID),
 			zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
 		)
-		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 		return
 	}
 	messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, bar.Max, req.Limit, req.Cat)
@@ -812,7 +812,7 @@ func (r *message) messagesDelete(in, out *rony.MessageEnvelope, timeoutCB domain
 				return
 			}
 			if pmsg.FileID != 0 {
-				r.fileCtrl.CancelUploadRequest(pmsg.FileID)
+				r.SDK().FileCtrl().CancelUploadRequest(pmsg.FileID)
 			}
 
 			_ = repo.PendingMessages.Delete(id)
@@ -821,7 +821,7 @@ func (r *message) messagesDelete(in, out *rony.MessageEnvelope, timeoutCB domain
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 
@@ -872,7 +872,7 @@ func (r *message) messagesGet(in, out *rony.MessageEnvelope, timeoutCB domain.Ti
 	}
 
 	// WebsocketSend the request to the server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -893,7 +893,7 @@ func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, timeoutCB 
 		req.MaxID = d.TopMessageID
 	}
 
-	err := repo.Messages.ClearHistory(r.sdk.GetConnInfo().PickupUserID(), domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	err := repo.Messages.ClearHistory(r.SDK().GetConnInfo().PickupUserID(), domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 	logs.WarnOnErr("We got error on clear history", err,
 		zap.Int64("PeerID", req.Peer.ID),
 		zap.Int64("TeamID", domain.GetTeamID(in)),
@@ -908,7 +908,7 @@ func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, timeoutCB 
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -922,7 +922,7 @@ func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, timeoutCB 
 	repo.Messages.SetContentRead(req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -949,7 +949,7 @@ func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, timeoutCB dom
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -966,7 +966,7 @@ func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, timeoutCB do
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -980,7 +980,7 @@ func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, timeoutCB dom
 	err := repo.Dialogs.UpdatePinMessageID(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MessageID)
 	logs.ErrorOnErr("MessagesTogglePin", err)
 
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -994,7 +994,7 @@ func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, timeoutCB 
 	err := repo.Reactions.IncrementReactionUseCount(req.Reaction, 1)
 	logs.ErrorOnErr("messagesSendReaction", err)
 
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1010,7 +1010,7 @@ func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, timeoutC
 		logs.ErrorOnErr("messagesDeleteReaction", err)
 	}
 
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -1033,7 +1033,7 @@ func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, timeout
 	repo.Dialogs.Save(dialog)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 
@@ -1107,7 +1107,7 @@ func (r *message) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutC
 
 	h, _ := domain.CalculateSha256(reqMedia.FilePath)
 	pendingMessage, err := repo.PendingMessages.SaveClientMessageMedia(
-		domain.GetTeamID(in), domain.GetTeamAccess(in), msgID, r.sdk.GetConnInfo().PickupUserID(), fileID, fileID, thumbID, reqMedia, h,
+		domain.GetTeamID(in), domain.GetTeamAccess(in), msgID, r.SDK().GetConnInfo().PickupUserID(), fileID, fileID, thumbID, reqMedia, h,
 	)
 	if err != nil {
 		e := &rony.Error{
@@ -1123,7 +1123,7 @@ func (r *message) clientSendMessageMedia(in, out *rony.MessageEnvelope, timeoutC
 	out.Fill(out.RequestID, msg.C_ClientPendingMessage, pendingMessage)
 
 	// 4. Start the upload process
-	r.fileCtrl.UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID, checkSha256)
+	r.SDK().FileCtrl().UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID, checkSha256)
 
 	uiexec.ExecSuccessCB(successCB, out)
 }

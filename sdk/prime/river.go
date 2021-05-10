@@ -14,6 +14,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/module/label"
 	"git.ronaksoft.com/river/sdk/internal/module/message"
 	"git.ronaksoft.com/river/sdk/internal/module/search"
+	"git.ronaksoft.com/river/sdk/internal/module/system"
 	"git.ronaksoft.com/river/sdk/internal/module/team"
 	"git.ronaksoft.com/river/sdk/internal/module/user"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
@@ -686,6 +687,7 @@ func (r *River) registerModules() {
 	r.registerModule(label.New())
 	r.registerModule(message.New())
 	r.registerModule(search.New())
+	r.registerModule(system.New())
 	r.registerModule(team.New())
 	r.registerModule(user.New())
 }

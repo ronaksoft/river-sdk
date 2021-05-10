@@ -46,7 +46,7 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, timeoutCB domain.Timeou
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *label) labelsDelete(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -63,7 +63,7 @@ func (r *label) labelsDelete(in, out *rony.MessageEnvelope, timeoutCB domain.Tim
 	logs.ErrorOnErr("LabelsDelete", err)
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -75,7 +75,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 	}
 
 	// Offline mode
-	if !r.networkCtrl.Connected() {
+	if !r.SDK().NetCtrl().Connected() {
 		logs.Debug("We are offline then load from local db",
 			zap.Int32("LabelID", req.LabelID),
 			zap.Int64("MinID", req.MinID),
@@ -124,7 +124,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
-		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 	case req.MinID == 0 && req.MaxID != 0:
 		b, _ := repo.Labels.GetLowerFilled(domain.GetTeamID(in), req.LabelID, req.MaxID)
 		if !b {
@@ -133,7 +133,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
 			)
-			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, 0, req.MaxID)
@@ -146,13 +146,13 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("MaxID", req.MaxID),
 			)
-			r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, req.MinID, 0)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
-		r.queueCtrl.EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
 		return
 	}
 }
@@ -184,7 +184,7 @@ func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, timeoutCB domai
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 
@@ -206,7 +206,7 @@ func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, timeoutCB 
 	}
 
 	// send the request to server
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 
 }
 

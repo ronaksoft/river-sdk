@@ -32,7 +32,7 @@ func (r *team) teamEdit(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutC
 		_ = repo.Teams.Save(team)
 	}
 
-	r.queueCtrl.EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
 }
 
 func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
@@ -43,7 +43,7 @@ func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB do
 		return
 	}
 
-	unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.sdk.GetConnInfo().PickupUserID(), req.Team.ID, req.WithMutes)
+	unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.SDK().GetConnInfo().PickupUserID(), req.Team.ID, req.WithMutes)
 
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
