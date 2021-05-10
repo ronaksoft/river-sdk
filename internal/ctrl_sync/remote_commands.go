@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
@@ -244,7 +245,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, t
 					ctrl.GetAllDialogs(waitGroup, teamID, teamAccess, offset+limit, limit)
 				} else {
 					waitGroup.Done()
-					ctrl.dataSyncCallback(true, false, false)
+					uiexec.ExecDataSynced(true, false, false)
 				}
 			}
 		},
@@ -303,7 +304,7 @@ func (ctrl *Controller) GetAllTopPeers(
 					ctrl.GetAllTopPeers(waitGroup, teamID, teamAccess, cat, offset+limit, limit)
 				} else {
 					waitGroup.Done()
-					ctrl.dataSyncCallback(true, false, false)
+					uiexec.ExecDataSynced(true, false, false)
 				}
 			}
 		},

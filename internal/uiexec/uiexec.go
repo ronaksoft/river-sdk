@@ -17,7 +17,9 @@ const (
 )
 
 var (
-	funcChan = make(chan execItem, 100)
+	updateCB     domain.UpdateReceivedCallback
+	dataSyncedCB domain.DataSyncedCallback
+	funcChan     = make(chan execItem, 100)
 )
 
 type execItem struct {
@@ -28,6 +30,8 @@ type execItem struct {
 }
 
 func init() {
+	updateCB = func(constructor int64, msg []byte) {}
+	dataSyncedCB = func(dialogs, contacts, gifs bool) {}
 	go func() {
 		for it := range funcChan {
 			startTime := time.Now()
@@ -57,7 +61,11 @@ func init() {
 			}
 		}
 	}()
+}
 
+func Init(updateReceived domain.UpdateReceivedCallback, dataSynced domain.DataSyncedCallback) {
+	updateCB = updateReceived
+	dataSyncedCB = dataSynced
 }
 
 func ExecSuccessCB(handler domain.MessageHandler, out *rony.MessageEnvelope) {
@@ -77,16 +85,20 @@ func ExecTimeoutCB(h domain.TimeoutCallback) {
 	}
 }
 
-func ExecUpdate(cb domain.UpdateReceivedCallback, constructor int64, m proto.Message) {
+func ExecUpdate(constructor int64, m proto.Message) {
 	mo := proto.MarshalOptions{UseCachedSize: true}
 	b := pbytes.GetCap(mo.Size(m))
 	b, err := mo.MarshalAppend(b, m)
 	if err == nil {
 		exec("update", constructor, func() {
-			cb(constructor, b)
+			updateCB(constructor, b)
 			pbytes.Put(b)
 		})
 	}
+}
+
+func ExecDataSynced(dialogs, contacts, gifs bool) {
+	dataSyncedCB(dialogs, contacts, gifs)
 }
 
 // Exec pass given function to UIExecutor buffered channel

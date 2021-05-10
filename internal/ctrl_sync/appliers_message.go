@@ -8,6 +8,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
 	"go.uber.org/zap"
@@ -107,7 +108,7 @@ func (ctrl *Controller) contactsMany(e *rony.MessageEnvelope) {
 		if err != nil {
 			logs.Error("SyncCtrl couldn't save ContactsHash in to the db", zap.Error(err))
 		}
-		ctrl.dataSyncCallback(false, true, false)
+		uiexec.ExecDataSynced(false, true, false)
 	}
 }
 
@@ -346,7 +347,7 @@ func (ctrl *Controller) savedGifs(e *rony.MessageEnvelope) {
 		logs.Warn("SyncCtrl got error on saving GifHash", zap.Error(err))
 	}
 	if oldHash != uint64(u.Hash) {
-		ctrl.dataSyncCallback(false, false, true)
+		uiexec.ExecDataSynced(false, false, true)
 	}
 }
 

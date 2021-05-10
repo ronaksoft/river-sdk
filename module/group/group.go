@@ -32,5 +32,13 @@ func New() *group {
 			msg.C_GroupsUpdateAdmin:  r.groupUpdateAdmin,
 		},
 	)
+	r.RegisterUpdateAppliers(
+		map[int64]domain.UpdateApplier{
+			msg.C_UpdateGroupAdmins:           r.updateGroupAdmins,
+			msg.C_UpdateGroupAdminOnly:        r.updateGroupAdminOnly,
+			msg.C_UpdateGroupParticipantAdmin: r.updateGroupParticipantAdmin,
+			msg.C_UpdateGroupPhoto:            r.updateGroupPhoto,
+		},
+	)
 	return r
 }

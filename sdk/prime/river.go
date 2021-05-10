@@ -9,6 +9,7 @@ import (
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/salt"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"git.ronaksoft.com/river/sdk/module"
 	"git.ronaksoft.com/river/sdk/module/account"
 	"git.ronaksoft.com/river/sdk/module/contact"
@@ -200,6 +201,12 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		msg.C_SystemGetServerKeys: true,
 	}
 
+	// Initialize UI-Executor
+	uiexec.Init(
+		r.mainDelegate.OnUpdates,
+		r.mainDelegate.DataSynced,
+	)
+
 	// Initialize Network Controller
 	r.networkCtrl = networkCtrl.New(
 		networkCtrl.Config{
@@ -256,11 +263,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			SyncStatusChangeCB: func(newStatus domain.SyncStatus) {
 				if r.mainDelegate != nil {
 					r.mainDelegate.OnSyncStatusChanged(int(newStatus))
-				}
-			},
-			UpdateReceivedCB: func(constructorID int64, b []byte) {
-				if r.mainDelegate != nil {
-					r.mainDelegate.OnUpdates(constructorID, b)
 				}
 			},
 			AppUpdateCB: func(version string, updateAvailable bool, force bool) {
@@ -695,6 +697,12 @@ func (r *River) registerModule(modules ...module.Module) {
 		m.Init(r)
 		for c, h := range m.LocalHandlers() {
 			r.localCommands[c] = h
+		}
+		for c, h := range m.UpdateAppliers() {
+			r.syncCtrl.RegisterUpdateApplier(c, h)
+		}
+		for c, h := range m.MessageAppliers() {
+			r.syncCtrl.RegisterMessageApplier(c, h)
 		}
 	}
 }

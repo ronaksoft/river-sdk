@@ -27,5 +27,12 @@ func New() *user {
 			msg.C_UsersGetFull: r.usersGetFull,
 		},
 	)
+	r.RegisterUpdateAppliers(
+		map[int64]domain.UpdateApplier{
+			msg.C_UpdateUsername:    r.updateUsername,
+			msg.C_UpdateUserBlocked: r.updateUserBlocked,
+			msg.C_UpdateUserPhoto:   r.updateUserPhoto,
+		},
+	)
 	return r
 }

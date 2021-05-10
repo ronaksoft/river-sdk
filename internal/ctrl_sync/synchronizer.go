@@ -29,9 +29,7 @@ type Config struct {
 	QueueCtrl          *queueCtrl.Controller
 	FileCtrl           *fileCtrl.Controller
 	SyncStatusChangeCB domain.SyncStatusChangeCallback
-	UpdateReceivedCB   domain.UpdateReceivedCallback
 	AppUpdateCB        domain.AppUpdateCallback
-	DataSyncedCB       domain.DataSyncedCallback
 }
 
 // Controller cache received data from server to client DB
@@ -50,9 +48,7 @@ type Controller struct {
 
 	// Callbacks
 	syncStatusChangeCallback domain.SyncStatusChangeCallback
-	updateReceivedCallback   domain.UpdateReceivedCallback
 	appUpdateCallback        domain.AppUpdateCallback
-	dataSyncCallback         domain.DataSyncedCallback
 }
 
 // NewSyncController create new instance
@@ -62,11 +58,6 @@ func NewSyncController(config Config) *Controller {
 	ctrl.queueCtrl = config.QueueCtrl
 	ctrl.networkCtrl = config.NetworkCtrl
 	ctrl.fileCtrl = config.FileCtrl
-
-	if config.UpdateReceivedCB == nil {
-		config.UpdateReceivedCB = func(constructor int64, msg []byte) {}
-	}
-	ctrl.updateReceivedCallback = config.UpdateReceivedCB
 
 	if config.SyncStatusChangeCB == nil {
 		config.SyncStatusChangeCB = func(newStatus domain.SyncStatus) {}
@@ -78,43 +69,7 @@ func NewSyncController(config Config) *Controller {
 	}
 	ctrl.appUpdateCallback = config.AppUpdateCB
 
-	if config.DataSyncedCB == nil {
-		config.DataSyncedCB = func(dialogs, contacts, gifs bool) {}
-	}
-	ctrl.dataSyncCallback = config.DataSyncedCB
-
-	ctrl.updateAppliers = map[int64]domain.UpdateApplier{
-		msg.C_UpdateAccountPrivacy:        ctrl.updateAccountPrivacy,
-		msg.C_UpdateDialogPinned:          ctrl.updateDialogPinned,
-		msg.C_UpdateDraftMessage:          ctrl.updateDraftMessage,
-		msg.C_UpdateDraftMessageCleared:   ctrl.updateDraftMessageCleared,
-		msg.C_UpdateGroupAdmins:           ctrl.updateGroupAdmins,
-		msg.C_UpdateGroupAdminOnly:        ctrl.updateGroupAdminOnly,
-		msg.C_UpdateGroupParticipantAdmin: ctrl.updateGroupParticipantAdmin,
-		msg.C_UpdateGroupPhoto:            ctrl.updateGroupPhoto,
-		msg.C_UpdateLabelDeleted:          ctrl.updateLabelDeleted,
-		msg.C_UpdateLabelItemsAdded:       ctrl.updateLabelItemsAdded,
-		msg.C_UpdateLabelItemsRemoved:     ctrl.updateLabelItemsRemoved,
-		msg.C_UpdateLabelSet:              ctrl.updateLabelSet,
-		msg.C_UpdateMessageEdited:         ctrl.updateMessageEdited,
-		msg.C_UpdateMessageID:             ctrl.updateMessageID,
-		msg.C_UpdateMessagePinned:         ctrl.updateMessagePinned,
-		msg.C_UpdateMessagesDeleted:       ctrl.updateMessagesDeleted,
-		msg.C_UpdateNewMessage:            ctrl.updateNewMessage,
-		msg.C_UpdateNotifySettings:        ctrl.updateNotifySettings,
-		msg.C_UpdateReaction:              ctrl.updateReaction,
-		msg.C_UpdateReadHistoryInbox:      ctrl.updateReadHistoryInbox,
-		msg.C_UpdateReadHistoryOutbox:     ctrl.updateReadHistoryOutbox,
-		msg.C_UpdateReadMessagesContents:  ctrl.updateReadMessagesContents,
-		msg.C_UpdateTeam:                  ctrl.updateTeam,
-		msg.C_UpdateTeamCreated:           ctrl.updateTeamCreated,
-		msg.C_UpdateTeamMemberAdded:       ctrl.updateTeamMemberAdded,
-		msg.C_UpdateTeamMemberRemoved:     ctrl.updateTeamMemberRemoved,
-		msg.C_UpdateTeamMemberStatus:      ctrl.updateTeamMemberStatus,
-		msg.C_UpdateUserBlocked:           ctrl.updateUserBlocked,
-		msg.C_UpdateUsername:              ctrl.updateUsername,
-		msg.C_UpdateUserPhoto:             ctrl.updateUserPhoto,
-	}
+	ctrl.updateAppliers = map[int64]domain.UpdateApplier{}
 	ctrl.messageAppliers = map[int64]domain.MessageApplier{
 		msg.C_AuthAuthorization:    ctrl.authAuthorization,
 		msg.C_AuthSentCode:         ctrl.authSentCode,
@@ -465,7 +420,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	}
 	updContainer.Length = int32(len(updContainer.Updates))
 
-	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updContainer)
+	uiexec.ExecUpdate(msg.C_UpdateContainer, updContainer)
 }
 
 func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64, forceUpdate bool) {
@@ -620,7 +575,7 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 	}
 
 	udpContainer.Length = int32(len(udpContainer.Updates))
-	uiexec.ExecUpdate(ctrl.updateReceivedCallback, msg.C_UpdateContainer, updateContainer)
+	uiexec.ExecUpdate(msg.C_UpdateContainer, updateContainer)
 	return
 }
 
@@ -722,7 +677,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 	if successCB != nil && out != nil {
 		successCB(out)
 	} else {
-		ctrl.dataSyncCallback(false, true, false)
+		uiexec.ExecDataSynced(false, true, false)
 	}
 	return
 }

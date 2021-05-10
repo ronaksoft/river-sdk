@@ -27,5 +27,14 @@ func New() *team {
 			msg.C_ClientGetTeamCounters: r.clientGetTeamCounters,
 		},
 	)
+	r.RegisterUpdateAppliers(
+		map[int64]domain.UpdateApplier{
+			msg.C_UpdateTeam:              r.updateTeam,
+			msg.C_UpdateTeamCreated:       r.updateTeamCreated,
+			msg.C_UpdateTeamMemberAdded:   r.updateTeamMemberAdded,
+			msg.C_UpdateTeamMemberRemoved: r.updateTeamMemberRemoved,
+			msg.C_UpdateTeamMemberStatus:  r.updateTeamMemberStatus,
+		},
+	)
 	return r
 }

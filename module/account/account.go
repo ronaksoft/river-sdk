@@ -32,5 +32,8 @@ func New() *account {
 			msg.C_AccountUpdateUsername:    r.accountUpdateUsername,
 		},
 	)
+	r.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{
+		msg.C_UpdateAccountPrivacy: r.updateAccountPrivacy,
+	})
 	return r
 }

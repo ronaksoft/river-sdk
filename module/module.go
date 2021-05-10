@@ -37,15 +37,19 @@ type SDK interface {
 type Module interface {
 	Init(sdk SDK)
 	LocalHandlers() map[int64]domain.LocalMessageHandler
+	UpdateAppliers() map[int64]domain.UpdateApplier
+	MessageAppliers() map[int64]domain.MessageApplier
 }
 
 type Base struct {
-	queueCtrl   *queueCtrl.Controller
-	networkCtrl *networkCtrl.Controller
-	fileCtrl    *fileCtrl.Controller
-	syncCtrl    *syncCtrl.Controller
-	sdk         SDK
-	handlers    map[int64]domain.LocalMessageHandler
+	queueCtrl       *queueCtrl.Controller
+	networkCtrl     *networkCtrl.Controller
+	fileCtrl        *fileCtrl.Controller
+	syncCtrl        *syncCtrl.Controller
+	sdk             SDK
+	handlers        map[int64]domain.LocalMessageHandler
+	updateAppliers  map[int64]domain.UpdateApplier
+	messageAppliers map[int64]domain.MessageApplier
 }
 
 func (b Base) Init(sdk SDK) {
@@ -61,6 +65,22 @@ func (b Base) Execute(in *rony.MessageEnvelope, onTimeout domain.TimeoutCallback
 		return
 	}
 	h(in, out, onTimeout, onComplete)
+}
+
+func (b Base) RegisterUpdateAppliers(appliers map[int64]domain.UpdateApplier) {
+	b.updateAppliers = appliers
+}
+
+func (b Base) UpdateAppliers() map[int64]domain.UpdateApplier {
+	return b.updateAppliers
+}
+
+func (b Base) RegisterMessageAppliers(appliers map[int64]domain.MessageApplier) {
+	b.messageAppliers = appliers
+}
+
+func (b Base) MessageAppliers() map[int64]domain.MessageApplier {
+	return b.messageAppliers
 }
 
 func (b Base) RegisterHandlers(handlers map[int64]domain.LocalMessageHandler) {

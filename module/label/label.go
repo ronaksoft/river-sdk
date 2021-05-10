@@ -30,5 +30,13 @@ func New() *label {
 			msg.C_LabelsRemoveFromMessage: r.labelRemoveFromMessage,
 		},
 	)
+	r.RegisterUpdateAppliers(
+		map[int64]domain.UpdateApplier{
+			msg.C_UpdateLabelDeleted:      r.updateLabelDeleted,
+			msg.C_UpdateLabelItemsAdded:   r.updateLabelItemsAdded,
+			msg.C_UpdateLabelItemsRemoved: r.updateLabelItemsRemoved,
+			msg.C_UpdateLabelSet:          r.updateLabelSet,
+		},
+	)
 	return r
 }
