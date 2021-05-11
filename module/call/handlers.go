@@ -285,21 +285,27 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	// Client should listen to icecandidateerror and send it to SDK
 	// TODO checkDisconnection(connId, pc.iceConnectionState, true)
 
-	conn := &msg.CallConnection{
-		Accepted:            remote,
-		RTCPeerConnectionID: rtcConnId,
-		IceConnectionState:  "",
-		IceQueue:            nil,
-		IceServers:          nil,
-		Init:                false,
-		Reconnecting:        false,
-		ReconnectingTry:     0,
-		ScreenShareStreamID: 0,
-		StreamID:            0,
-		IntervalID:          0,
-		Try:                 0,
+	conn := &Connection{
+		CallConnection: msg.CallConnection{
+			Accepted:            remote,
+			RTCPeerConnectionID: rtcConnId,
+			IceConnectionState:  "",
+			IceQueue:            nil,
+			IceServers:          nil,
+			Init:                false,
+			Reconnecting:        false,
+			ReconnectingTry:     0,
+			ScreenShareStreamID: 0,
+			StreamID:            0,
+			IntervalID:          0,
+			Try:                 0,
+		},
+		mu:              &sync.RWMutex{},
+		connectTimout:   nil,
+		reconnectTimout: nil,
 	}
 
+	conn.RTCPeerConnectionID = rtcConnId
 	if pc, ok := c.peerConnections[connId]; !ok {
 		c.peerConnections[connId] = conn
 	} else {
@@ -439,16 +445,18 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 			return
 		}
 
-		c.peerConnections[connId].IceQueue = nil
-		c.peerConnections[connId].Reconnecting = true
-		c.peerConnections[connId].ReconnectingTry++
+		conn.mu.Lock()
+		conn.IceQueue = nil
+		conn.Reconnecting = true
+		conn.ReconnectingTry++
 		if conn.ReconnectingTry <= ReconnectTry {
-			time.AfterFunc(time.Duration(ReconnectTimeout)*time.Millisecond, func() {
+			conn.reconnectTimout = time.AfterFunc(time.Duration(ReconnectTimeout)*time.Millisecond, func() {
 				if _, ok := c.peerConnections[connId]; ok {
 					c.peerConnections[connId].Reconnecting = false
 				}
 			})
 		}
+		conn.mu.Unlock()
 
 		// TODO call -> msg.CallUpdate_ConnectionStatusChanged with state "reconnecting"
 		var initRes *msg.PhoneInit
@@ -462,7 +470,9 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 			return
 		}
 
-		c.peerConnections[connId].IceServers = initRes.IceServers
+		conn.mu.Lock()
+		conn.IceServers = initRes.IceServers
+		conn.mu.Unlock()
 		currConnId, _ := c.getConnId(c.activeCallID, c.userID)
 		if currConnId == nil {
 			return

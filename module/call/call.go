@@ -27,7 +27,7 @@ const (
 type call struct {
 	module.Base
 
-	peerConnections map[int32]*msg.CallConnection
+	peerConnections map[int32]*Connection
 	peer            *msg.InputPeer
 	activeCallID    int64
 	callInfo        map[int64]*Info
@@ -42,7 +42,7 @@ type call struct {
 
 func New(callback *Callback) *call {
 	r := &call{
-		peerConnections: nil,
+		peerConnections: make(map[int32]*Connection),
 		peer:            nil,
 		activeCallID:    0,
 		callInfo:        make(map[int64]*Info),

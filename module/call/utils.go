@@ -3,6 +3,8 @@ package call
 import (
 	"errors"
 	"git.ronaksoft.com/river/msg/go/msg"
+	"sync"
+	"time"
 )
 
 var (
@@ -34,10 +36,10 @@ type RTCIceCandidate struct {
 }
 
 type Connection struct {
-	accepted bool
-	iceQueue []RTCIceCandidate
-	interval interface{}
-	try      int64
+	msg.CallConnection
+	mu              *sync.RWMutex
+	connectTimout   *time.Timer
+	reconnectTimout *time.Timer
 }
 
 type Info struct {
