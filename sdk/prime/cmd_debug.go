@@ -5,6 +5,8 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/module"
+	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 )
@@ -19,7 +21,7 @@ import (
 */
 
 func (r *River) HandleDebugActions(txt string) {
-	req := msg.MessagesSend{
+	req := &msg.MessagesSend{
 		RandomID:   tools.RandomInt64(0),
 		Peer:       &msg.InputPeer{ID: r.ConnInfo.UserID},
 		Body:       txt,
@@ -27,8 +29,9 @@ func (r *River) HandleDebugActions(txt string) {
 		ClearDraft: false,
 		Entities:   nil,
 	}
-	reqBytes, _ := req.Marshal()
-	_, _ = r.ExecuteCommand(msg.C_MessagesSend, reqBytes, domain.NewRequestDelegate(func(b []byte) {}, func(err error) {}, RequestBlocking))
+	in := &rony.MessageEnvelope{}
+	in.Fill(domain.NextRequestID(), msg.C_MessagesSend, req)
+	r.Module(module.Message).Execute(in, domain.EmptyCallback())
 }
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
