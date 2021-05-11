@@ -22,7 +22,7 @@ type gif struct {
 func New() *gif {
 	r := &gif{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_GifDelete:   r.gifDelete,
 			msg.C_GifGetSaved: r.gifGetSaved,
 			msg.C_GifSave:     r.gifSave,

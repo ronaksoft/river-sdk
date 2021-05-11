@@ -22,7 +22,7 @@ type label struct {
 func New() *label {
 	r := &label{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_LabelsAddToMessage:      r.labelAddToMessage,
 			msg.C_LabelsDelete:            r.labelsDelete,
 			msg.C_LabelsGet:               r.labelsGet,

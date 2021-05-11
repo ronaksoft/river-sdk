@@ -22,7 +22,7 @@ type message struct {
 func New() *message {
 	r := &message{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_MessagesClearDraft:         r.messagesClearDraft,
 			msg.C_MessagesClearHistory:       r.messagesClearHistory,
 			msg.C_MessagesDelete:             r.messagesDelete,

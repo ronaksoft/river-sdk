@@ -22,7 +22,7 @@ type user struct {
 func New() *user {
 	r := &user{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_UsersGet:     r.usersGet,
 			msg.C_UsersGetFull: r.usersGetFull,
 		},

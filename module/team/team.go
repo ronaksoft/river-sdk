@@ -22,7 +22,7 @@ type team struct {
 func New() *team {
 	r := &team{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_TeamEdit:              r.teamEdit,
 			msg.C_ClientGetTeamCounters: r.clientGetTeamCounters,
 		},

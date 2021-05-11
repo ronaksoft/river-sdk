@@ -17,11 +17,11 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *team) teamEdit(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *team) teamEdit(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.TeamEdit{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -32,14 +32,14 @@ func (r *team) teamEdit(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutC
 		_ = repo.Teams.Save(team)
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientGetTeamCounters{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB do
 
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -57,5 +57,5 @@ func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, timeoutCB do
 	}
 
 	out.Fill(in.RequestID, msg.C_ClientTeamCounters, res)
-	uiexec.ExecSuccessCB(successCB, out)
+	uiexec.ExecSuccessCB(da.OnComplete, out)
 }

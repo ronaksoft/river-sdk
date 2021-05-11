@@ -19,11 +19,11 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.AccountUpdateUsername{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -31,14 +31,14 @@ func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, timeoutCB
 	r.SDK().GetConnInfo().Save()
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.AccountRegisterDevice{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -53,14 +53,14 @@ func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, timeoutCB
 		return
 	}
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.AccountUnregisterDevice{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -76,14 +76,14 @@ func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, timeout
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.AccountSetNotifySettings{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -96,16 +96,16 @@ func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, timeou
 	_ = repo.Dialogs.Save(dialog)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 
 }
 
-func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da domain.Callback) {
 	x := &msg.AccountRemovePhoto{}
 	_ = x.Unmarshal(in.Message)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 
 	user, err := repo.Users.Get(r.SDK().GetConnInfo().PickupUserID())
 	if err != nil {
@@ -125,11 +125,11 @@ func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, timeoutCB do
 	_ = repo.Users.RemovePhotoGallery(r.SDK().GetConnInfo().PickupUserID(), x.PhotoID)
 }
 
-func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.AccountUpdateProfile{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -145,14 +145,14 @@ func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, timeoutCB 
 	)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.AccountGetTeams{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -163,9 +163,9 @@ func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, timeoutCB doma
 			Teams: teams,
 		}
 		out.Fill(out.RequestID, msg.C_TeamsMany, teamsMany)
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }

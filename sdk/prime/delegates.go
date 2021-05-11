@@ -25,13 +25,6 @@ type ConnInfoDelegate interface {
 	Set(key, value string)
 }
 
-// RequestDelegate each request should have this callbacks
-type RequestDelegate interface {
-	OnComplete(b []byte)
-	OnTimeout(err error)
-	Flags() int32
-}
-
 // Request Flags
 const (
 	RequestServerForced int32 = 1 << iota
@@ -39,3 +32,9 @@ const (
 	RequestDontWaitForNetwork
 	RequestTeamForce
 )
+
+type RequestDelegate interface {
+	OnComplete(b []byte)
+	OnTimeout(err error)
+	Flags() int32
+}

@@ -3,7 +3,131 @@ package domain
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/pools"
 )
+
+type RequestDelegate interface {
+	OnComplete(b []byte)
+	OnTimeout(err error)
+	OnProgress(percent int64)
+	Flags() int32
+}
+
+type delegateAdapter struct {
+	d RequestDelegate
+}
+
+func DelegateAdapterFromRequest(d RequestDelegate) *delegateAdapter {
+	return &delegateAdapter{
+		d: d,
+	}
+}
+
+func (rda *delegateAdapter) OnComplete(m *rony.MessageEnvelope) {
+	if rda.d == nil {
+		return
+	}
+	buf := pools.Buffer.FromProto(m)
+	rda.d.OnComplete(*buf.Bytes())
+	pools.Buffer.Put(buf)
+}
+
+func (rda *delegateAdapter) OnTimeout() {
+	if rda.d == nil {
+		return
+	}
+	rda.d.OnTimeout(ErrRequestTimeout)
+}
+
+func (rda *delegateAdapter) OnProgress(percent int64) {
+	if rda.d == nil {
+		return
+	}
+	rda.d.OnProgress(percent)
+}
+
+type Callback interface {
+	OnComplete(m *rony.MessageEnvelope)
+	OnTimeout()
+	OnProgress(percent int64)
+}
+
+type callback struct {
+	onComplete func(m *rony.MessageEnvelope)
+	onTimeout  func()
+	onProgress func(percent int64)
+}
+
+func (c *callback) OnComplete(m *rony.MessageEnvelope) {
+	if c.onComplete == nil {
+		return
+	}
+	c.onComplete(m)
+}
+
+func (c *callback) OnTimeout() {
+	if c.onTimeout == nil {
+		return
+	}
+	c.onTimeout()
+}
+
+func (c *callback) OnProgress(percent int64) {
+	if c.onProgress == nil {
+		return
+	}
+	c.onProgress(percent)
+}
+
+func NewCallback(onTimeout func(), onComplete func(envelope *rony.MessageEnvelope), onProgress func(int64)) *callback {
+	return &callback{
+		onComplete: onComplete,
+		onTimeout:  onTimeout,
+		onProgress: onProgress,
+	}
+}
+
+func EmptyCallback() *callback {
+	return &callback{}
+}
+
+type requestDelegate struct {
+	onComplete func(b []byte)
+	onTimeout  func(error)
+	onProgress func(int64)
+	flags      int32
+}
+
+func (r *requestDelegate) OnComplete(b []byte) {
+	if r.onComplete != nil {
+		r.onComplete(b)
+	}
+}
+
+func (r *requestDelegate) OnTimeout(err error) {
+	if r.onTimeout != nil {
+		r.onTimeout(err)
+	}
+}
+
+func (r *requestDelegate) Flags() int32 {
+	return r.flags
+}
+
+func (r *requestDelegate) OnProgress(percent int64) {
+	if r.onProgress != nil {
+		r.onProgress(percent)
+	}
+}
+
+func NewRequestDelegate(onComplete func(b []byte), onTimeout func(err error), flags int32) *requestDelegate {
+	return &requestDelegate{
+		onComplete: onComplete,
+		onTimeout:  onTimeout,
+		onProgress: nil,
+		flags:      flags,
+	}
+}
 
 // UpdateReceivedCallback used as relay to pass getDifference updates to UI
 type UpdateReceivedCallback func(constructor int64, msg []byte)
@@ -38,8 +162,8 @@ type UpdateApplier func(envelope *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, er
 // MessageApplier on receive response in SyncController, cache client data, there are some applier function for each proto message
 type MessageApplier func(envelope *rony.MessageEnvelope)
 
-// LocalMessageHandler SDK commands that handle user request from client cache
-type LocalMessageHandler func(in, out *rony.MessageEnvelope, timeoutCB TimeoutCallback, successCB MessageHandler)
+// LocalHandler SDK commands that handle user request from client cache
+type LocalHandler func(in, out *rony.MessageEnvelope, da Callback)
 
 // ReceivedMessageHandler NetworkController pass all received response messages to this callback/delegate
 type ReceivedMessageHandler func(messages []*rony.MessageEnvelope)

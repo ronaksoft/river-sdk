@@ -64,29 +64,29 @@ func (r *River) executeCommand(
 		r.delegateMutex.Unlock()
 	}
 
-	// Timeout Callback
-	timeoutCallback := func() {
-		err = domain.ErrRequestTimeout
-		delegate.OnTimeout(err)
-		releaseDelegate(r, uint64(requestID))
-		if blockingMode {
-			waitGroup.Done()
-		}
-	}
-
-	// Success Callback
-	successCallback := func(envelope *rony.MessageEnvelope) {
-		b, _ := envelope.Marshal()
-		delegate.OnComplete(b)
-		releaseDelegate(r, uint64(requestID))
-		if blockingMode {
-			waitGroup.Done()
-		}
-	}
+	da := domain.DelegateAdapterFromRequest(
+		domain.NewRequestDelegate(
+			func(b []byte) {
+				delegate.OnComplete(b)
+				releaseDelegate(r, uint64(requestID))
+				if blockingMode {
+					waitGroup.Done()
+				}
+			},
+			func(err error) {
+				delegate.OnTimeout(err)
+				releaseDelegate(r, uint64(requestID))
+				if blockingMode {
+					waitGroup.Done()
+				}
+			},
+			delegate.Flags(),
+		),
+	)
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
-		executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+		executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, da)
 		return
 	}
 
@@ -94,23 +94,23 @@ func (r *River) executeCommand(
 	handler, ok := r.localCommands[constructor]
 	if ok {
 		if blockingMode {
-			executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+			executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, da)
 		} else {
-			go executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+			go executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, da)
 		}
 		return
 	}
 
 	// If we reached here, then execute the remote commands
-	executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, timeoutCallback, successCallback)
+	executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, da)
 
 	return
 }
 func executeLocalCommand(
 	teamID int64, teamAccess uint64,
-	handler domain.LocalMessageHandler,
+	handler domain.LocalHandler,
 	requestID uint64, constructor int64, commandBytes []byte,
-	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	da domain.Callback,
 ) {
 	logs.Debug("We execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -126,13 +126,13 @@ func executeLocalCommand(
 		Header:    domain.TeamHeader(teamID, teamAccess),
 		RequestID: requestID,
 	}
-	handler(in, out, timeoutCB, successCB)
+	handler(in, out, da)
 }
 func executeRemoteCommand(
 	teamID int64, teamAccess uint64,
 	r *River,
 	requestID uint64, constructor int64, commandBytes []byte,
-	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	da domain.Callback,
 ) {
 	logs.Debug("We execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -175,7 +175,7 @@ func executeRemoteCommand(
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
-		}, timeoutCB, successCB, blocking, true)
+		}, da.OnTimeout, da.OnComplete, blocking, true)
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&rony.MessageEnvelope{
@@ -184,7 +184,7 @@ func executeRemoteCommand(
 				RequestID:   requestID,
 				Message:     commandBytes,
 			},
-			timeoutCB, successCB, true,
+			da.OnTimeout, da.OnComplete, true,
 		)
 	}
 }
@@ -252,12 +252,8 @@ func getServerKeys(r *River) (sk *msg.SystemKeys, err error) {
 	reqBytes, _ := req.Marshal()
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	executeRemoteCommand(
-		0, 0,
-		r,
-		uint64(domain.SequentialUniqueID()),
-		msg.C_SystemGetServerKeys,
-		reqBytes,
+
+	cb := domain.NewCallback(
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
@@ -284,6 +280,10 @@ func getServerKeys(r *River) (sk *msg.SystemKeys, err error) {
 				err = domain.ErrInvalidConstructor
 			}
 		},
+		nil,
+	)
+	executeRemoteCommand(
+		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_SystemGetServerKeys, reqBytes, cb,
 	)
 	waitGroup.Wait()
 	return
@@ -296,12 +296,7 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 	req1Bytes, _ := req1.Marshal()
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	executeRemoteCommand(
-		0, 0,
-		r,
-		uint64(domain.SequentialUniqueID()),
-		msg.C_InitConnect,
-		req1Bytes,
+	cb := domain.NewCallback(
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
@@ -332,7 +327,10 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 			default:
 				err = domain.ErrInvalidConstructor
 			}
-		},
+		}, nil,
+	)
+	executeRemoteCommand(
+		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_InitConnect, req1Bytes, cb,
 	)
 	waitGroup.Wait()
 	return
@@ -389,12 +387,7 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	executeRemoteCommand(
-		0, 0,
-		r,
-		uint64(domain.SequentialUniqueID()),
-		msg.C_InitCompleteAuth,
-		req2Bytes,
+	cb := domain.NewCallback(
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
@@ -448,6 +441,10 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 				return
 			}
 		},
+		nil,
+	)
+	executeRemoteCommand(
+		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_InitCompleteAuth, req2Bytes, cb,
 	)
 	waitGroup.Wait()
 	return

@@ -22,7 +22,7 @@ type search struct {
 func New() *search {
 	r := &search{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
 			msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
 			msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,

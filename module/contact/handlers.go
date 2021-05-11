@@ -20,11 +20,11 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *contact) contactsGet(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *contact) contactsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ContactsGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -43,20 +43,20 @@ func (r *contact) contactsGet(in, out *rony.MessageEnvelope, timeoutCB domain.Ti
 		zap.Int("Users", len(res.Users)),
 		zap.Int("Contacts", len(res.Contacts)),
 	)
-	uiexec.ExecSuccessCB(successCB, out)
+	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *contact) contactsAdd(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *contact) contactsAdd(in, out *rony.MessageEnvelope, da domain.Callback) {
 	if domain.GetTeamID(in) != 0 {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: "teams cannot add contact"})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
 	req := &msg.ContactsAdd{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -80,27 +80,27 @@ func (r *contact) contactsAdd(in, out *rony.MessageEnvelope, timeoutCB domain.Ti
 
 	// reset contacts hash to update the contacts
 	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(domain.GetTeamID(in)), 0)
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *contact) contactsImport(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da domain.Callback) {
 	if domain.GetTeamID(in) != 0 {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: "teams cannot import contact"})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
 	req := &msg.ContactsImport{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
 	// If only importing one contact then we don't need to calculate contacts hash
 	if len(req.Contacts) == 1 {
 		// send request to server
-		r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 		return
 	}
 
@@ -121,7 +121,7 @@ func (r *contact) contactsImport(in, out *rony.MessageEnvelope, timeoutCB domain
 			Empty:        true,
 		}
 		out.Fill(out.RequestID, msg.C_ContactsImported, res)
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -142,61 +142,61 @@ func (r *contact) contactsImport(in, out *rony.MessageEnvelope, timeoutCB domain
 
 	if len(diffContacts) <= 250 {
 		// send the request to server
-		r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 		return
 	}
 
 	// chunk contacts by size of 50 and send them to server
-	r.SDK().SyncCtrl().ContactsImport(req.Replace, successCB, out)
+	r.SDK().SyncCtrl().ContactsImport(req.Replace, da.OnComplete, out)
 }
 
-func (r *contact) contactsDelete(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *contact) contactsDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
 	if domain.GetTeamID(in) != 0 {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: "teams cannot delete contact"})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
 	req := &msg.ContactsDelete{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
 	_ = repo.Users.DeleteContact(domain.GetTeamID(in), req.UserIDs...)
 	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(domain.GetTeamID(in)), 0)
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 	return
 }
 
-func (r *contact) contactsDeleteAll(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *contact) contactsDeleteAll(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ContactsDeleteAll{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
 	_ = repo.Users.DeleteAllContacts(domain.GetTeamID(in))
 	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(domain.GetTeamID(in)), 0)
 	_ = repo.System.SaveInt(domain.SkContactsImportHash, 0)
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 	return
 }
 
-func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ContactsGetTopPeers{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 	res := &msg.ContactsTopPeers{}
 	topPeers, _ := repo.TopPeers.List(domain.GetTeamID(in), req.Category, req.Offset, req.Limit)
 	if len(topPeers) == 0 {
-		r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 		return
 	}
 
@@ -252,33 +252,33 @@ func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, timeoutCB d
 	buff, err := res.Marshal()
 	logs.ErrorOnErr("River got error on marshal ContactsTopPeers", err)
 	out.Message = buff
-	uiexec.ExecSuccessCB(successCB, out)
+	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *contact) contactsResetTopPeer(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *contact) contactsResetTopPeer(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ContactsResetTopPeer{}
 	err := req.Unmarshal(in.Message)
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
 	err = repo.TopPeers.Delete(req.Category, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *contact) clientContactSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *contact) clientContactSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientContactSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -294,5 +294,5 @@ func (r *contact) clientContactSearch(in, out *rony.MessageEnvelope, timeoutCB d
 	users.Users, _ = repo.Users.GetMany(userIDs)
 
 	out.Fill(in.RequestID, msg.C_UsersMany, users)
-	uiexec.ExecSuccessCB(successCB, out)
+	uiexec.ExecSuccessCB(da.OnComplete, out)
 }

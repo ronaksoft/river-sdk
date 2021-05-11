@@ -18,18 +18,18 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *gif) gifSave(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *gif) gifSave(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.GifSave{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
 	cf, err := repo.Files.Get(req.Doc.ClusterID, req.Doc.ID, req.Doc.AccessHash)
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -55,20 +55,20 @@ func (r *gif) gifSave(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCal
 		err = repo.Gifs.Save(md)
 		if err != nil {
 			out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-			successCB(out)
+			da.OnComplete(out)
 			return
 		}
 	}
 	_ = repo.Gifs.UpdateLastAccess(cf.ClusterID, cf.FileID, domain.Now().Unix())
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *gif) gifDelete(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.GifDelete{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -77,14 +77,14 @@ func (r *gif) gifDelete(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutC
 		logs.Warn("We got error on deleting GIF document", zap.Error(err))
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.GifGetSaved{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 	gifHash, _ := repo.System.LoadInt(domain.SkGifHash)
@@ -95,19 +95,19 @@ func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, timeoutCB domain.Timeou
 		res, err := repo.Gifs.GetSaved()
 		if err != nil {
 			out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-			successCB(out)
+			da.OnComplete(out)
 			return
 		}
 		out.Fill(out.RequestID, msg.C_SavedGifs, res)
-		successCB(out)
+		da.OnComplete(out)
 
 		// ignore success cb because we notify views on message hanlder
 		enqueueSuccessCB = func(m *rony.MessageEnvelope) {
 
 		}
 	} else {
-		enqueueSuccessCB = successCB
+		enqueueSuccessCB = da.OnComplete
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, enqueueSuccessCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, enqueueSuccessCB, true)
 }

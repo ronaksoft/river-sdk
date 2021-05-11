@@ -20,7 +20,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *user) usersGetFull(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.UsersGetFull{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::usersGetFull()-> Unmarshal()", zap.Error(err))
@@ -45,7 +45,7 @@ func (r *user) usersGetFull(in, out *rony.MessageEnvelope, timeoutCB domain.Time
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
-		uiexec.ExecSuccessCB(successCB, out)
+		uiexec.ExecSuccessCB(da.OnComplete, out)
 
 		if len(outDated) > 0 {
 			req.Users = req.Users[:0]
@@ -62,10 +62,10 @@ func (r *user) usersGetFull(in, out *rony.MessageEnvelope, timeoutCB domain.Time
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *user) usersGet(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *user) usersGet(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.UsersGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		logs.Error("River::usersGet()-> Unmarshal()", zap.Error(err))
@@ -84,7 +84,7 @@ func (r *user) usersGet(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutC
 
 		out.Constructor = msg.C_UsersMany
 		out.Message, _ = res.Marshal()
-		uiexec.ExecSuccessCB(successCB, out)
+		uiexec.ExecSuccessCB(da.OnComplete, out)
 
 		if len(outDated) > 0 {
 			req.Users = req.Users[:0]
@@ -101,5 +101,5 @@ func (r *user) usersGet(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutC
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }

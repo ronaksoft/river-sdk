@@ -92,7 +92,7 @@ func (r *River) executeCommand(
 	}
 
 	serverForce := delegate.Flags()&RequestServerForced != 0
-	rda := NewDelegateAdapter(delegate)
+	rda := domain.DelegateAdapterFromRequest(delegate)
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
@@ -114,9 +114,9 @@ func (r *River) executeCommand(
 }
 func executeLocalCommand(
 	teamID int64, teamAccess uint64,
-	handler LocalHandler,
+	handler domain.LocalHandler,
 	requestID uint64, constructor int64, commandBytes []byte,
-	da *DelegateAdapter,
+	da domain.Callback,
 ) {
 	logs.Debug("We execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -138,7 +138,7 @@ func executeRemoteCommand(
 	teamID int64, teamAccess uint64,
 	r *River,
 	requestID uint64, constructor int64, commandBytes []byte,
-	da *DelegateAdapter,
+	da domain.Callback,
 ) {
 	logs.Debug("We execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),

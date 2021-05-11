@@ -22,7 +22,7 @@ type system struct {
 func New() *system {
 	r := &system{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_SystemGetConfig: r.systemGetConfig,
 		},
 	)

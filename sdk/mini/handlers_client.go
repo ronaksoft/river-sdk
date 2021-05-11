@@ -27,7 +27,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da *DelegateAdapter) {
+func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da domain.Callback) {
 	reqMedia := &msg.ClientSendMessageMedia{}
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -201,7 +201,7 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation,
 	}
 	return nil, domain.ErrServer
 }
-func (r *River) uploadFile(in *rony.MessageEnvelope, da *DelegateAdapter, fileID int64, filePath string, peerID int64) error {
+func (r *River) uploadFile(in *rony.MessageEnvelope, da domain.Callback, fileID int64, filePath string, peerID int64) error {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -291,7 +291,7 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 	return err
 }
 
-func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da *DelegateAdapter) {
+func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientGlobalSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
