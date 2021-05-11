@@ -38,16 +38,6 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-type dummyDelegate struct{}
-
-func (d dummyDelegate) OnComplete(b []byte) {}
-
-func (d dummyDelegate) OnTimeout(err error) {}
-
-func (d dummyDelegate) Flags() int32 {
-	return 0
-}
-
 func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.MessagesGetDialogs{}
 	if err := req.Unmarshal(in.Message); err != nil {
@@ -208,7 +198,7 @@ func (r *message) messagesSend(in, out *rony.MessageEnvelope, da domain.Callback
 	}
 
 	if req.Peer.ID == r.SDK().GetConnInfo().PickupUserID() {
-		r.HandleDebugActions(req.Body)
+		r.handleDebugActions(req.Body)
 	}
 
 	// this will be used as next requestID
@@ -247,7 +237,7 @@ func (r *message) messagesSend(in, out *rony.MessageEnvelope, da domain.Callback
 	//   invoke new OnUpdate with new proto buffer to inform ui that pending message got delivered
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
-func (r *message) HandleDebugActions(txt string) {
+func (r *message) handleDebugActions(txt string) {
 	parts := strings.Fields(strings.ToLower(txt))
 	if len(parts) == 0 {
 		return
