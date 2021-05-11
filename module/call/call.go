@@ -13,6 +13,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/module"
+	"sync"
 )
 
 const (
@@ -27,6 +28,7 @@ const (
 type call struct {
 	module.Base
 
+	mu              *sync.RWMutex
 	peerConnections map[int32]*Connection
 	peer            *msg.InputPeer
 	activeCallID    int64

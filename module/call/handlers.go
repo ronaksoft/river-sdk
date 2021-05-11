@@ -74,7 +74,7 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, er
 		case msg.PhoneCallAction_PhoneCallIceExchange:
 			c.iceExchange(update)
 		case msg.PhoneCallAction_PhoneCallMediaSettingsChanged:
-			c.mediaSettingsUpdate(update)
+			c.mediaSettingsUpdated(update)
 		case msg.PhoneCallAction_PhoneCallSDPOffer:
 			c.sdpOfferUpdated(update)
 		case msg.PhoneCallAction_PhoneCallSDPAnswer:
@@ -102,8 +102,8 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, er
 	return res, nil
 }
 
-func (c *call) getStreamState() *msg.CallMediaSettings {
-	return &msg.CallMediaSettings{
+func (c *call) getStreamState() MediaSettings {
+	return MediaSettings{
 		Audio:       true,
 		ScreenShare: false,
 		Video:       true,
@@ -136,7 +136,9 @@ func (c *call) initCallParticipants(callID int64, participants []*msg.InputUser)
 		}
 		callParticipantMap[participant.UserID] = idx
 	}
+
 	mediaState := c.getStreamState()
+	c.mu.Lock()
 	c.callInfo[callID] = &Info{
 		acceptedParticipantIds: nil,
 		acceptedParticipants:   nil,
@@ -147,7 +149,131 @@ func (c *call) initCallParticipants(callID int64, participants []*msg.InputUser)
 		participants:           callParticipants,
 		requestParticipantIds:  nil,
 		requests:               nil,
+		iceServer:              nil,
+		mu:                     &sync.RWMutex{},
 	}
+	c.mu.Unlock()
+}
+
+func (c *call) initParticipant(callID int64, participants []*msg.PhoneParticipant, bootstrap bool) {
+	fn := func(callParticipants map[int32]*Participant, callParticipantMap map[int64]int32) (map[int32]*Participant, map[int64]int32) {
+		for _, participant := range participants {
+			callParticipants[participant.ConnectionId] = &Participant{
+				PhoneParticipant: msg.PhoneParticipant{
+					ConnectionId: participant.ConnectionId,
+					Peer:         participant.Peer,
+					Initiator:    participant.Initiator,
+					Admin:        participant.Admin,
+				},
+				DeviceType: msg.CallDeviceType_CallDeviceUnknown,
+				MediaSettings: msg.CallMediaSettings{
+					Audio:       true,
+					ScreenShare: false,
+					Video:       true,
+				},
+				Started: false,
+			}
+			callParticipantMap[participant.Peer.UserID] = participant.ConnectionId
+		}
+		return callParticipants, callParticipantMap
+	}
+
+	if info, ok := c.callInfo[callID]; !ok {
+		if bootstrap {
+			callParticipants, callParticipantMap := fn(make(map[int32]*Participant), make(map[int64]int32))
+			mediaState := c.getStreamState()
+			c.mu.Lock()
+			c.callInfo[callID] = &Info{
+				acceptedParticipantIds: nil,
+				acceptedParticipants:   nil,
+				allConnected:           false,
+				dialed:                 false,
+				mediaSettings:          mediaState,
+				participantMap:         callParticipantMap,
+				participants:           callParticipants,
+				requestParticipantIds:  nil,
+				requests:               nil,
+				iceServer:              nil,
+				mu:                     &sync.RWMutex{},
+			}
+			c.mu.Unlock()
+		}
+	} else {
+		info.mu.RLock()
+		callParticipants, callParticipantMap := fn(info.participants, info.participantMap)
+		info.mu.RUnlock()
+
+		info.mu.Lock()
+		info.participantMap = callParticipantMap
+		info.participants = callParticipants
+		info.mu.Unlock()
+	}
+}
+
+func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequested) {
+	if info, ok := c.callInfo[in.CallID]; ok {
+		requestParticipantIds := info.requestParticipantIds
+		hasReq := false
+		for idx := range requestParticipantIds {
+			if requestParticipantIds[idx] == in.UserID {
+				hasReq = true
+				break
+			}
+		}
+
+		if hasReq {
+			info.mu.Lock()
+			info.requests = append(info.requests, in)
+			info.requestParticipantIds = append(info.requestParticipantIds, in.UserID)
+			info.mu.Unlock()
+			logs.Info("[webrtc] request from", zap.Int64("UserID", in.UserID))
+		}
+		return
+	}
+
+	logs.Info("[webrtc] request from", zap.Int64("UserID", in.UserID))
+	callParticipants := make(map[int32]*Participant)
+	callParticipantMap := make(map[int64]int32)
+	for _, participant := range sdpData.Participants {
+		deviceType := msg.CallDeviceType_CallDeviceUnknown
+		if in.UserID == participant.Peer.UserID {
+			deviceType = sdpData.DeviceType
+		}
+		callParticipants[participant.ConnectionId] = &Participant{
+			PhoneParticipant: msg.PhoneParticipant{
+				ConnectionId: participant.ConnectionId,
+				Peer:         participant.Peer,
+				Initiator:    participant.Initiator,
+				Admin:        participant.Admin,
+			},
+			DeviceType: deviceType,
+			MediaSettings: msg.CallMediaSettings{
+				Audio:       true,
+				ScreenShare: false,
+				Video:       true,
+			},
+			Started: false,
+		}
+		callParticipantMap[participant.Peer.UserID] = participant.ConnectionId
+	}
+
+	mediaState := c.getStreamState()
+	c.mu.Lock()
+	c.callInfo[in.CallID] = &Info{
+		acceptedParticipantIds: nil,
+		acceptedParticipants:   nil,
+		allConnected:           false,
+		dialed:                 false,
+		mediaSettings:          mediaState,
+		participantMap:         callParticipantMap,
+		participants:           callParticipants,
+		requestParticipantIds:  []int64{in.UserID},
+		requests:               []*UpdatePhoneCall{in},
+		iceServer:              nil,
+		mu:                     &sync.RWMutex{},
+	}
+	c.mu.Unlock()
+	return
 }
 
 func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool, request *UpdatePhoneCall) (res *msg.PhoneCall, err error) {
@@ -406,6 +532,87 @@ func (c *call) sendIceCandidate(callID int64, candidate *msg.CallRTCIceCandidate
 	return
 }
 
+func (c *call) flushIceCandidates(callID int64, connId int32) {
+	c.mu.RLock()
+	conn, ok := c.peerConnections[connId]
+	c.mu.RUnlock()
+
+	if !ok {
+		return
+	}
+
+	for _, candidate := range conn.IceQueue {
+		go func(ic *msg.CallRTCIceCandidate) {
+			_ = c.sendIceCandidate(callID, ic, connId)
+		}(candidate)
+	}
+}
+
+func (c *call) propagateMediaSettings(in MediaSettingsIn) {
+	if c.activeCallID == 0 {
+		return
+	}
+
+	if c.peer == nil {
+		return
+	}
+
+	c.mu.RLock()
+	info, ok := c.callInfo[c.activeCallID]
+	c.mu.RUnlock()
+	if !ok {
+		return
+	}
+
+	if in.Audio != nil {
+		info.mediaSettings.Audio = *in.Audio
+	}
+
+	if in.Video != nil {
+		info.mediaSettings.Video = *in.Video
+	}
+
+	if in.ScreenShare != nil {
+		info.mediaSettings.ScreenShare = *in.ScreenShare
+	}
+
+	action := &msg.PhoneActionMediaSettingsUpdated{
+		Video:       info.mediaSettings.Video,
+		Audio:       info.mediaSettings.Audio,
+		ScreenShare: info.mediaSettings.ScreenShare,
+	}
+	actionData, err := action.Marshal()
+	if err == nil {
+		return
+	}
+
+	// TODO -> msg.CallUpdate_LocalMediaSettingsUpdated
+
+	inputUsers := c.getInputUsers(c.activeCallID)
+	_, _ = c.apiSendUpdate(c.peer, c.activeCallID, inputUsers, msg.PhoneCallAction_PhoneCallMediaSettingsChanged, actionData, false)
+	return
+}
+
+func (c *call) mediaSettingsInit(in MediaSettings) {
+	if c.activeCallID == 0 {
+		return
+	}
+
+	cid, info := c.getConnId(c.activeCallID, c.userID)
+	if cid == nil {
+		return
+	}
+
+	connId := *cid
+	info.mu.Lock()
+	info.participants[connId].MediaSettings.Audio = in.Audio
+	info.participants[connId].MediaSettings.Video = in.Video
+	info.participants[connId].MediaSettings.ScreenShare = in.ScreenShare
+	info.mu.Unlock()
+
+	// TOO Call -> msg.CallUpdate_MediaSettingsUpdated
+}
+
 func (c *call) checkAllConnected() {
 	if c.activeCallID == 0 {
 		return
@@ -586,6 +793,19 @@ func (c *call) getInputUserByUserIDs(callID int64, userIDs []int64) (inputUser [
 	return
 }
 
+func (c *call) getInputUsers(callID int64) (inputUser []*msg.InputUser) {
+	info := c.getCallInfo(callID)
+	if info == nil {
+		return nil
+	}
+
+	inputUser = make([]*msg.InputUser, 0, len(info.participants))
+	for _, participant := range info.participants {
+		inputUser = append(inputUser, participant.Peer)
+	}
+	return
+}
+
 func (c *call) swapTempInfo(callID int64) {
 	info := c.getCallInfo(TempCallID)
 	if info == nil {
@@ -601,9 +821,165 @@ func (c *call) setCallInfoDialed(callID int64) {
 	}
 }
 
+func (c *call) callBusy(in *UpdatePhoneCall) {
+	inputPeer := c.getInputUserFromUpdate(in)
+
+	_, _ = c.apiReject(inputPeer, in.CallID, msg.DiscardReason_DiscardReasonBusy, 0)
+	return
+}
+
+func (c *call) callAccept(callID int64, video bool) (err error) {
+	if c.peer == nil {
+		err = ErrInvalidPeerInput
+		return
+	}
+
+	initRes, err := c.apiInit(c.peer, callID)
+	if err != nil {
+		return
+	}
+
+	c.activeCallID = callID
+	c.iceServer = initRes.IceServers
+
+	info := c.getCallInfo(callID)
+	if info == nil {
+		err = ErrInvalidCallRequest
+		return
+	}
+
+	if len(info.requests) == 0 {
+		err = ErrNoCallRequest
+		return
+	}
+
+	initFn := func() error {
+		wg := sync.WaitGroup{}
+		for _, request := range info.requests {
+			wg.Add(0)
+			go func(req *UpdatePhoneCall) {
+				defer wg.Done()
+				_, innerErr := c.initConnections(c.peer, callID, false, req)
+				if innerErr != nil {
+					return
+				}
+
+				streamState := c.getStreamState()
+				c.mediaSettingsInit(streamState)
+				c.propagateMediaSettings(MediaSettingsIn{
+					Audio:       &streamState.Audio,
+					ScreenShare: &streamState.ScreenShare,
+					Video:       &streamState.Video,
+				})
+			}(request)
+		}
+		wg.Wait()
+
+		return nil
+	}
+
+	if !info.dialed {
+		err = c.callback.InitStream(true, video)
+		if err != nil {
+			return
+		}
+
+		return initFn()
+	}
+
+	return initFn()
+}
+
+func (c *call) sendCallAck(in *UpdatePhoneCall) {
+	inputPeer := c.getInputUserFromUpdate(in)
+
+	inputUser := &msg.InputUser{
+		UserID:     in.UserID,
+		AccessHash: in.AccessHash,
+	}
+
+	action := &msg.PhoneActionAck{}
+	actionData, err := action.Marshal()
+	if err != nil {
+		return
+	}
+
+	_, _ = c.apiSendUpdate(inputPeer, in.CallID, []*msg.InputUser{inputUser}, msg.PhoneCallAction_PhoneCallAck, actionData, false)
+	return
+}
+
+func (c *call) getInputUserFromUpdate(in *UpdatePhoneCall) *msg.InputPeer {
+	inputPeer := &msg.InputPeer{
+		ID:   in.PeerID,
+		Type: msg.PeerType(in.PeerType),
+	}
+	if in.PeerType == int32(msg.PeerType_PeerGroup) {
+		inputPeer.AccessHash = 0
+	} else {
+		inputPeer.AccessHash = in.AccessHash
+	}
+
+	return inputPeer
+}
+
+func (c *call) shouldAccept(in *UpdatePhoneCall) bool {
+	if c.activeCallID == in.CallID {
+		return false
+	}
+
+	if c.peer.GetType() == msg.PeerType_PeerUser {
+		return false
+	}
+
+	if _, ok := c.callInfo[c.activeCallID]; !ok {
+		return false
+	}
+
+	c.mu.RLock()
+	info, ok := c.callInfo[c.activeCallID]
+	c.mu.RUnlock()
+
+	if !ok {
+		return false
+	}
+
+	if ok {
+		info.mu.RLock()
+		defer info.mu.RUnlock()
+		for idx := range info.acceptedParticipantIds {
+			if info.acceptedParticipantIds[idx] == in.UserID {
+				return false
+			}
+		}
+	}
+
+	info.mu.Lock()
+	info.acceptedParticipantIds = append(info.acceptedParticipantIds, in.UserID)
+	info.mu.Unlock()
+	return true
+}
+
 func (c *call) callRequested(in *UpdatePhoneCall) {
 	data := in.Data.(*msg.PhoneActionRequested)
-	fmt.Println(data)
+	if c.activeCallID != in.CallID {
+		c.callBusy(in)
+		return
+	}
+
+	// Send ack update so callee ringing indicator activates
+	c.sendCallAck(in)
+	if _, ok := c.callInfo[in.CallID]; !ok {
+		c.initCallRequest(in, data)
+
+		c.mu.Lock()
+		c.peer = c.getInputUserFromUpdate(in)
+		c.mu.Unlock()
+
+		// TODO send -> msg.CallUpdate_CallRequested
+	} else if c.shouldAccept(in) {
+		streamState := c.getStreamState()
+		_ = c.callAccept(c.activeCallID, streamState.Video)
+	}
 }
 
 func (c *call) callAccepted(in *UpdatePhoneCall) {
@@ -621,9 +997,21 @@ func (c *call) iceExchange(in *UpdatePhoneCall) {
 	fmt.Println(data)
 }
 
-func (c *call) mediaSettingsUpdate(in *UpdatePhoneCall) {
+func (c *call) mediaSettingsUpdated(in *UpdatePhoneCall) {
 	data := in.Data.(*msg.PhoneActionMediaSettingsUpdated)
-	fmt.Println(data)
+	cid, info := c.getConnId(in.CallID, in.UserID)
+	if cid == nil {
+		return
+	}
+
+	connId := *cid
+	info.mu.Lock()
+	info.participants[connId].MediaSettings.Audio = data.Audio
+	info.participants[connId].MediaSettings.Video = data.Video
+	info.participants[connId].MediaSettings.ScreenShare = data.ScreenShare
+	info.mu.Unlock()
+
+	// TOO Call -> msg.CallUpdate_MediaSettingsUpdated
 }
 
 func (c *call) sdpOfferUpdated(in *UpdatePhoneCall) {

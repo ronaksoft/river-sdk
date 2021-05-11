@@ -8,12 +8,14 @@ import (
 )
 
 var (
-	ErrActionNotFound   = errors.New("action not found")
-	ErrInvalidCallId    = errors.New("invalid call id")
-	ErrInvalidConnId    = errors.New("invalid conn id")
-	ErrInvalidPeerInput = errors.New("invalid peer input")
-	ErrNoActiveCall     = errors.New("no active call")
-	ErrNoSDP            = errors.New("no sdp")
+	ErrActionNotFound     = errors.New("action not found")
+	ErrInvalidCallId      = errors.New("invalid call id")
+	ErrInvalidConnId      = errors.New("invalid conn id")
+	ErrInvalidPeerInput   = errors.New("invalid peer input")
+	ErrInvalidCallRequest = errors.New("invalid call request")
+	ErrNoActiveCall       = errors.New("no active call")
+	ErrNoSDP              = errors.New("no sdp")
+	ErrNoCallRequest      = errors.New("no call request")
 )
 
 type UpdatePhoneCall struct {
@@ -42,17 +44,30 @@ type Connection struct {
 	reconnectTimout *time.Timer
 }
 
+type MediaSettingsIn struct {
+	Audio       *bool
+	ScreenShare *bool
+	Video       *bool
+}
+
+type MediaSettings struct {
+	Audio       bool
+	ScreenShare bool
+	Video       bool
+}
+
 type Info struct {
 	acceptedParticipantIds []int64
 	acceptedParticipants   []int
 	allConnected           bool
 	dialed                 bool
-	mediaSettings          *msg.CallMediaSettings
+	mediaSettings          MediaSettings
 	participantMap         map[int64]int32
 	participants           map[int32]*Participant
 	requestParticipantIds  []int64
 	requests               []*UpdatePhoneCall
 	iceServer              *msg.IceServer
+	mu                     *sync.RWMutex
 }
 
 func parseCallAction(constructor msg.PhoneCallAction, data []byte) (out interface{}, err error) {
