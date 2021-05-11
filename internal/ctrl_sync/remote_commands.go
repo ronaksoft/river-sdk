@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
@@ -244,7 +245,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, t
 					ctrl.GetAllDialogs(waitGroup, teamID, teamAccess, offset+limit, limit)
 				} else {
 					waitGroup.Done()
-					ctrl.dataSyncCallback(true, false, false)
+					uiexec.ExecDataSynced(true, false, false)
 				}
 			}
 		},
@@ -284,10 +285,15 @@ func (ctrl *Controller) GetAllTopPeers(
 				logs.Error("SyncCtrl got error response on ContactsGetTopPeers", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
-				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
+				switch {
+				case domain.CheckError(x, msg.ErrCodeUnavailable, msg.ErrItemUserID):
+					fallthrough
+				case domain.CheckError(x, msg.ErrCodeInvalid, msg.ErrItemAccessHash):
+					fallthrough
+				case domain.CheckErrorCode(x, msg.ErrCodeAccess):
 					waitGroup.Done()
 					return
-				} else if x.Code == msg.ErrCodeRateLimit {
+				case domain.CheckErrorCode(x, msg.ErrCodeRateLimit):
 					time.Sleep(time.Second * time.Duration(tools.StrToInt64(x.Items)))
 				}
 				ctrl.GetAllTopPeers(waitGroup, teamID, teamAccess, cat, offset, limit)
@@ -303,7 +309,7 @@ func (ctrl *Controller) GetAllTopPeers(
 					ctrl.GetAllTopPeers(waitGroup, teamID, teamAccess, cat, offset+limit, limit)
 				} else {
 					waitGroup.Done()
-					ctrl.dataSyncCallback(true, false, false)
+					uiexec.ExecDataSynced(true, false, false)
 				}
 			}
 		},
@@ -334,10 +340,15 @@ func (ctrl *Controller) GetLabels(waitGroup *sync.WaitGroup, teamID int64, teamA
 				logs.Error("SyncCtrl got error response on LabelsGet", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
-				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
+				switch {
+				case domain.CheckError(x, msg.ErrCodeUnavailable, msg.ErrItemUserID):
+					fallthrough
+				case domain.CheckError(x, msg.ErrCodeInvalid, msg.ErrItemAccessHash):
+					fallthrough
+				case domain.CheckErrorCode(x, msg.ErrCodeAccess):
 					waitGroup.Done()
 					return
-				} else if x.Code == msg.ErrCodeRateLimit {
+				case domain.CheckErrorCode(x, msg.ErrCodeRateLimit):
 					time.Sleep(time.Second * time.Duration(tools.StrToInt64(x.Items)))
 				}
 				ctrl.GetLabels(waitGroup, teamID, teamAccess)

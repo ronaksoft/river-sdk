@@ -10,6 +10,22 @@ import (
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/salt"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
+	"git.ronaksoft.com/river/sdk/module"
+	"git.ronaksoft.com/river/sdk/module/account"
+	"git.ronaksoft.com/river/sdk/module/auth"
+	"git.ronaksoft.com/river/sdk/module/bot"
+	"git.ronaksoft.com/river/sdk/module/call"
+	"git.ronaksoft.com/river/sdk/module/contact"
+	"git.ronaksoft.com/river/sdk/module/gif"
+	"git.ronaksoft.com/river/sdk/module/group"
+	"git.ronaksoft.com/river/sdk/module/label"
+	"git.ronaksoft.com/river/sdk/module/message"
+	"git.ronaksoft.com/river/sdk/module/search"
+	"git.ronaksoft.com/river/sdk/module/system"
+	"git.ronaksoft.com/river/sdk/module/team"
+	"git.ronaksoft.com/river/sdk/module/user"
+	"git.ronaksoft.com/river/sdk/module/wallpaper"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
@@ -83,9 +99,8 @@ type RiverConfig struct {
 type River struct {
 	// Connection Info
 	ConnInfo *RiverConnection
-	// Device Token
-	DeviceToken *msg.AccountRegisterDevice
 
+	modules map[string]module.Module
 	// localCommands can be satisfied by client cache
 	localCommands map[int64]domain.LocalMessageHandler
 	// realTimeCommands should not passed to queue to send they should directly pass to networkController
@@ -103,11 +118,36 @@ type River struct {
 	delegates     map[uint64]RequestDelegate
 	mainDelegate  MainDelegate
 	fileDelegate  FileDelegate
+	callDelegate  CallDelegate
 
 	dbPath               string
 	optimizeForLowMemory bool
 	resetQueueOnStartup  bool
 	sentryDSN            string
+}
+
+func (r *River) GetConnInfo() domain.RiverConfigurator {
+	return r.ConnInfo
+}
+
+func (r *River) SyncCtrl() *syncCtrl.Controller {
+	return r.syncCtrl
+}
+
+func (r *River) NetCtrl() *networkCtrl.Controller {
+	return r.networkCtrl
+}
+
+func (r *River) QueueCtrl() *queueCtrl.Controller {
+	return r.queueCtrl
+}
+
+func (r *River) FileCtrl() *fileCtrl.Controller {
+	return r.fileCtrl
+}
+
+func (r *River) Module(name string) module.Module {
+	return r.modules[name]
 }
 
 // SetConfig must be called before any other function, otherwise it panics
@@ -136,7 +176,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 
-	r.registerCommandHandlers()
 	r.delegates = make(map[uint64]RequestDelegate)
 	r.mainDelegate = conf.MainDelegate
 	r.fileDelegate = conf.FileDelegate
@@ -150,6 +189,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// Initialize realtime requests
+	r.modules = map[string]module.Module{}
+	r.localCommands = map[int64]domain.LocalMessageHandler{}
 	r.realTimeCommands = map[int64]bool{
 		msg.C_MessagesSetTyping:   true,
 		msg.C_InitConnect:         true,
@@ -160,6 +201,12 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		msg.C_SystemGetServerTime: true,
 		msg.C_SystemGetServerKeys: true,
 	}
+
+	// Initialize UI-Executor
+	uiexec.Init(
+		r.mainDelegate.OnUpdates,
+		r.mainDelegate.DataSynced,
+	)
 
 	// Initialize Network Controller
 	r.networkCtrl = networkCtrl.New(
@@ -199,13 +246,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	})
 
 	// Initialize queueController
-	if q, err := queueCtrl.New(r.fileCtrl, r.networkCtrl, r.dbPath); err != nil {
-		logs.Fatal("We couldn't initialize MessageQueue",
-			zap.String("Error", err.Error()),
-		)
-	} else {
-		r.queueCtrl = q
-	}
+	r.queueCtrl = queueCtrl.New(r.fileCtrl, r.networkCtrl, r.dbPath)
 
 	// Initialize Sync Controller
 	r.syncCtrl = syncCtrl.NewSyncController(
@@ -219,17 +260,26 @@ func (r *River) SetConfig(conf *RiverConfig) {
 					r.mainDelegate.OnSyncStatusChanged(int(newStatus))
 				}
 			},
-			UpdateReceivedCB: func(constructorID int64, b []byte) {
-				if r.mainDelegate != nil {
-					r.mainDelegate.OnUpdates(constructorID, b)
-				}
-			},
 			AppUpdateCB: func(version string, updateAvailable bool, force bool) {
 				if r.mainDelegate != nil {
 					r.mainDelegate.AppUpdate(version, updateAvailable, force)
 				}
 			},
 		},
+	)
+
+	callModule := call.New(&call.Callback{
+		OnUpdate:        r.callDelegate.OnUpdate,
+		CloseConnection: r.callDelegate.CloseConnection,
+		GetAnswerSDP:    r.callDelegate.GetAnswerSDP,
+		GetOfferSDP:     r.callDelegate.GetOfferSDP,
+	})
+
+	r.registerModule(
+		account.New(), auth.New(), bot.New(), contact.New(),
+		gif.New(), group.New(), label.New(), message.New(),
+		search.New(), system.New(), team.New(), user.New(), wallpaper.New(),
+		callModule,
 	)
 
 	r.callCtrl = callCtrl.NewCallController()
@@ -239,19 +289,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Set current team
 	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
-}
-
-func (r *River) loadDeviceToken() {
-	r.DeviceToken = new(msg.AccountRegisterDevice)
-	str, err := repo.System.LoadString(domain.SkDeviceToken)
-	if err != nil {
-		logs.Info("We did not find device token")
-		return
-	}
-	err = json.Unmarshal([]byte(str), r.DeviceToken)
-	if err != nil {
-		logs.Warn("We couldn't unmarshal device token", zap.Error(err))
-	}
 }
 
 func (r *River) onNetworkConnect() (err error) {
@@ -344,14 +381,14 @@ func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 		zap.String("Item", e.Items),
 	)
 	switch {
-	case e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt:
+	case domain.CheckError(e, msg.ErrCodeInvalid, msg.ErrItemSalt):
 		if !salt.UpdateSalt() {
 			go func() {
 				r.syncCtrl.GetServerSalt()
 				domain.WindowLog(fmt.Sprintf("SaltsReceived: %s", time.Now().Sub(domain.StartTime)))
 			}()
 		}
-	case e.Code == msg.ErrCodeUnavailable && e.Items == msg.ErrItemUserID:
+	case domain.CheckError(e, msg.ErrCodeUnavailable, msg.ErrItemUserID):
 		// We don't do anything just log, but client must call logout
 	}
 
@@ -669,70 +706,19 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 	return
 }
 
-func (r *River) registerCommandHandlers() {
-	r.localCommands = map[int64]domain.LocalMessageHandler{
-		msg.C_AccountGetTeams:               r.accountsGetTeams,
-		msg.C_AccountRegisterDevice:         r.accountRegisterDevice,
-		msg.C_AccountRemovePhoto:            r.accountRemovePhoto,
-		msg.C_AccountSetNotifySettings:      r.accountSetNotifySettings,
-		msg.C_AccountUnregisterDevice:       r.accountUnregisterDevice,
-		msg.C_AccountUpdateProfile:          r.accountUpdateProfile,
-		msg.C_AccountUpdateUsername:         r.accountUpdateUsername,
-		msg.C_ClientClearCachedMedia:        r.clientClearCachedMedia,
-		msg.C_ClientContactSearch:           r.clientContactSearch,
-		msg.C_ClientGetCachedMedia:          r.clientGetCachedMedia,
-		msg.C_ClientGetFrequentReactions:    r.clientGetFrequentReactions,
-		msg.C_ClientGetMediaHistory:         r.clientGetMediaHistory,
-		msg.C_ClientGetLastBotKeyboard:      r.clientGetLastBotKeyboard,
-		msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
-		msg.C_ClientGetTeamCounters:         r.clientGetTeamCounters,
-		msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
-		msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,
-		msg.C_ClientRemoveAllRecentSearches: r.clientRemoveAllRecentSearches,
-		msg.C_ClientRemoveRecentSearch:      r.clientRemoveRecentSearch,
-		msg.C_ClientSendMessageMedia:        r.clientSendMessageMedia,
-		msg.C_ContactsAdd:                   r.contactsAdd,
-		msg.C_ContactsDelete:                r.contactsDelete,
-		msg.C_ContactsDeleteAll:             r.contactsDeleteAll,
-		msg.C_ContactsGet:                   r.contactsGet,
-		msg.C_ContactsGetTopPeers:           r.contactsGetTopPeers,
-		msg.C_ContactsImport:                r.contactsImport,
-		msg.C_ContactsResetTopPeer:          r.contactsResetTopPeer,
-		msg.C_GifDelete:                     r.gifDelete,
-		msg.C_GifGetSaved:                   r.gifGetSaved,
-		msg.C_GifSave:                       r.gifSave,
-		msg.C_GroupsAddUser:                 r.groupAddUser,
-		msg.C_GroupsDeleteUser:              r.groupDeleteUser,
-		msg.C_GroupsEditTitle:               r.groupsEditTitle,
-		msg.C_GroupsGetFull:                 r.groupsGetFull,
-		msg.C_GroupsRemovePhoto:             r.groupRemovePhoto,
-		msg.C_GroupsToggleAdmins:            r.groupToggleAdmin,
-		msg.C_GroupsUpdateAdmin:             r.groupUpdateAdmin,
-		msg.C_LabelsAddToMessage:            r.labelAddToMessage,
-		msg.C_LabelsDelete:                  r.labelsDelete,
-		msg.C_LabelsGet:                     r.labelsGet,
-		msg.C_LabelsListItems:               r.labelsListItems,
-		msg.C_LabelsRemoveFromMessage:       r.labelRemoveFromMessage,
-		msg.C_MessagesClearDraft:            r.messagesClearDraft,
-		msg.C_MessagesClearHistory:          r.messagesClearHistory,
-		msg.C_MessagesDelete:                r.messagesDelete,
-		msg.C_MessagesDeleteReaction:        r.messagesDeleteReaction,
-		msg.C_MessagesGet:                   r.messagesGet,
-		msg.C_MessagesGetDialog:             r.messagesGetDialog,
-		msg.C_MessagesGetDialogs:            r.messagesGetDialogs,
-		msg.C_MessagesGetHistory:            r.messagesGetHistory,
-		msg.C_MessagesReadContents:          r.messagesReadContents,
-		msg.C_MessagesReadHistory:           r.messagesReadHistory,
-		msg.C_MessagesSaveDraft:             r.messagesSaveDraft,
-		msg.C_MessagesSend:                  r.messagesSend,
-		msg.C_MessagesSendMedia:             r.messagesSendMedia,
-		msg.C_MessagesSendReaction:          r.messagesSendReaction,
-		msg.C_MessagesToggleDialogPin:       r.dialogTogglePin,
-		msg.C_MessagesTogglePin:             r.messagesTogglePin,
-		msg.C_SystemGetConfig:               r.systemGetConfig,
-		msg.C_TeamEdit:                      r.teamEdit,
-		msg.C_UsersGet:                      r.usersGet,
-		msg.C_UsersGetFull:                  r.usersGetFull,
+func (r *River) registerModule(modules ...module.Module) {
+	for _, m := range modules {
+		m.Init(r)
+		r.modules[m.Name()] = m
+		for c, h := range m.LocalHandlers() {
+			r.localCommands[c] = h
+		}
+		for c, h := range m.UpdateAppliers() {
+			r.syncCtrl.RegisterUpdateApplier(c, h)
+		}
+		for c, h := range m.MessageAppliers() {
+			r.syncCtrl.RegisterMessageApplier(c, h)
+		}
 	}
 }
 

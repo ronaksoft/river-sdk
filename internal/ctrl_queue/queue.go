@@ -48,18 +48,18 @@ type Controller struct {
 	cancelledRequest map[int64]bool
 }
 
-func New(fileCtrl *fileCtrl.Controller, network *networkCtrl.Controller, dataDir string) (*Controller, error) {
+func New(fileCtrl *fileCtrl.Controller, network *networkCtrl.Controller, dataDir string) *Controller {
 	ctrl := new(Controller)
 	ctrl.dataDir = filepath.Join(dataDir, "queue")
 	ctrl.rateLimiter = ratelimit.NewBucket(time.Second, 20)
 	if dataDir == "" {
-		return nil, domain.ErrQueuePathIsNotSet
+		panic(domain.ErrQueuePathIsNotSet)
 	}
 
 	ctrl.cancelledRequest = make(map[int64]bool)
 	ctrl.networkCtrl = network
 	ctrl.fileCtrl = fileCtrl
-	return ctrl, nil
+	return ctrl
 }
 
 // distributor

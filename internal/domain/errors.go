@@ -32,3 +32,16 @@ func ParseServerError(b []byte) error {
 	_ = x.Unmarshal(b)
 	return x
 }
+
+func CheckErrorCode(err *rony.Error, code string) bool {
+	if err.Code == code {
+		return true
+	}
+	return false
+}
+func CheckError(err *rony.Error, code, item string) bool {
+	if err.Code == code && err.Items == item {
+		return true
+	}
+	return false
+}
