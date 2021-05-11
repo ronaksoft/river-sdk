@@ -25,6 +25,7 @@ type RequestDelegate interface {
 	Flags() int32
 }
 
+// SDK represents the Prime or Mini River.
 type SDK interface {
 	Version() string
 	SyncCtrl() *syncCtrl.Controller
@@ -44,6 +45,8 @@ type Module interface {
 	Execute(in *rony.MessageEnvelope, onTimeout domain.TimeoutCallback, onComplete domain.MessageHandler)
 }
 
+// Base provides the boilerplate code for every module. Hence developer only needs to write the module specific
+// LocalHandlers, UpdateAppliers and MessageAppliers.
 type Base struct {
 	queueCtrl       *queueCtrl.Controller
 	networkCtrl     *networkCtrl.Controller
