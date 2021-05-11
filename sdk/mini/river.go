@@ -27,8 +27,6 @@ func SetLogLevel(l int) {
 	logs.SetLogLevel(l)
 }
 
-type LocalHandler func(in, out *rony.MessageEnvelope, da *DelegateAdapter)
-
 type RiverConfig struct {
 	ServerHostPort string
 	// DbPath is the path of the folder holding the sqlite database.
@@ -80,7 +78,7 @@ type River struct {
 	sentryDSN      string
 
 	// localCommands can be satisfied by client cache
-	localCommands map[int64]LocalHandler
+	localCommands map[int64]domain.LocalHandler
 
 	// Internal Controllers
 	network *networkCtrl.Controller
@@ -177,7 +175,7 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {}
 func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {}
 
 func (r *River) registerCommandHandlers() {
-	r.localCommands = map[int64]LocalHandler{
+	r.localCommands = map[int64]domain.LocalHandler{
 		msg.C_ClientSendMessageMedia: r.clientSendMessageMedia,
 		msg.C_ClientGlobalSearch:     r.clientGlobalSearch,
 		msg.C_MessagesSendMedia:      r.messagesSendMedia,

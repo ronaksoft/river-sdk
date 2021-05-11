@@ -25,6 +25,7 @@ type RequestDelegate interface {
 	Flags() int32
 }
 
+// SDK represents the Prime or Mini River.
 type SDK interface {
 	Version() string
 	SyncCtrl() *syncCtrl.Controller
@@ -38,19 +39,21 @@ type SDK interface {
 type Module interface {
 	Name() string
 	Init(sdk SDK)
-	LocalHandlers() map[int64]domain.LocalMessageHandler
+	LocalHandlers() map[int64]domain.LocalHandler
 	UpdateAppliers() map[int64]domain.UpdateApplier
 	MessageAppliers() map[int64]domain.MessageApplier
-	Execute(in *rony.MessageEnvelope, onTimeout domain.TimeoutCallback, onComplete domain.MessageHandler)
+	Execute(in *rony.MessageEnvelope, da domain.Callback)
 }
 
+// Base provides the boilerplate code for every module. Hence developer only needs to write the module specific
+// LocalHandlers, UpdateAppliers and MessageAppliers.
 type Base struct {
 	queueCtrl       *queueCtrl.Controller
 	networkCtrl     *networkCtrl.Controller
 	fileCtrl        *fileCtrl.Controller
 	syncCtrl        *syncCtrl.Controller
 	sdk             SDK
-	handlers        map[int64]domain.LocalMessageHandler
+	handlers        map[int64]domain.LocalHandler
 	updateAppliers  map[int64]domain.UpdateApplier
 	messageAppliers map[int64]domain.MessageApplier
 }
@@ -59,15 +62,16 @@ func (b Base) Init(sdk SDK) {
 	b.sdk = sdk
 }
 
-func (b Base) Execute(in *rony.MessageEnvelope, onTimeout domain.TimeoutCallback, onComplete domain.MessageHandler) {
+func (b Base) Execute(in *rony.MessageEnvelope, da domain.Callback) {
 	out := &rony.MessageEnvelope{}
 	h := b.handlers[in.Constructor]
 	if h == nil {
 		out.Fill(in.RequestID, rony.C_Error, &rony.Error{Code: "E100", Items: "MODULE_HANDLER_NOT_FOUND"})
-		onComplete(out)
+		da.OnComplete(out)
 		return
 	}
-	h(in, out, onTimeout, onComplete)
+
+	h(in, out, da)
 }
 
 func (b Base) RegisterUpdateAppliers(appliers map[int64]domain.UpdateApplier) {
@@ -86,11 +90,11 @@ func (b Base) MessageAppliers() map[int64]domain.MessageApplier {
 	return b.messageAppliers
 }
 
-func (b Base) RegisterHandlers(handlers map[int64]domain.LocalMessageHandler) {
+func (b Base) RegisterHandlers(handlers map[int64]domain.LocalHandler) {
 	b.handlers = handlers
 }
 
-func (b Base) LocalHandlers() map[int64]domain.LocalMessageHandler {
+func (b Base) LocalHandlers() map[int64]domain.LocalHandler {
 	return b.handlers
 }
 

@@ -33,22 +33,27 @@ type call struct {
 	callInfo        map[int64]*Info
 	iceServer       []*msg.IceServer
 	userID          int64
-	api             API
-	callback        *Callback
+
+	teamInput  teamInput
+	deviceType msg.CallDeviceType
+
+	callback *Callback
 }
 
 func New(callback *Callback) *call {
-	api := NewAPI()
-
 	r := &call{
 		peerConnections: nil,
 		peer:            nil,
 		activeCallID:    0,
-		callInfo:        make(map[int64]*Info, 0),
+		callInfo:        make(map[int64]*Info),
 		iceServer:       nil,
 		userID:          0,
-		api:             api,
-		callback:        callback,
+		teamInput: teamInput{
+			teamID:     domain.GetCurrTeamID(),
+			teamAccess: domain.GetCurrTeamAccess(),
+		},
+		deviceType: msg.CallDeviceType_CallDeviceUnknown,
+		callback:   callback,
 	}
 
 	r.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{

@@ -22,7 +22,7 @@ type account struct {
 func New() *account {
 	r := &account{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_AccountGetTeams:          r.accountsGetTeams,
 			msg.C_AccountRegisterDevice:    r.accountRegisterDevice,
 			msg.C_AccountRemovePhoto:       r.accountRemovePhoto,

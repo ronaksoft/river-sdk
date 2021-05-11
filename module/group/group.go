@@ -22,7 +22,7 @@ type group struct {
 func New() *group {
 	r := &group{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_GroupsAddUser:      r.groupAddUser,
 			msg.C_GroupsDeleteUser:   r.groupDeleteUser,
 			msg.C_GroupsEditTitle:    r.groupsEditTitle,

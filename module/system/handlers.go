@@ -15,7 +15,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *system) systemGetConfig(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *system) systemGetConfig(in, out *rony.MessageEnvelope, da domain.Callback) {
 	out.Fill(out.RequestID, msg.C_SystemConfig, domain.SysConfig)
-	successCB(out)
+	da.OnComplete(out)
 }

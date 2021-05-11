@@ -2,8 +2,6 @@ package call
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	networkCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_network"
-	queueCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_queue"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
@@ -17,46 +15,7 @@ type teamInput struct {
 	teamAccess uint64
 }
 
-type API interface {
-	Init(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, err error)
-	Request(peer *msg.InputPeer, randomID int64, initiator bool, participants []*msg.PhoneParticipantSDP, callID int64, batch bool) (res *msg.PhoneCall, err error)
-	Accept(peer *msg.InputPeer, callID int64, participants []*msg.PhoneParticipantSDP) (res *msg.PhoneCall, err error)
-	Reject(peer *msg.InputPeer, callID int64, reason msg.DiscardReason, duration int32) (res *msg.Bool, err error)
-	Join(peer *msg.InputPeer, callID int64) (res *msg.PhoneParticipants, err error)
-	AddParticipant(peer *msg.InputPeer, callID int64, participants []*msg.InputUser) (res *msg.PhoneParticipants, err error)
-	RemoveParticipant(peer *msg.InputPeer, callID int64, participants []*msg.InputUser, isTimout bool) (res *msg.Bool, err error)
-	GetParticipant(peer *msg.InputPeer, callID int64) (res *msg.PhoneParticipants, err error)
-	UpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.InputUser, admin bool) (res *msg.Bool, err error)
-	SendUpdate(peer *msg.InputPeer, callID int64, participants []*msg.InputUser, action msg.PhoneCallAction, actionData []byte, instant bool) (res *msg.Bool, err error)
-
-	SetTeamInput(teamId int64, teamAccess uint64)
-	SetTempTeamInput(teamId int64, teamAccess uint64)
-}
-
-func NewAPI() API {
-	return &api{
-		networkCtrl: nil,
-		queueCtrl:   nil,
-		teamInput: teamInput{
-			teamID:     domain.GetCurrTeamID(),
-			teamAccess: domain.GetCurrTeamAccess(),
-		},
-		deviceType:    msg.CallDeviceType_CallDeviceUnknown,
-		tempTeamInput: nil,
-	}
-}
-
-type api struct {
-	networkCtrl *networkCtrl.Controller
-	queueCtrl   *queueCtrl.Controller
-
-	teamInput  teamInput
-	deviceType msg.CallDeviceType
-
-	tempTeamInput *teamInput
-}
-
-func (c *api) Init(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, err error) {
+func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, err error) {
 	req := msg.PhoneInitCall{
 		Peer:   peer,
 		CallID: callID,
@@ -98,7 +57,7 @@ func (c *api) Init(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, err e
 	return
 }
 
-func (c *api) Request(peer *msg.InputPeer, randomID int64, initiator bool, participants []*msg.PhoneParticipantSDP, callID int64, batch bool) (res *msg.PhoneCall, err error) {
+func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, participants []*msg.PhoneParticipantSDP, callID int64, batch bool) (res *msg.PhoneCall, err error) {
 	req := msg.PhoneRequestCall{
 		Peer:         peer,
 		RandomID:     randomID,
@@ -145,7 +104,7 @@ func (c *api) Request(peer *msg.InputPeer, randomID int64, initiator bool, parti
 	return
 }
 
-func (c *api) Accept(peer *msg.InputPeer, callID int64, participants []*msg.PhoneParticipantSDP) (res *msg.PhoneCall, err error) {
+func (c *call) apiAccept(peer *msg.InputPeer, callID int64, participants []*msg.PhoneParticipantSDP) (res *msg.PhoneCall, err error) {
 	req := msg.PhoneAcceptCall{
 		Peer:         peer,
 		Participants: participants,
@@ -190,7 +149,7 @@ func (c *api) Accept(peer *msg.InputPeer, callID int64, participants []*msg.Phon
 	return
 }
 
-func (c *api) Reject(peer *msg.InputPeer, callID int64, reason msg.DiscardReason, duration int32) (res *msg.Bool, err error) {
+func (c *call) apiReject(peer *msg.InputPeer, callID int64, reason msg.DiscardReason, duration int32) (res *msg.Bool, err error) {
 	req := msg.PhoneDiscardCall{
 		Peer:     peer,
 		CallID:   callID,
@@ -235,7 +194,7 @@ func (c *api) Reject(peer *msg.InputPeer, callID int64, reason msg.DiscardReason
 	return
 }
 
-func (c *api) Join(peer *msg.InputPeer, callID int64) (res *msg.PhoneParticipants, err error) {
+func (c *call) apiJoin(peer *msg.InputPeer, callID int64) (res *msg.PhoneParticipants, err error) {
 	req := msg.PhoneJoinCall{
 		Peer:   peer,
 		CallID: callID,
@@ -278,7 +237,7 @@ func (c *api) Join(peer *msg.InputPeer, callID int64) (res *msg.PhoneParticipant
 	return
 }
 
-func (c *api) AddParticipant(peer *msg.InputPeer, callID int64, participants []*msg.InputUser) (res *msg.PhoneParticipants, err error) {
+func (c *call) apiAddParticipant(peer *msg.InputPeer, callID int64, participants []*msg.InputUser) (res *msg.PhoneParticipants, err error) {
 	req := msg.PhoneAddParticipant{
 		Peer:         peer,
 		CallID:       callID,
@@ -322,7 +281,7 @@ func (c *api) AddParticipant(peer *msg.InputPeer, callID int64, participants []*
 	return
 }
 
-func (c *api) RemoveParticipant(peer *msg.InputPeer, callID int64, participants []*msg.InputUser, isTimout bool) (res *msg.Bool, err error) {
+func (c *call) apiRemoveParticipant(peer *msg.InputPeer, callID int64, participants []*msg.InputUser, isTimout bool) (res *msg.Bool, err error) {
 	req := msg.PhoneRemoveParticipant{
 		Peer:         peer,
 		CallID:       callID,
@@ -367,7 +326,7 @@ func (c *api) RemoveParticipant(peer *msg.InputPeer, callID int64, participants 
 	return
 }
 
-func (c *api) GetParticipant(peer *msg.InputPeer, callID int64) (res *msg.PhoneParticipants, err error) {
+func (c *call) apiGetParticipant(peer *msg.InputPeer, callID int64) (res *msg.PhoneParticipants, err error) {
 	req := msg.PhoneGetParticipants{
 		Peer:   peer,
 		CallID: callID,
@@ -410,7 +369,7 @@ func (c *api) GetParticipant(peer *msg.InputPeer, callID int64) (res *msg.PhoneP
 	return
 }
 
-func (c *api) UpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.InputUser, admin bool) (res *msg.Bool, err error) {
+func (c *call) apiUpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.InputUser, admin bool) (res *msg.Bool, err error) {
 	req := msg.PhoneUpdateAdmin{
 		Peer:   peer,
 		CallID: callID,
@@ -455,7 +414,7 @@ func (c *api) UpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.Inpu
 	return
 }
 
-func (c *api) SendUpdate(peer *msg.InputPeer, callID int64, participants []*msg.InputUser, action msg.PhoneCallAction, actionData []byte, instant bool) (res *msg.Bool, err error) {
+func (c *call) apiSendUpdate(peer *msg.InputPeer, callID int64, participants []*msg.InputUser, action msg.PhoneCallAction, actionData []byte, instant bool) (res *msg.Bool, err error) {
 	req := msg.PhoneUpdateCall{
 		Peer:         peer,
 		CallID:       callID,
@@ -501,21 +460,14 @@ func (c *api) SendUpdate(peer *msg.InputPeer, callID int64, participants []*msg.
 	return
 }
 
-func (c *api) SetTeamInput(teamId int64, teamAccess uint64) {
+func (c *call) setTeamInput(teamId int64, teamAccess uint64) {
 	c.teamInput = teamInput{
 		teamID:     teamId,
 		teamAccess: teamAccess,
 	}
 }
 
-func (c *api) SetTempTeamInput(teamId int64, teamAccess uint64) {
-	c.tempTeamInput = &teamInput{
-		teamID:     teamId,
-		teamAccess: teamAccess,
-	}
-}
-
-func (c *api) executeRemoteCommand(
+func (c *call) executeRemoteCommand(
 	constructor int64, commandBytes []byte,
 	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	instant bool) {
@@ -526,23 +478,23 @@ func (c *api) executeRemoteCommand(
 	requestID := uint64(domain.SequentialUniqueID())
 	teamID := c.teamInput.teamID
 	teamAccess := c.teamInput.teamAccess
-	if c.tempTeamInput != nil {
-		teamID = c.tempTeamInput.teamID
-		teamAccess = c.tempTeamInput.teamAccess
-		c.tempTeamInput = nil
-	}
+	//if c.tempTeamInput != nil {
+	//	teamID = c.tempTeamInput.teamID
+	//	teamAccess = c.tempTeamInput.teamAccess
+	//	c.tempTeamInput = nil
+	//}
 
 	header := domain.TeamHeader(teamID, teamAccess)
 	// If the constructor is a realtime command, then just send it to the server
 	if instant {
-		c.networkCtrl.WebsocketCommand(&rony.MessageEnvelope{
+		c.SDK().NetCtrl().WebsocketCommand(&rony.MessageEnvelope{
 			Header:      header,
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
 		}, timeoutCB, successCB, true, true)
 	} else {
-		c.queueCtrl.EnqueueCommand(
+		c.SDK().QueueCtrl().EnqueueCommand(
 			&rony.MessageEnvelope{
 				Header:      header,
 				Constructor: constructor,

@@ -101,7 +101,7 @@ type River struct {
 
 	modules map[string]module.Module
 	// localCommands can be satisfied by client cache
-	localCommands map[int64]domain.LocalMessageHandler
+	localCommands map[int64]domain.LocalHandler
 	// realTimeCommands should not passed to queue to send they should directly pass to networkController
 	realTimeCommands map[int64]bool
 
@@ -188,7 +188,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize realtime requests
 	r.modules = map[string]module.Module{}
-	r.localCommands = map[int64]domain.LocalMessageHandler{}
+	r.localCommands = map[int64]domain.LocalHandler{}
 	r.realTimeCommands = map[int64]bool{
 		msg.C_MessagesSetTyping:   true,
 		msg.C_InitConnect:         true,

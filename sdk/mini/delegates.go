@@ -2,8 +2,6 @@ package mini
 
 import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/pools"
 )
 
 // MainDelegate external (UI) handler will listen to this function to receive data from SDK
@@ -19,13 +17,7 @@ type MainDelegate interface {
 	DataSynced(dialogs, contacts, gifs bool)
 }
 
-// RequestDelegate each request should have this callbacks
-type RequestDelegate interface {
-	OnComplete(b []byte)
-	OnTimeout(err error)
-	Flags() int32
-	OnProgress(percent int64)
-}
+type RequestDelegate = domain.RequestDelegate
 
 // Request Flags
 const (
@@ -34,27 +26,3 @@ const (
 	RequestDontWaitForNetwork
 	RequestTeamForce
 )
-
-type DelegateAdapter struct {
-	d RequestDelegate
-}
-
-func NewDelegateAdapter(d RequestDelegate) *DelegateAdapter {
-	return &DelegateAdapter{
-		d: d,
-	}
-}
-
-func (rda *DelegateAdapter) OnComplete(m *rony.MessageEnvelope) {
-	buf := pools.Buffer.FromProto(m)
-	rda.d.OnComplete(*buf.Bytes())
-	pools.Buffer.Put(buf)
-}
-
-func (rda *DelegateAdapter) OnTimeout() {
-	rda.d.OnTimeout(domain.ErrRequestTimeout)
-}
-
-func (rda *DelegateAdapter) OnProgress(percent int64) {
-	rda.d.OnProgress(percent)
-}

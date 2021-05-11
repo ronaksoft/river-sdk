@@ -21,11 +21,11 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *label) labelsGet(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *label) labelsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.LabelsGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -41,19 +41,19 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, timeoutCB domain.Timeou
 
 		out.Constructor = msg.C_LabelsMany
 		out.Message, _ = res.Marshal()
-		uiexec.ExecSuccessCB(successCB, out)
+		uiexec.ExecSuccessCB(da.OnComplete, out)
 		return
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *label) labelsDelete(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.LabelsDelete{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -63,14 +63,14 @@ func (r *label) labelsDelete(in, out *rony.MessageEnvelope, timeoutCB domain.Tim
 	logs.ErrorOnErr("LabelsDelete", err)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
 
-func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.LabelsListItems{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 			zap.Int64("MaxID", req.MaxID),
 		)
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, req.MinID, req.MaxID)
-		fillLabelItems(out, messages, users, groups, in.RequestID, successCB)
+		fillLabelItems(out, messages, users, groups, in.RequestID, da.OnComplete)
 		return
 	}
 
@@ -119,12 +119,12 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 			logs.Warn("We received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
 		}
 
-		successCB(m)
+		da.OnComplete(m)
 	}
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
-		r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
 	case req.MinID == 0 && req.MaxID != 0:
 		b, _ := repo.Labels.GetLowerFilled(domain.GetTeamID(in), req.LabelID, req.MaxID)
 		if !b {
@@ -133,7 +133,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, 0, req.MaxID)
@@ -146,22 +146,22 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, timeoutCB domain.
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("MaxID", req.MaxID),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, req.MinID, 0)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
-		r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, preSuccessCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
 		return
 	}
 }
 
-func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.LabelsAddToMessage{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -184,15 +184,15 @@ func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, timeoutCB domai
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 
 }
 
-func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.LabelsRemoveFromMessage{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -206,7 +206,7 @@ func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, timeoutCB 
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, timeoutCB, successCB, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 
 }
 

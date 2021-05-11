@@ -19,11 +19,11 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *search) clientGlobalSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *search) clientGlobalSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientGlobalSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -92,14 +92,14 @@ func (r *search) clientGlobalSearch(in, out *rony.MessageEnvelope, timeoutCB dom
 	searchResults.Groups = groups
 	searchResults.MatchedUsers = matchedUsers
 	out.Fill(in.RequestID, msg.C_ClientSearchResult, searchResults)
-	uiexec.ExecSuccessCB(successCB, out)
+	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *search) clientGetRecentSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *search) clientGetRecentSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientGetRecentSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -126,14 +126,14 @@ func (r *search) clientGetRecentSearch(in, out *rony.MessageEnvelope, timeoutCB 
 		Groups:         groups,
 	}
 	out.Fill(in.RequestID, msg.C_ClientRecentSearchMany, res)
-	uiexec.ExecSuccessCB(successCB, out)
+	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *search) clientPutRecentSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *search) clientPutRecentSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientPutRecentSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -152,7 +152,7 @@ func (r *search) clientPutRecentSearch(in, out *rony.MessageEnvelope, timeoutCB 
 
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -160,14 +160,14 @@ func (r *search) clientPutRecentSearch(in, out *rony.MessageEnvelope, timeoutCB 
 		Result: true,
 	}
 	out.Fill(in.RequestID, msg.C_Bool, res)
-	uiexec.ExecSuccessCB(successCB, out)
+	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *search) clientRemoveAllRecentSearches(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *search) clientRemoveAllRecentSearches(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientRemoveAllRecentSearches{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -175,7 +175,7 @@ func (r *search) clientRemoveAllRecentSearches(in, out *rony.MessageEnvelope, ti
 
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -183,14 +183,14 @@ func (r *search) clientRemoveAllRecentSearches(in, out *rony.MessageEnvelope, ti
 		Result: true,
 	}
 	out.Fill(in.RequestID, msg.C_Bool, res)
-	uiexec.ExecSuccessCB(successCB, out)
+	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *search) clientRemoveRecentSearch(in, out *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler) {
+func (r *search) clientRemoveRecentSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientRemoveRecentSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -198,7 +198,7 @@ func (r *search) clientRemoveRecentSearch(in, out *rony.MessageEnvelope, timeout
 
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		successCB(out)
+		da.OnComplete(out)
 		return
 	}
 
@@ -206,5 +206,5 @@ func (r *search) clientRemoveRecentSearch(in, out *rony.MessageEnvelope, timeout
 		Result: true,
 	}
 	out.Fill(in.RequestID, msg.C_Bool, res)
-	uiexec.ExecSuccessCB(successCB, out)
+	uiexec.ExecSuccessCB(da.OnComplete, out)
 }

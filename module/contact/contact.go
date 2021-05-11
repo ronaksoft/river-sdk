@@ -22,7 +22,7 @@ type contact struct {
 func New() *contact {
 	r := &contact{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalMessageHandler{
+		map[int64]domain.LocalHandler{
 			msg.C_ContactsAdd:          r.contactsAdd,
 			msg.C_ContactsDelete:       r.contactsDelete,
 			msg.C_ContactsDeleteAll:    r.contactsDeleteAll,

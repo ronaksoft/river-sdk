@@ -24,7 +24,7 @@ func (c *call) TryReconnect(connId int32) {
 
 func (c *call) CallStart(peer *msg.InputPeer, participants []*msg.InputUser, callID int64) {
 	c.peer = peer
-	initRes, err := c.api.Init(peer, callID)
+	initRes, err := c.apiInit(peer, callID)
 	if err != nil {
 		logs.Warn("Init", zap.Error(err))
 		return
@@ -181,7 +181,7 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 			Type:         sdpOffer.Type,
 		}
 
-		res, innerErr = c.api.Accept(peer, callID, []*msg.PhoneParticipantSDP{phoneParticipant})
+		res, innerErr = c.apiAccept(peer, callID, []*msg.PhoneParticipantSDP{phoneParticipant})
 		return
 	}
 
@@ -353,7 +353,7 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 
 func (c *call) callUser(peer *msg.InputPeer, initiator bool, phoneParticipants []*msg.PhoneParticipantSDP, callID int64) (res *msg.PhoneCall, err error) {
 	randomID := domain.RandomInt64(0)
-	res, err = c.api.Request(peer, randomID, initiator, phoneParticipants, callID, false)
+	res, err = c.apiRequest(peer, randomID, initiator, phoneParticipants, callID, false)
 	return
 }
 
@@ -396,7 +396,7 @@ func (c *call) sendIceCandidate(callID int64, candidate *msg.CallRTCIceCandidate
 		return
 	}
 
-	_, err = c.api.SendUpdate(c.peer, callID, []*msg.InputUser{inputUser}, msg.PhoneCallAction_PhoneCallIceExchange, actionData, false)
+	_, err = c.apiSendUpdate(c.peer, callID, []*msg.InputUser{inputUser}, msg.PhoneCallAction_PhoneCallIceExchange, actionData, false)
 	return
 }
 
@@ -452,7 +452,7 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 
 		// TODO call -> msg.CallUpdate_ConnectionStatusChanged with state "reconnecting"
 		var initRes *msg.PhoneInit
-		initRes, err = c.api.Init(c.peer, c.activeCallID)
+		initRes, err = c.apiInit(c.peer, c.activeCallID)
 		if err != nil {
 			return
 		}
@@ -511,7 +511,7 @@ func (c *call) callSendRestart(connId int32, sender bool) (err error) {
 		return
 	}
 
-	_, err = c.api.SendUpdate(c.peer, c.activeCallID, []*msg.InputUser{inputUser}, msg.PhoneCallAction_PhoneCallRestarted, actionData, true)
+	_, err = c.apiSendUpdate(c.peer, c.activeCallID, []*msg.InputUser{inputUser}, msg.PhoneCallAction_PhoneCallRestarted, actionData, true)
 	return
 }
 
