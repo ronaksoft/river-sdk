@@ -367,14 +367,14 @@ func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 		zap.String("Item", e.Items),
 	)
 	switch {
-	case e.Code == msg.ErrCodeInvalid && e.Items == msg.ErrItemSalt:
+	case domain.CheckError(e, msg.ErrCodeInvalid, msg.ErrItemSalt):
 		if !salt.UpdateSalt() {
 			go func() {
 				r.syncCtrl.GetServerSalt()
 				domain.WindowLog(fmt.Sprintf("SaltsReceived: %s", time.Now().Sub(domain.StartTime)))
 			}()
 		}
-	case e.Code == msg.ErrCodeUnavailable && e.Items == msg.ErrItemUserID:
+	case domain.CheckError(e, msg.ErrCodeUnavailable, msg.ErrItemUserID):
 		// We don't do anything just log, but client must call logout
 	}
 
