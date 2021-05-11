@@ -34,9 +34,10 @@ type RequestDelegate interface {
 
 type CallDelegate interface {
 	OnUpdate(constructor int64, b []byte)
-	CloseConnection(connId int32)
-	GetAnswerSDP(connId int32) []byte
-	GetOfferSDP(connId int32) []byte
+	InitConnection(connId int32) (id int64, err error)
+	CloseConnection(connId int32) (err error)
+	GetAnswerSDP(connId int32) (res []byte, err error)
+	GetOfferSDP(connId int32) (res []byte, err error)
 }
 
 // Request Flags

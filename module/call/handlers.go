@@ -29,12 +29,11 @@ func (c *call) CallStart(peer *msg.InputPeer, participants []*msg.InputUser, cal
 		logs.Warn("Init", zap.Error(err))
 		return
 	}
-	c.iceServer = c.transformIceServers(initRes.IceServers)
+	c.iceServer = initRes.IceServers
 	if callID != 0 {
 	} else {
 		c.activeCallID = 0
 		c.initCallParticipants(TempCallID, participants)
-
 	}
 }
 
@@ -162,8 +161,8 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 	wg := &sync.WaitGroup{}
 	mu := &sync.RWMutex{}
 
-	callResults := []*msg.PhoneParticipantSDP{}
-	acceptResults := []*msg.PhoneCall{}
+	var callResults []*msg.PhoneParticipantSDP
+	var acceptResults []*msg.PhoneCall
 
 	sdp := &msg.PhoneActionSDPOffer{}
 	requestConnId := int32(-1024)
@@ -260,12 +259,20 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 		iceServer = pc.IceServers
 	}
 
-	println(iceServer)
-
 	// Client should initiate RTCPeerConnection with given server config
 	// TODO call delegate
+	callInitReq := &msg.PhoneInit{
+		IceServers: iceServer,
+	}
+	callInitData, err := callInitReq.Marshal()
+	if err != nil {
+		return
+	}
 
-	rtcConnId := int64(0)
+	rtcConnId, err := c.callback.InitConnection(connId, callInitData)
+	if err != nil {
+		return
+	}
 
 	// Client should listen to icecandidate and send it to SDK
 	// TODO execute local command then call -> c.sendIceCandidate()
@@ -311,6 +318,17 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 			// TODO Client should setRemoteDescription(sdp)
 			// TODO Client should create answer
 			// TODO Client should setLocalDescription and pass it to SDK
+			var clientAnswerSQP []byte
+			clientAnswerSQP, err = c.callback.GetAnswerSDP(connId)
+			if err != nil {
+				return
+			}
+
+			sdpAnswer = &msg.PhoneActionSDPAnswer{}
+			err = sdpAnswer.Unmarshal(clientAnswerSQP)
+			if err != nil {
+				return
+			}
 		} else {
 			err = ErrNoSDP
 			return
@@ -318,6 +336,17 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	} else {
 		// TODO Client should create offer
 		// TODO Client should setLocalDescription and pass the offer to SDK
+		var clientOfferSDP []byte
+		clientOfferSDP, err = c.callback.GetOfferSDP(connId)
+		if err != nil {
+			return
+		}
+
+		sdpAnswer = &msg.PhoneActionSDPAnswer{}
+		err = sdpAnswer.Unmarshal(clientOfferSDP)
+		if err != nil {
+			return
+		}
 	}
 	return
 }
@@ -391,7 +420,7 @@ func (c *call) checkAllConnected() {
 	}
 }
 
-func (c *call) checkDisconnection(connId int32, state string, isIceError bool) {
+func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (err error) {
 	if c.activeCallID == 0 {
 		return
 	}
@@ -405,6 +434,11 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) {
 		((isIceError && c.peerConnections[connId].Init && (state == "disconnected" || state == "failed" || state == "closed")) ||
 			state == "disconnected") {
 		// TODO close connection with connID
+		err = c.callback.CloseConnection(connId)
+		if err != nil {
+			return
+		}
+
 		c.peerConnections[connId].IceQueue = nil
 		c.peerConnections[connId].Reconnecting = true
 		c.peerConnections[connId].ReconnectingTry++
@@ -415,27 +449,34 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) {
 				}
 			})
 		}
+
 		// TODO call -> msg.CallUpdate_ConnectionStatusChanged with state "reconnecting"
-		initRes, err := c.api.Init(c.peer, c.activeCallID)
+		var initRes *msg.PhoneInit
+		initRes, err = c.api.Init(c.peer, c.activeCallID)
 		if err != nil {
 			return
 		}
+
 		_, hasConn = c.peerConnections[connId]
 		if !hasConn {
 			return
 		}
-		c.peerConnections[connId].IceServers = c.transformIceServers(initRes.IceServers)
+
+		c.peerConnections[connId].IceServers = initRes.IceServers
 		currConnId, _ := c.getConnId(c.activeCallID, c.userID)
 		if currConnId == nil {
 			return
 		}
+
 		currentConnId := *currConnId
 		if currentConnId < connId {
 			_ = c.callSendRestart(connId, true)
 		} else {
-			c.initConnection(true, connId, nil)
+			_, _ = c.initConnection(true, connId, nil)
 		}
 	}
+
+	return
 }
 
 func (c *call) callSendRestart(connId int32, sender bool) (err error) {
@@ -548,19 +589,6 @@ func (c *call) setCallInfoDialed(callID int64) {
 	if _, ok := c.callInfo[callID]; ok {
 		c.callInfo[callID].dialed = true
 	}
-}
-
-func (c *call) transformIceServers(in []*msg.IceServer) (out []*msg.CallRTCIceServer) {
-	out = make([]*msg.CallRTCIceServer, len(in))
-	for idx, item := range in {
-		out[idx] = &msg.CallRTCIceServer{
-			Credential:     item.Credential,
-			CredentialType: "",
-			Urls:           item.Urls,
-			Username:       item.Username,
-		}
-	}
-	return
 }
 
 func (c *call) callRequested(in *UpdatePhoneCall) {

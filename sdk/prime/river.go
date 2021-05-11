@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
-	callCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_call"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
@@ -111,7 +110,6 @@ type River struct {
 	queueCtrl   *queueCtrl.Controller
 	syncCtrl    *syncCtrl.Controller
 	fileCtrl    *fileCtrl.Controller
-	callCtrl    callCtrl.CallController
 
 	// Delegates
 	delegateMutex sync.Mutex
@@ -282,8 +280,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		callModule,
 	)
 
-	r.callCtrl = callCtrl.NewCallController()
-
 	// Initialize River Connection
 	logs.Info("River SetConfig done!")
 
@@ -448,9 +444,6 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 
 	for _, update := range updateContainer.Updates {
 		logs.UpdateLog(update.UpdateID, update.Constructor)
-		if update.Constructor == msg.C_UpdatePhoneCall {
-			r.callCtrl.ParseUpdate(update)
-		}
 	}
 
 	outOfSync := false

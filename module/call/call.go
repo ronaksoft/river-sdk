@@ -31,7 +31,7 @@ type call struct {
 	peer            *msg.InputPeer
 	activeCallID    int64
 	callInfo        map[int64]*Info
-	iceServer       []*msg.CallRTCIceServer
+	iceServer       []*msg.IceServer
 	userID          int64
 	api             API
 	callback        *Callback
@@ -58,6 +58,6 @@ func New(callback *Callback) *call {
 	return r
 }
 
-func (r *call) Name() string {
+func (c *call) Name() string {
 	return module.Call
 }
