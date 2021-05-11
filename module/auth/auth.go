@@ -34,6 +34,10 @@ func New() *auth {
 	return r
 }
 
+func (r *auth) Name() string {
+	return module.Auth
+}
+
 func (r *auth) authAuthorization(e *rony.MessageEnvelope) {
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {

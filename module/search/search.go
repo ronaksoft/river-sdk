@@ -32,3 +32,7 @@ func New() *search {
 	)
 	return r
 }
+
+func (r *search) Name() string {
+	return module.Search
+}

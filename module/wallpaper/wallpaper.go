@@ -33,6 +33,10 @@ func New() *wallpaper {
 	return r
 }
 
+func (r *wallpaper) Name() string {
+	return module.Wallpaper
+}
+
 func (r *wallpaper) wallpapersMany(e *rony.MessageEnvelope) {
 	u := &msg.WallPapersMany{}
 	err := u.Unmarshal(e.Message)

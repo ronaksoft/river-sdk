@@ -41,3 +41,7 @@ func New() *user {
 	)
 	return r
 }
+
+func (r *user) Name() string {
+	return module.User
+}

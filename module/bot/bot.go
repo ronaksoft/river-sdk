@@ -33,6 +33,9 @@ func New() *bot {
 	return r
 }
 
+func (r *bot) Name() string {
+	return module.Bot
+}
 func (r *bot) botResults(e *rony.MessageEnvelope) {
 	br := &msg.BotResults{}
 	err := br.Unmarshal(e.Message)

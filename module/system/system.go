@@ -33,3 +33,7 @@ func New() *system {
 	)
 	return r
 }
+
+func (r *system) Name() string {
+	return module.System
+}

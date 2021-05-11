@@ -42,3 +42,7 @@ func New() *contact {
 	)
 	return r
 }
+
+func (r *contact) Name() string {
+	return module.Contact
+}

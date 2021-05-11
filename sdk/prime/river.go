@@ -98,6 +98,7 @@ type River struct {
 	// Connection Info
 	ConnInfo *RiverConnection
 
+	modules map[string]module.Module
 	// localCommands can be satisfied by client cache
 	localCommands map[int64]domain.LocalMessageHandler
 	// realTimeCommands should not passed to queue to send they should directly pass to networkController
@@ -141,6 +142,10 @@ func (r *River) FileCtrl() *fileCtrl.Controller {
 	return r.fileCtrl
 }
 
+func (r *River) Module(name string) module.Module {
+	return r.modules[name]
+}
+
 // SetConfig must be called before any other function, otherwise it panics
 func (r *River) SetConfig(conf *RiverConfig) {
 	domain.ClientPlatform = conf.ClientPlatform
@@ -180,6 +185,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// Initialize realtime requests
+	r.modules = map[string]module.Module{}
+	r.localCommands = map[int64]domain.LocalMessageHandler{}
 	r.realTimeCommands = map[int64]bool{
 		msg.C_MessagesSetTyping:   true,
 		msg.C_InitConnect:         true,
@@ -685,6 +692,7 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 func (r *River) registerModule(modules ...module.Module) {
 	for _, m := range modules {
 		m.Init(r)
+		r.modules[m.Name()] = m
 		for c, h := range m.LocalHandlers() {
 			r.localCommands[c] = h
 		}

@@ -73,3 +73,7 @@ func New() *message {
 	)
 	return r
 }
+
+func (r *message) Name() string {
+	return module.Message
+}

@@ -47,3 +47,7 @@ func New() *group {
 	)
 	return r
 }
+
+func (r *group) Name() string {
+	return module.Group
+}

@@ -44,3 +44,7 @@ func New() *team {
 	)
 	return r
 }
+
+func (r *team) Name() string {
+	return module.Team
+}

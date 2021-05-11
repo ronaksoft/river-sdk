@@ -46,3 +46,7 @@ func New() *label {
 	)
 	return r
 }
+
+func (r *label) Name() string {
+	return module.Label
+}

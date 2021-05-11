@@ -35,3 +35,7 @@ func New() *gif {
 	)
 	return r
 }
+
+func (r *gif) Name() string {
+	return module.Gif
+}

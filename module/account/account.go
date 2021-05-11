@@ -37,3 +37,7 @@ func New() *account {
 	})
 	return r
 }
+
+func (r *account) Name() string {
+	return module.Account
+}

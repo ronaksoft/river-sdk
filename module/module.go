@@ -32,13 +32,16 @@ type SDK interface {
 	QueueCtrl() *queueCtrl.Controller
 	FileCtrl() *fileCtrl.Controller
 	GetConnInfo() domain.RiverConfigurator
+	Module(name string) Module
 }
 
 type Module interface {
+	Name() string
 	Init(sdk SDK)
 	LocalHandlers() map[int64]domain.LocalMessageHandler
 	UpdateAppliers() map[int64]domain.UpdateApplier
 	MessageAppliers() map[int64]domain.MessageApplier
+	Execute(in *rony.MessageEnvelope, onTimeout domain.TimeoutCallback, onComplete domain.MessageHandler)
 }
 
 type Base struct {
