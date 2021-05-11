@@ -1,9 +1,13 @@
 package riversdk
 
 import (
+	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/module"
+	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 )
 
@@ -15,6 +19,20 @@ import (
    Auditor: Ehsan N. Moosa (E2)
    Copyright Ronak Software Group 2018
 */
+
+func (r *River) HandleDebugActions(txt string) {
+	req := &msg.MessagesSend{
+		RandomID:   tools.RandomInt64(0),
+		Peer:       &msg.InputPeer{ID: r.ConnInfo.UserID},
+		Body:       txt,
+		ReplyTo:    0,
+		ClearDraft: false,
+		Entities:   nil,
+	}
+	in := &rony.MessageEnvelope{}
+	in.Fill(domain.NextRequestID(), msg.C_MessagesSend, req)
+	r.Module(module.Message).Execute(in, domain.EmptyCallback())
+}
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
 	return repo.MessagesExtra.GetHoles(domain.GetCurrTeamID(), peerID, peerType, 0)
