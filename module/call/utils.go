@@ -27,6 +27,7 @@ type Participant struct {
 	msg.PhoneParticipant
 	DeviceType    msg.CallDeviceType
 	MediaSettings msg.CallMediaSettings
+	Muted         bool
 	Started       bool
 }
 
