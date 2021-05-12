@@ -55,7 +55,7 @@ func DataTransfer(totalUploadBytes, totalDownloadBytes int, d time.Duration) {
 	Stats.mtx.Lock()
 	Stats.TotalDownloadBytes += int64(totalDownloadBytes)
 	Stats.TotalUploadBytes += int64(totalUploadBytes)
-	if time.Now().Sub(Stats.lastDataTransfer) > time.Second*30 {
+	if time.Since(Stats.lastDataTransfer) > time.Second*30 {
 		Stats.totalBytes = totalDownloadBytes + totalUploadBytes
 		Stats.dataTransferPeriod = d
 	} else {
@@ -121,7 +121,7 @@ func SetForegroundTime() {
 func IncForegroundTime() {
 	Stats.mtx.Lock()
 	if Stats.LastForegroundTime.Unix() != 0 {
-		Stats.ForegroundTime += int64(time.Now().Sub(Stats.LastForegroundTime).Seconds())
+		Stats.ForegroundTime += int64(time.Since(Stats.LastForegroundTime).Seconds())
 	}
 	Stats.mtx.Unlock()
 }

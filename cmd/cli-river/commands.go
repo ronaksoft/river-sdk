@@ -692,16 +692,6 @@ func fnGetTopPeerCat(c *ishell.Context) msg.TopPeerCategory {
 
 }
 
-func fnGetUpdateNewMessageHexString(c *ishell.Context) string {
-	c.Print("Enter UpdateNewMessage Hex String:")
-	title := c.ReadLine()
-
-	if title[:2] == "0x" {
-		title = title[2:]
-	}
-	return title
-}
-
 func fnGetMime(c *ishell.Context) string {
 	c.Print("MIME Type:")
 	mime := c.ReadLine()

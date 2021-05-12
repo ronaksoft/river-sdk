@@ -25,7 +25,7 @@ import (
 const urlPost = `https://www.instagram.com/p/{{CODE}}/?__a=1`
 
 var (
-	RegExExtractCode = regexp.MustCompile("https?://www.instagram.com/(p|tv)/([^\\/]+)(/|$)")
+	RegExExtractCode = regexp.MustCompile(`https?://www.instagram.com/(p|tv)/([^\/]+)(/|$)`)
 )
 
 // Decode JSON data returned by Instagram post API

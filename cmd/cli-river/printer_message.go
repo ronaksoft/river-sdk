@@ -78,7 +78,7 @@ func MessagePrinter(envelope *rony.MessageEnvelope) {
 			fmt.Sprintf("%d", x.AccessHash),
 			fmt.Sprintf("%s %s", x.Sender.FirstName, x.Sender.LastName),
 			fmt.Sprintf("%d", x.Message.ID),
-			fmt.Sprintf("%s", x.Message.Body),
+			x.Message.Body,
 		})
 
 		tableMsg.Render()
@@ -210,7 +210,7 @@ func printMessagesMany(envelope *rony.MessageEnvelope) {
 			fmt.Sprintf("%d", d.Flags),
 			fmt.Sprintf("%v", d.Body),
 			fmt.Sprintf("%v", d.Entities),
-			fmt.Sprintf("%s", d.MediaType.String()),
+			d.MediaType.String(),
 			fmt.Sprintf("%d", docID),
 			fmt.Sprintf("%d", accessHash),
 		})
@@ -224,8 +224,8 @@ func printMessagesMany(envelope *rony.MessageEnvelope) {
 	for _, x := range x.Users {
 		tableUsers.Append([]string{
 			fmt.Sprintf("%d", x.ID),
-			fmt.Sprintf("%s", x.FirstName),
-			fmt.Sprintf("%s", x.LastName),
+			x.FirstName,
+			x.LastName,
 			fmt.Sprintf("%d", len(x.Photo.String())),
 		})
 	}
@@ -246,11 +246,11 @@ func printUsersMany(envelope *rony.MessageEnvelope) {
 	for _, x := range x.Users {
 		tableUsers.Append([]string{
 			fmt.Sprintf("%d", x.ID),
-			fmt.Sprintf("%s", x.FirstName),
-			fmt.Sprintf("%s", x.LastName),
+			 x.FirstName,
+			x.LastName,
 			x.Username,
 			fmt.Sprintf("%d", x.Photo.PhotoID),
-			fmt.Sprintf("%s", time.Unix(x.LastSeen, 0).Format(time.RFC822)),
+			time.Unix(x.LastSeen, 0).Format(time.RFC822),
 		})
 	}
 	tableUsers.Render()
@@ -359,8 +359,8 @@ func printLabelItems(envelope *rony.MessageEnvelope) {
 	for _, x := range x.Users {
 		tableUsers.Append([]string{
 			fmt.Sprintf("%d", x.ID),
-			fmt.Sprintf("%s", x.FirstName),
-			fmt.Sprintf("%s", x.LastName),
+			x.FirstName,
+			x.LastName,
 			fmt.Sprintf("%d", len(x.Photo.String())),
 		})
 	}

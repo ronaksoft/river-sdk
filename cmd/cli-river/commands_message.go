@@ -53,7 +53,7 @@ var MessageSendToSelf = &ishell.Cmd{
 			x := &rony.MessageEnvelope{}
 			_ = x.Unmarshal(b)
 			MessagePrinter(x)
-			// _Shell.Println("Execute Time:", time.Now().Sub(startTime))
+			// _Shell.Println("Execute Time:", time.Since(startTime))
 		}
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesSend, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)

@@ -183,7 +183,7 @@ func TestPing(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		logs.Info("Pinged", zap.Duration("D", time.Now().Sub(startTime)))
+		logs.Info("Pinged", zap.Duration("D", time.Since(startTime)))
 	}
 	time.Sleep(5 * time.Second)
 	ctrl.Stop()

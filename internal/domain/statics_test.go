@@ -30,7 +30,7 @@ func TestSplitPQ(t *testing.T) {
 	fmt.Println(x)
 	startTime := time.Now()
 	p, q := SplitPQ(big.NewInt(int64(x)))
-	fmt.Println(time.Now().Sub(startTime))
+	fmt.Println(time.Since(startTime))
 	fmt.Println(p, q)
 }
 

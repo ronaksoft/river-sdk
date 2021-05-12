@@ -169,7 +169,6 @@ func (d *RequestDelegate) OnComplete(b []byte) {
 	}
 	_Shell.Println("Request Completed:", d.RequestID, registry.ConstructorName(d.Envelope.Constructor))
 	MessagePrinter(&d.Envelope)
-	return
 }
 
 func (d *RequestDelegate) OnTimeout(err error) {

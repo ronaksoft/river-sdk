@@ -314,19 +314,19 @@ func (r *River) onNetworkConnect() (err error) {
 		if err != nil {
 			return err
 		}
-		domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Now().Sub(domain.StartTime)))
+		domain.WindowLog(fmt.Sprintf("ServerTime (%s): %s", domain.TimeDelta, time.Since(domain.StartTime)))
 	}
 	atomic.CompareAndSwapInt32(&domain.TimeSynced, 0, 1)
 
 	switch salt.Count() {
 	case 0:
 		r.syncCtrl.GetServerSalt()
-		domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Now().Sub(domain.StartTime)))
+		domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Since(domain.StartTime)))
 	case 1, 2, 3:
 		waitGroup.Add(1)
 		go func() {
 			r.syncCtrl.GetServerSalt()
-			domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Now().Sub(domain.StartTime)))
+			domain.WindowLog(fmt.Sprintf("ServerSalt: %s", time.Since(domain.StartTime)))
 			waitGroup.Done()
 		}()
 	default:
@@ -337,7 +337,7 @@ func (r *River) onNetworkConnect() (err error) {
 	if err != nil {
 		logs.Warn("Error On AuthRecall", zap.Error(err))
 	}
-	domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Now().Sub(domain.StartTime)))
+	domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Since(domain.StartTime)))
 	waitGroup.Wait()
 
 	// If we are disconnected or not logged in or error happened then we return
@@ -350,10 +350,10 @@ func (r *River) onNetworkConnect() (err error) {
 		if r.syncCtrl.GetUpdateID() < serverUpdateID {
 			// Sync with Server
 			r.syncCtrl.Sync()
-			domain.WindowLog(fmt.Sprintf("Synced: %s", time.Now().Sub(domain.StartTime)))
+			domain.WindowLog(fmt.Sprintf("Synced: %s", time.Since(domain.StartTime)))
 		} else {
 			r.syncCtrl.SetSynced()
-			domain.WindowLog(fmt.Sprintf("Already Synced: %s", time.Now().Sub(domain.StartTime)))
+			domain.WindowLog(fmt.Sprintf("Already Synced: %s", time.Since(domain.StartTime)))
 		}
 
 		// Load SystemConfigs
@@ -367,9 +367,9 @@ func (r *River) onNetworkConnect() (err error) {
 			waitGroup.Add(1)
 			r.syncCtrl.GetContacts(waitGroup, 0, 0)
 			waitGroup.Wait()
-			domain.WindowLog(fmt.Sprintf("ContactsGet: %s", time.Now().Sub(domain.StartTime)))
+			domain.WindowLog(fmt.Sprintf("ContactsGet: %s", time.Since(domain.StartTime)))
 			r.syncCtrl.ContactsImport(true, nil, nil)
-			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Now().Sub(domain.StartTime)))
+			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Since(domain.StartTime)))
 		}
 		atomic.CompareAndSwapInt32(&domain.ContactsSynced, 0, 1)
 
@@ -388,7 +388,7 @@ func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 		if !salt.UpdateSalt() {
 			go func() {
 				r.syncCtrl.GetServerSalt()
-				domain.WindowLog(fmt.Sprintf("SaltsReceived: %s", time.Now().Sub(domain.StartTime)))
+				domain.WindowLog(fmt.Sprintf("SaltsReceived: %s", time.Since(domain.StartTime)))
 			}()
 		}
 	case domain.CheckError(e, msg.ErrCodeUnavailable, msg.ErrItemUserID):

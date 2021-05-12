@@ -705,7 +705,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 	}
 	logs.Debug("NetCtrl sent over websocket",
 		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
-		zap.Duration("Duration", time.Now().Sub(startTime)),
+		zap.Duration("Duration", time.Since(startTime)),
 	)
 
 	return nil

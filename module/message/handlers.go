@@ -425,7 +425,7 @@ func (r *message) getMonitorStats() []byte {
 	m := domain.M{
 		"ServerAvgTime":    (time.Duration(s.AvgResponseTime) * time.Millisecond).String(),
 		"ServerRequests":   s.TotalServerRequests,
-		"RecordTime":       time.Now().Sub(s.StartTime).String(),
+		"RecordTime":       time.Since(s.StartTime).String(),
 		"ForegroundTime":   (time.Duration(s.ForegroundTime) * time.Second).String(),
 		"SentMessages":     s.SentMessages,
 		"SentMedia":        s.SentMedia,

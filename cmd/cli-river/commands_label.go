@@ -205,7 +205,6 @@ func addLabelToMessage(c *ishell.Context, msgIDs []int64, labelIDs []int32) {
 		reqD.RequestID = reqID
 	}
 	wg.Wait()
-	return
 }
 func removeLabelFromMessage(c *ishell.Context, msgIDs []int64, labelIDs []int32) {
 	req := msg.LabelsRemoveFromMessage{
@@ -241,7 +240,6 @@ func removeLabelFromMessage(c *ishell.Context, msgIDs []int64, labelIDs []int32)
 		reqD.RequestID = reqID
 	}
 	wg.Wait()
-	return
 }
 func getMessage(c *ishell.Context, msgIDs []int64) {
 	req := msg.MessagesGet{

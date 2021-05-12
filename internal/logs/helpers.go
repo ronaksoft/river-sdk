@@ -28,7 +28,7 @@ func CleanUP() {
 			return nil
 		}
 		if strings.HasSuffix(info.Name(), ".log") {
-			if time.Now().Sub(info.ModTime()).Truncate(lifeTime) > 0 {
+			if time.Since(info.ModTime()).Truncate(lifeTime) > 0 {
 				_ = os.Remove(path)
 			}
 		}
