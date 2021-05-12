@@ -27,10 +27,13 @@ type ConnInfoDelegate interface {
 
 type CallDelegate interface {
 	OnUpdate(constructor int64, b []byte)
-	InitConnection(connId int32) (id int64, err error)
-	CloseConnection(connId int32) (err error)
-	GetAnswerSDP(connId int32) (res []byte, err error)
+	InitStream(audio, video bool) (err error)
+	InitConnection(connId int32, b []byte) (id int64, err error)
+	CloseConnection(connId int32, all bool) (err error)
+	GetAnswerSDP(connId int32, req []byte) (res []byte, err error)
 	GetOfferSDP(connId int32) (res []byte, err error)
+	SetAnswerSDP(connId int32, b []byte) (err error)
+	AddIceCandidate(connId int32, b []byte) (err error)
 }
 
 // Request Flags

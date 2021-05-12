@@ -268,9 +268,13 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	callModule := call.New(&call.Callback{
 		OnUpdate:        r.callDelegate.OnUpdate,
+		InitStream:      r.callDelegate.InitStream,
+		InitConnection:  r.callDelegate.InitConnection,
 		CloseConnection: r.callDelegate.CloseConnection,
 		GetAnswerSDP:    r.callDelegate.GetAnswerSDP,
 		GetOfferSDP:     r.callDelegate.GetOfferSDP,
+		SetAnswerSDP:    r.callDelegate.SetAnswerSDP,
+		AddIceCandidate: r.callDelegate.AddIceCandidate,
 	})
 
 	r.registerModule(

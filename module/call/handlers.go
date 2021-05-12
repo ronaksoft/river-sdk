@@ -1557,7 +1557,7 @@ func (c *call) participantAdded(in *UpdatePhoneCall) {
 	}
 
 	data := in.Data.(*msg.PhoneActionParticipantAdded)
-	c.initParticipant(c.activeCallID, data.Participants, false)
+	c.initParticipants(c.activeCallID, data.Participants, false)
 	isNew := true
 	for _, participant := range data.Participants {
 		if participant.Peer.UserID == c.userID {
