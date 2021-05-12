@@ -249,8 +249,11 @@ func (r *message) handlePendingMessage(x *msg.UpdateNewMessage) {
 
 				err = os.Rename(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
 				if err != nil {
-
-					logs.Error("Error On HandlePendingMessage (Rename)", zap.Error(err))
+					logs.Error("Error On HandlePendingMessage (Move) we try Copy", zap.Error(err))
+					err = domain.CopyFile(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
+					if err != nil {
+						logs.Error("Error On HandlePendingMessage (Copy) we give up!", zap.Error(err))
+					}
 					return
 				}
 			} else {
