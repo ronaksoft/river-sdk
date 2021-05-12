@@ -37,6 +37,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, callID 
 		logs.Warn("Init", zap.Error(err))
 		return
 	}
+
 	c.iceServer = initRes.IceServers
 	if callID != 0 {
 		c.activeCallID = callID
@@ -45,6 +46,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, callID 
 		if err != nil {
 			return
 		}
+
 		c.initParticipants(c.activeCallID, joinRes.Participants, true)
 		_, err = c.initConnections(peer, c.activeCallID, false, nil)
 		if err != nil {
@@ -57,6 +59,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, callID 
 		if err != nil {
 			return
 		}
+
 		c.swapTempInfo(c.activeCallID)
 	}
 	id = c.activeCallID
