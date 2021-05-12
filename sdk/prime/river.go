@@ -56,6 +56,8 @@ type RiverConfig struct {
 	MainDelegate MainDelegate
 	// FileDelegate holds all the callbacks required by file related functions
 	FileDelegate FileDelegate
+	// CallDelegate handle call events to devices
+	CallDelegate CallDelegate
 	// LogLevel
 	LogLevel  int
 	SentryDSN string
@@ -177,6 +179,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.delegates = make(map[uint64]RequestDelegate)
 	r.mainDelegate = conf.MainDelegate
 	r.fileDelegate = conf.FileDelegate
+	r.callDelegate = conf.CallDelegate
 
 	// set loglevel
 	logs.SetLogLevel(conf.LogLevel)
