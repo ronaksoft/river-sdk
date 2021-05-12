@@ -26,7 +26,7 @@ type ConnInfoDelegate interface {
 }
 
 type CallDelegate interface {
-	OnUpdate(constructor int64, b []byte)
+	OnUpdate(constructor int32, b []byte)
 	InitStream(audio, video bool) (err error)
 	InitConnection(connId int32, b []byte) (id int64, err error)
 	CloseConnection(connId int32, all bool) (err error)
