@@ -35,6 +35,7 @@ type call struct {
 	callInfo        map[int64]*Info
 	iceServer       []*msg.IceServer
 	userID          int64
+	authID          int64
 
 	teamInput  teamInput
 	deviceType msg.CallDeviceType
@@ -50,6 +51,7 @@ func New(callback *Callback) *call {
 		callInfo:        make(map[int64]*Info),
 		iceServer:       nil,
 		userID:          0,
+		authID:          0,
 		teamInput: teamInput{
 			teamID:     domain.GetCurrTeamID(),
 			teamAccess: domain.GetCurrTeamAccess(),
