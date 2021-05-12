@@ -74,7 +74,7 @@ func (c *call) join(peer *msg.InputPeer, callID int64) {
 	// TODO Call -> msg.CallUpdate_CallPreview
 }
 
-func (c *call) callAccept(callID int64, video bool) (err error) {
+func (c *call) accept(callID int64, video bool) (err error) {
 	if c.peer == nil {
 		err = ErrInvalidPeerInput
 		return
@@ -1412,7 +1412,7 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 		// TODO send -> msg.CallUpdate_CallRequested
 	} else if c.shouldAccept(in) {
 		streamState := c.getStreamState()
-		_ = c.callAccept(c.activeCallID, streamState.Video)
+		_ = c.accept(c.activeCallID, streamState.Video)
 	}
 }
 
