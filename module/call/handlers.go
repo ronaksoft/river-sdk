@@ -70,8 +70,16 @@ func (c *call) join(peer *msg.InputPeer, callID int64) {
 	if c.activeCallID == 0 {
 		return
 	}
+
 	c.activeCallID = callID
-	// TODO Call -> msg.CallUpdate_CallPreview
+	update := msg.CallUpdateCallPreview{
+		CallID: callID,
+		Peer:   peer,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_CallPreview, updateData)
+	}
 }
 
 func (c *call) accept(callID int64, video bool) (err error) {
@@ -184,7 +192,14 @@ func (c *call) groupRemoveParticipant(callID int64, userIDs []int64, timeout boo
 		c.removeParticipant(userID, nil)
 	}
 
-	// TODO Call -> msg.CallUpdate_ParticipantRemoved
+	update := msg.CallUpdateParticipantRemoved{
+		UserIDs: userIDs,
+		Timeout: timeout,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_ParticipantRemoved, updateData)
+	}
 	return
 }
 
@@ -206,7 +221,15 @@ func (c *call) groupUpdateAdmin(callID int64, userID int64, admin bool) (err err
 	}
 
 	c.updateAdmin(userID, admin)
-	// TODO Call -> msg.CallUpdate_ParticipantAdminUpdated
+
+	update := msg.CallUpdateParticipantAdminUpdated{
+		UserID: userID,
+		Admin:  admin,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_ParticipantAdminUpdated, updateData)
+	}
 
 	return
 }
@@ -313,7 +336,15 @@ func (c *call) groupMuteParticipant(userID int64, muted bool) {
 	info.participants[connId].Muted = muted
 	info.mu.Unlock()
 
-	// TODO Call -> msg.CallUpdate_ParticipantMuted
+	update := msg.CallUpdateParticipantMuted{
+		ConnectionID: connId,
+		Muted:        muted,
+		UserID:       userID,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_ParticipantMuted, updateData)
+	}
 }
 
 func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
@@ -663,7 +694,6 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	}
 
 	// Client should initiate RTCPeerConnection with given server config
-	// TODO call delegate
 	callInitReq := &msg.PhoneInit{
 		IceServers: iceServer,
 	}
@@ -724,9 +754,9 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 
 	if remote {
 		if sdp != nil {
-			// TODO Client should setRemoteDescription(sdp)
-			// TODO Client should create answer
-			// TODO Client should setLocalDescription and pass it to SDK
+			// Client should setRemoteDescription(sdp)
+			// Client should create answer
+			// Client should setLocalDescription and pass it to SDK
 			offerSDP := &msg.PhoneActionSDPOffer{
 				SDP:  sdp.SDP,
 				Type: sdp.Type,
@@ -754,8 +784,8 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 			return
 		}
 	} else {
-		// TODO Client should create offer
-		// TODO Client should setLocalDescription and pass the offer to SDK
+		// Client should create offer
+		// Client should setLocalDescription and pass the offer to SDK
 		var clientOfferSDP []byte
 		clientOfferSDP, err = c.callback.GetOfferSDP(connId)
 		if err != nil {
@@ -940,7 +970,17 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn) {
 		return
 	}
 
-	// TODO -> msg.CallUpdate_LocalMediaSettingsUpdated
+	update := msg.CallUpdateLocalMediaSettingsUpdated{
+		MediaSettings: &msg.CallMediaSettings{
+			Video:       info.mediaSettings.Video,
+			Audio:       info.mediaSettings.Audio,
+			ScreenShare: info.mediaSettings.ScreenShare,
+		},
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_LocalMediaSettingsUpdated, updateData)
+	}
 
 	inputUsers := c.getInputUsers(c.activeCallID)
 	_, _ = c.apiSendUpdate(c.peer, c.activeCallID, inputUsers, msg.PhoneCallAction_PhoneCallMediaSettingsChanged, actionData, false)
@@ -963,7 +1003,18 @@ func (c *call) mediaSettingsInit(in MediaSettings) {
 	info.participants[connId].MediaSettings.ScreenShare = in.ScreenShare
 	info.mu.Unlock()
 
-	// TOO Call -> msg.CallUpdate_MediaSettingsUpdated
+	update := msg.CallUpdateMediaSettingsUpdated{
+		ConnectionID: connId,
+		MediaSettings: &msg.CallMediaSettings{
+			Video:       in.Video,
+			Audio:       in.Audio,
+			ScreenShare: in.ScreenShare,
+		},
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_MediaSettingsUpdated, updateData)
+	}
 }
 
 func (c *call) checkAllConnected() {
@@ -982,7 +1033,13 @@ func (c *call) checkAllConnected() {
 		}
 
 		c.callInfo[c.activeCallID].allConnected = true
-		// TODO call -> msg.CallUpdate_AllConnected with 255 msec delay
+		time.AfterFunc(time.Duration(255)*time.Millisecond, func() {
+			update := msg.CallUpdateAllConnected{}
+			updateData, uErr := update.Marshal()
+			if uErr == nil {
+				c.callUpdate(msg.CallUpdate_AllConnected, updateData)
+			}
+		})
 	}
 }
 
@@ -999,7 +1056,6 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 	if !conn.Reconnecting &&
 		((isIceError && c.peerConnections[connId].Init && (state == "disconnected" || state == "failed" || state == "closed")) ||
 			state == "disconnected") {
-		// TODO close connection with connID
 		err = c.callback.CloseConnection(connId, false)
 		if err != nil {
 			return
@@ -1018,7 +1074,15 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 		}
 		conn.mu.Unlock()
 
-		// TODO call -> msg.CallUpdate_ConnectionStatusChanged with state "reconnecting"
+		update := msg.CallUpdateConnectionStatusChanged{
+			ConnectionID: connId,
+			State:        "reconnecting",
+		}
+		updateData, uErr := update.Marshal()
+		if uErr == nil {
+			c.callUpdate(msg.CallUpdate_ConnectionStatusChanged, updateData)
+		}
+
 		var initRes *msg.PhoneInit
 		initRes, err = c.apiInit(c.peer, c.activeCallID)
 		if err != nil {
@@ -1409,7 +1473,18 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 		c.peer = c.getInputUserFromUpdate(in)
 		c.mu.Unlock()
 
-		// TODO send -> msg.CallUpdate_CallRequested
+		update := msg.CallUpdateCallRequested{
+			Peer: &msg.InputPeer{
+				ID:         in.PeerID,
+				Type:       msg.PeerType(in.PeerType),
+				AccessHash: in.AccessHash,
+			},
+			CallID: 0,
+		}
+		updateData, uErr := update.Marshal()
+		if uErr == nil {
+			c.callUpdate(msg.CallUpdate_CallRequested, updateData)
+		}
 	} else if c.shouldAccept(in) {
 		streamState := c.getStreamState()
 		_ = c.accept(c.activeCallID, streamState.Video)
@@ -1466,7 +1541,13 @@ func (c *call) callAccepted(in *UpdatePhoneCall) {
 	c.clearRetryInterval(connId, false)
 	logs.Info("[webrtc] accept signal", zap.Int32("connId", connId))
 
-	// TODO Client -> msg.CallUpdate_CallAccepted
+	update := msg.CallUpdateCallAccepted{
+		ConnectionID: connId,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_CallAccepted, updateData)
+	}
 }
 
 func (c *call) callDiscarded(in *UpdatePhoneCall) {
@@ -1479,13 +1560,33 @@ func (c *call) callDiscarded(in *UpdatePhoneCall) {
 
 	data := in.Data.(*msg.PhoneActionDiscarded)
 	if in.PeerType == int32(msg.PeerType_PeerUser) || data.Terminate {
-		// TODO Client -> msg.CallUpdate_CallRejected
+		update := msg.CallUpdateCallRejected{
+			CallID: in.CallID,
+			Reason: data.Reason,
+		}
+		updateData, uErr := update.Marshal()
+		if uErr == nil {
+			c.callUpdate(msg.CallUpdate_CallRejected, updateData)
+		}
 	} else {
 		if c.removeParticipant(in.UserID, &in.CallID) {
-			// TODO Client -> msg.CallUpdate_CallRejected
+			update := msg.CallUpdateCallRejected{
+				CallID: in.CallID,
+				Reason: data.Reason,
+			}
+			updateData, uErr := update.Marshal()
+			if uErr == nil {
+				c.callUpdate(msg.CallUpdate_CallRejected, updateData)
+			}
 		} else {
 			c.checkAllConnected()
-			// TODO Client -> msg.CallUpdate_ParticipantLeft
+			update := msg.CallUpdateParticipantLeft{
+				UserID: in.UserID,
+			}
+			updateData, uErr := update.Marshal()
+			if uErr == nil {
+				c.callUpdate(msg.CallUpdate_ParticipantLeft, updateData)
+			}
 		}
 	}
 }
@@ -1625,7 +1726,13 @@ func (c *call) callAcknowledged(in *UpdatePhoneCall) {
 	}
 
 	c.clearRetryInterval(connId, true)
-	// TODO Call -> msg.CallUpdate_CallAck
+	update := msg.CallUpdateCallAck{
+		ConnectionID: connId,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_CallAck, updateData)
+	}
 }
 
 func (c *call) participantAdded(in *UpdatePhoneCall) {
@@ -1636,15 +1743,22 @@ func (c *call) participantAdded(in *UpdatePhoneCall) {
 	data := in.Data.(*msg.PhoneActionParticipantAdded)
 	c.initParticipants(c.activeCallID, data.Participants, false)
 	isNew := true
+	var userIDs []int64
 	for _, participant := range data.Participants {
 		if participant.Peer.UserID == c.userID {
 			isNew = false
-			break
 		}
+		userIDs = append(userIDs, participant.Peer.UserID)
 	}
 
 	if isNew {
-		// TODO CALL -> msg.CallUpdate_ParticipantJoined
+		update := msg.CallUpdateParticipantJoined{
+			UserIDs: userIDs,
+		}
+		updateData, uErr := update.Marshal()
+		if uErr == nil {
+			c.callUpdate(msg.CallUpdate_ParticipantJoined, updateData)
+		}
 	}
 }
 
@@ -1653,7 +1767,13 @@ func (c *call) participantRemoved(in *UpdatePhoneCall) {
 
 	for _, userId := range data.UserIDs {
 		if userId == c.userID {
-			// TODO Call -> msg.CallUpdate_CallCancelled
+			update := msg.CallUpdateCallCancelled{
+				CallID: in.CallID,
+			}
+			updateData, uErr := update.Marshal()
+			if uErr == nil {
+				c.callUpdate(msg.CallUpdate_CallCancelled, updateData)
+			}
 			break
 		}
 	}
@@ -1673,9 +1793,23 @@ func (c *call) participantRemoved(in *UpdatePhoneCall) {
 		}
 	}
 
-	// TODO Call -> msg.CallUpdate_ParticipantRemoved
+	update := msg.CallUpdateParticipantRemoved{
+		UserIDs: data.UserIDs,
+		Timeout: data.Timeout,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_ParticipantRemoved, updateData)
+	}
 	if isCurrentRemoved {
-		// TODO Call -> msg.CallUpdate_CallRejected
+		update := msg.CallUpdateCallRejected{
+			CallID: in.CallID,
+			Reason: msg.DiscardReason_DiscardReasonHangup,
+		}
+		updateData, uErr := update.Marshal()
+		if uErr == nil {
+			c.callUpdate(msg.CallUpdate_CallRejected, updateData)
+		}
 	}
 
 	c.checkAllConnected()
@@ -1688,20 +1822,33 @@ func (c *call) adminUpdated(in *UpdatePhoneCall) {
 
 	data := in.Data.(*msg.PhoneActionAdminUpdated)
 	c.updateAdmin(data.UserID, data.Admin)
-	// TODO Call -> msg.CallUpdate_ParticipantAdminUpdated
+	update := msg.CallUpdateParticipantAdminUpdated{
+		UserID: data.UserID,
+		Admin:  data.Admin,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_ParticipantAdminUpdated, updateData)
+	}
 }
 
 func (c *call) joinRequested(in *UpdatePhoneCall) {
 	data := in.Data.(*msg.PhoneActionJoinRequested)
 	for _, userId := range data.UserIDs {
 		if userId == c.userID {
-			inputPeer := &msg.InputPeer{
-				ID:         in.PeerID,
-				Type:       msg.PeerType(in.PeerType),
-				AccessHash: 0,
+			update := msg.CallUpdateCallJoinRequested{
+				CallID:   in.CallID,
+				CalleeID: userId,
+				Peer: &msg.InputPeer{
+					ID:         in.PeerID,
+					Type:       msg.PeerType(in.PeerType),
+					AccessHash: 0,
+				},
 			}
-			fmt.Println(inputPeer)
-			// TODO Call -> msg.CallUpdate_CallJoinRequested
+			updateData, uErr := update.Marshal()
+			if uErr == nil {
+				c.callUpdate(msg.CallUpdate_CallJoinRequested, updateData)
+			}
 			return
 		}
 	}
@@ -1715,7 +1862,13 @@ func (c *call) screenShareUpdated(in *UpdatePhoneCall) {
 func (c *call) callPicked(in *UpdatePhoneCall) {
 	data := in.Data.(*msg.PhoneActionPicked)
 	if data.AuthID != c.authID {
-		// TODO call -> msg.CallUpdate_CallCancelled
+		update := msg.CallUpdateCallCancelled{
+			CallID: in.CallID,
+		}
+		updateData, uErr := update.Marshal()
+		if uErr == nil {
+			c.callUpdate(msg.CallUpdate_CallCancelled, updateData)
+		}
 	}
 }
 
@@ -1740,4 +1893,8 @@ func (c *call) callRestarted(in *UpdatePhoneCall) {
 		}
 		c.sendSdpOffer(connId, sdpOffer)
 	}
+}
+
+func (c *call) callUpdate(constructor msg.CallUpdate, b []byte) {
+	c.callback.OnUpdate(int32(constructor), b)
 }
