@@ -10,16 +10,24 @@ import (
 	"time"
 )
 
-func (c *call) ToggleVide(enable bool) {
+func (c *call) toggleVide(enable bool) (err error) {
+	c.propagateMediaSettings(MediaSettingsIn{
+		Video: &enable,
+	})
 
+	return c.modifyMediaStream(enable)
 }
 
-func (c *call) ToggleAudio(enable bool) {
-
+func (c *call) toggleAudio(enable bool) (err error) {
+	c.propagateMediaSettings(MediaSettingsIn{
+		Audio: &enable,
+	})
+	return
 }
 
-func (c *call) TryReconnect(connId int32) {
-
+func (c *call) tryReconnect(connId int32) (err error) {
+	_ = c.checkDisconnection(connId, "disconnected", false)
+	return
 }
 
 func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, callID int64) (id int64, err error) {
@@ -823,6 +831,72 @@ func (c *call) flushIceCandidates(callID int64, connId int32) {
 			_ = c.sendIceCandidate(callID, ic, connId)
 		}(candidate)
 	}
+}
+
+func (c *call) modifyMediaStream(video bool) (err error) {
+	if c.activeCallID == 0 {
+		err = ErrNoActiveCall
+		return
+	}
+
+	err = c.callback.InitStream(true, video)
+	if err != nil {
+		return
+	}
+
+	_ = c.upgradeConnection(video)
+	c.propagateMediaSettings(MediaSettingsIn{
+		Video: &video,
+	})
+	return
+}
+
+func (c *call) upgradeConnection(video bool) (err error) {
+	if c.activeCallID == 0 {
+		return
+	}
+
+	err = c.callback.InitStream(true, video)
+	if err != nil {
+		return
+	}
+
+	var connIds []int32
+	c.mu.RLock()
+	for _, pc := range c.peerConnections {
+		if pc.IceConnectionState == "connected" {
+			connIds = append(connIds, pc.ConnId)
+		}
+	}
+	c.mu.RUnlock()
+
+	if len(connIds) == 0 {
+		return
+	}
+
+	wg := sync.WaitGroup{}
+	for _, connId := range connIds {
+		wg.Add(1)
+		go func(cid int32) {
+			var clientOfferSDP []byte
+			clientOfferSDP, err = c.callback.GetOfferSDP(cid)
+			if err != nil {
+				return
+			}
+
+			sdpOffer := &msg.PhoneActionSDPOffer{}
+			err = sdpOffer.Unmarshal(clientOfferSDP)
+			if err != nil {
+				return
+			}
+
+			c.sendSdpOffer(cid, sdpOffer)
+			wg.Done()
+		}(connId)
+	}
+
+	wg.Wait()
+	return
 }
 
 func (c *call) propagateMediaSettings(in MediaSettingsIn) {
