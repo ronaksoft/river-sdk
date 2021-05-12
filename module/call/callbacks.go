@@ -7,4 +7,5 @@ type Callback struct {
 	CloseConnection func(connId int32) (err error)
 	GetAnswerSDP    func(connId int32) (res []byte, err error)
 	GetOfferSDP     func(connId int32) (res []byte, err error)
+	SetAnswerSDP    func(connId int32, b []byte) (err error)
 }

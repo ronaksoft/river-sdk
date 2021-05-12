@@ -733,8 +733,11 @@ func (c *call) callSendRestart(connId int32, sender bool) (err error) {
 }
 
 func (c *call) getCallInfo(callID int64) *Info {
-	if c, ok := c.callInfo[callID]; ok {
-		return c
+	c.mu.RLock()
+	info, ok := c.callInfo[callID]
+	c.mu.RUnlock()
+	if ok {
+		return info
 	} else {
 		return nil
 	}
@@ -746,7 +749,9 @@ func (c *call) getConnId(callID, userID int64) (*int32, *Info) {
 		return nil, nil
 	}
 
+	info.mu.RLock()
 	connId := int32(info.participantMap[userID])
+	info.mu.RUnlock()
 	return &connId, info
 }
 
@@ -756,7 +761,10 @@ func (c *call) getUserIDbyCallID(callID int64, connID int32) *int64 {
 		return nil
 	}
 
-	if d, ok := info.participants[connID]; ok {
+	info.mu.RUnlock()
+	d, ok := info.participants[connID]
+	info.mu.RUnlock()
+	if ok {
 		return &d.Peer.UserID
 	} else {
 		return nil
@@ -769,7 +777,10 @@ func (c *call) getInputUserByConnId(callID int64, connID int32) (inputUser *msg.
 		return nil
 	}
 
-	if d, ok := info.participants[connID]; ok {
+	info.mu.RLock()
+	d, ok := info.participants[connID]
+	info.mu.RUnlock()
+	if ok {
 		return d.Peer
 	} else {
 		return nil
@@ -783,6 +794,7 @@ func (c *call) getInputUserByUserIDs(callID int64, userIDs []int64) (inputUser [
 	}
 
 	inputUser = make([]*msg.InputUser, 0, len(userIDs))
+	info.mu.RLock()
 	for _, userID := range userIDs {
 		if connId, ok := info.participantMap[userID]; ok {
 			if participant, ok2 := info.participants[connId]; ok2 {
@@ -790,6 +802,7 @@ func (c *call) getInputUserByUserIDs(callID int64, userIDs []int64) (inputUser [
 			}
 		}
 	}
+	info.mu.RUnlock()
 	return
 }
 
@@ -800,9 +813,11 @@ func (c *call) getInputUsers(callID int64) (inputUser []*msg.InputUser) {
 	}
 
 	inputUser = make([]*msg.InputUser, 0, len(info.participants))
+	info.mu.RLock()
 	for _, participant := range info.participants {
 		inputUser = append(inputUser, participant.Peer)
 	}
+	info.mu.RUnlock()
 	return
 }
 
@@ -811,14 +826,19 @@ func (c *call) swapTempInfo(callID int64) {
 	if info == nil {
 		return
 	}
+
+	c.mu.Lock()
 	c.callInfo[callID] = info
 	delete(c.callInfo, TempCallID)
+	c.mu.Unlock()
 }
 
 func (c *call) setCallInfoDialed(callID int64) {
+	c.mu.Lock()
 	if _, ok := c.callInfo[callID]; ok {
 		c.callInfo[callID].dialed = true
 	}
+	c.mu.Unlock()
 }
 
 func (c *call) callBusy(in *UpdatePhoneCall) {
@@ -922,6 +942,79 @@ func (c *call) getInputUserFromUpdate(in *UpdatePhoneCall) *msg.InputPeer {
 	return inputPeer
 }
 
+func (c *call) clearRetryInterval(connId int32, onlyClearInterval bool) {
+	c.mu.RLock()
+	pc, ok := c.peerConnections[connId]
+	c.mu.RUnlock()
+
+	if !ok {
+		return
+	}
+
+	if pc.connectTimout != nil {
+		pc.connectTimout.Stop()
+	}
+
+	if onlyClearInterval == false && c.activeCallID == 0 {
+		c.mu.Lock()
+		if info, ok := c.callInfo[c.activeCallID]; ok {
+			info.acceptedParticipants = append(info.acceptedParticipants, connId)
+		}
+		c.mu.Unlock()
+	}
+}
+
+func (c *call) removeParticipant(userID int64, callID *int64) bool {
+	activeCallID := c.activeCallID
+	if callID != nil {
+		activeCallID = *callID
+	}
+
+	if activeCallID == 0 {
+		return false
+	}
+
+	cId, info := c.getConnId(activeCallID, userID)
+	if cId == nil {
+		return false
+	}
+
+	connId := *cId
+
+	c.mu.RLock()
+	_, hasConn := c.peerConnections[connId]
+	c.mu.RUnlock()
+	if hasConn {
+		_ = c.callback.CloseConnection(connId)
+	}
+
+	info.mu.Lock()
+	for idx, id := range info.acceptedParticipantIds {
+		if id == userID {
+			info.acceptedParticipantIds = append(info.acceptedParticipantIds[:idx], info.acceptedParticipantIds[idx+1:]...)
+		}
+	}
+
+	for idx, id := range info.requestParticipantIds {
+		if id == userID {
+			info.requestParticipantIds = append(info.requestParticipantIds[:idx], info.requestParticipantIds[idx+1:]...)
+		}
+	}
+
+	for idx, request := range info.requests {
+		if request.UserID == userID {
+			info.requests = append(info.requests[:idx], info.requests[idx+1:]...)
+		}
+	}
+
+	delete(info.participants, connId)
+	delete(info.participantMap, userID)
+	allRemoved := len(info.participants) <= 1
+	info.mu.Unlock()
+
+	return allRemoved
+}
+
 func (c *call) shouldAccept(in *UpdatePhoneCall) bool {
 	if c.activeCallID == in.CallID {
 		return false
@@ -983,13 +1076,75 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 }
 
 func (c *call) callAccepted(in *UpdatePhoneCall) {
+	if c.activeCallID == 0 {
+		return
+	}
+
+	cId, info := c.getConnId(in.CallID, in.UserID)
+	if cId == nil {
+		return
+	}
+
+	connId := *cId
+
+	c.mu.RLock()
+	pc, ok := c.peerConnections[connId]
+	c.mu.RUnlock()
+	if !ok {
+		return
+	}
+
 	data := in.Data.(*msg.PhoneActionAccepted)
-	fmt.Println(data)
+	info.mu.Lock()
+	info.participants[connId].DeviceType = data.DeviceType
+	info.mu.Unlock()
+
+	sdp := &msg.PhoneActionSDPAnswer{
+		SDP:  data.SDP,
+		Type: data.Type,
+	}
+	sdpData, err := sdp.Marshal()
+	if err != nil {
+		return
+	}
+
+	err = c.callback.SetAnswerSDP(connId, sdpData)
+	if err != nil {
+		return
+	}
+
+	pc.mu.Lock()
+	pc.Accepted = true
+	pc.mu.Unlock()
+	c.flushIceCandidates(in.CallID, connId)
+
+	streamState := c.getStreamState()
+	c.propagateMediaSettings(MediaSettingsIn{
+		Audio:       &streamState.Audio,
+		ScreenShare: &streamState.ScreenShare,
+		Video:       &streamState.Video,
+	})
+	c.clearRetryInterval(connId, false)
+	logs.Info("[webrtc] accept signal", zap.Int32("connId", connId))
+
+	// TODO Client -> msg.CallUpdate_CallAccepted
 }
 
 func (c *call) callDiscarded(in *UpdatePhoneCall) {
+	cId, _ := c.getConnId(in.CallID, in.UserID)
+	if cId == nil {
+		return
+	}
+
+	connId := *cId
+	c.clearRetryInterval(connId, false)
+
 	data := in.Data.(*msg.PhoneActionDiscarded)
-	fmt.Println(data)
+	if in.PeerType == int32(msg.PeerType_PeerUser) || data.Terminate {
+		// TODO Client -> msg.CallUpdate_CallRejected
+	} else {
+
+	}
 }
 
 func (c *call) iceExchange(in *UpdatePhoneCall) {

@@ -58,7 +58,7 @@ type MediaSettings struct {
 
 type Info struct {
 	acceptedParticipantIds []int64
-	acceptedParticipants   []int
+	acceptedParticipants   []int32
 	allConnected           bool
 	dialed                 bool
 	mediaSettings          MediaSettings
