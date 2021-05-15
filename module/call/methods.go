@@ -108,7 +108,8 @@ func (c *call) iceConnectionStatusChange(connId int32, state string, hasIceError
 			ConnectionID: connId,
 			State:        state,
 		}
-		updateData, err := update.Marshal()
+		var updateData []byte
+		updateData, err = update.Marshal()
 		if err != nil {
 			return
 		}
