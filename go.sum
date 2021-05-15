@@ -43,6 +43,16 @@ git.ronaksoft.com/river/msg v0.0.0-20210512124450-35a81feddbf4 h1:Bt5fLQlppd5Kes
 git.ronaksoft.com/river/msg v0.0.0-20210512124450-35a81feddbf4/go.mod h1:U8LJ7P93dHqeXFP47ag3xdwMuxtvqsEYLNqZfwMlVGI=
 git.ronaksoft.com/river/msg v0.0.0-20210512131944-c4670e61a66f h1:qjpeXix5VIt3IbssJCyeRfE0xxor5nCZ8arTNvxfUbU=
 git.ronaksoft.com/river/msg v0.0.0-20210512131944-c4670e61a66f/go.mod h1:U8LJ7P93dHqeXFP47ag3xdwMuxtvqsEYLNqZfwMlVGI=
+git.ronaksoft.com/river/msg v0.0.0-20210515055458-80071d425af4 h1:djVAvH3hXQE14/xBEAqPkYnQvzVfKq4oWGLWB5NY9vM=
+git.ronaksoft.com/river/msg v0.0.0-20210515055458-80071d425af4/go.mod h1:U8LJ7P93dHqeXFP47ag3xdwMuxtvqsEYLNqZfwMlVGI=
+git.ronaksoft.com/river/msg v0.0.0-20210515061221-09806b8b1f85 h1:rWflAIWZfgQ9FD7WgKlxh+Y4IVF1PIAZaocCW7EHjJw=
+git.ronaksoft.com/river/msg v0.0.0-20210515061221-09806b8b1f85/go.mod h1:U8LJ7P93dHqeXFP47ag3xdwMuxtvqsEYLNqZfwMlVGI=
+git.ronaksoft.com/river/msg v0.0.0-20210515062723-0c570437a074 h1:zEwweUj98ppQkX4heijGSYDAdX5M+KYcgb6sdHLywy8=
+git.ronaksoft.com/river/msg v0.0.0-20210515062723-0c570437a074/go.mod h1:U8LJ7P93dHqeXFP47ag3xdwMuxtvqsEYLNqZfwMlVGI=
+git.ronaksoft.com/river/msg v0.0.0-20210515063213-c521987a8746 h1:uFskhCttw8Dd74rVLUVBmx2t36tts8zqhoiKOCIvR4E=
+git.ronaksoft.com/river/msg v0.0.0-20210515063213-c521987a8746/go.mod h1:U8LJ7P93dHqeXFP47ag3xdwMuxtvqsEYLNqZfwMlVGI=
+git.ronaksoft.com/river/msg v0.0.0-20210515065535-deee26dfc3b0 h1:umuWXDO/UmbnPNar8+FwgW6kMecrWPJryzz28n5Rkus=
+git.ronaksoft.com/river/msg v0.0.0-20210515065535-deee26dfc3b0/go.mod h1:U8LJ7P93dHqeXFP47ag3xdwMuxtvqsEYLNqZfwMlVGI=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=

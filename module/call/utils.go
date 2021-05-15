@@ -23,21 +23,6 @@ type UpdatePhoneCall struct {
 	Data interface{}
 }
 
-type Participant struct {
-	msg.PhoneParticipant
-	DeviceType    msg.CallDeviceType
-	MediaSettings msg.CallMediaSettings
-	Muted         bool
-	Started       bool
-}
-
-type RTCIceCandidate struct {
-	Candidate        string
-	SDPMid           string
-	SDPMLineIndex    int64
-	UsernameFragment string
-}
-
 type Connection struct {
 	msg.CallConnection
 	mu              *sync.RWMutex
@@ -64,7 +49,7 @@ type Info struct {
 	dialed                 bool
 	mediaSettings          MediaSettings
 	participantMap         map[int64]int32
-	participants           map[int32]*Participant
+	participants           map[int32]*msg.CallParticipant
 	requestParticipantIds  []int64
 	requests               []*UpdatePhoneCall
 	iceServer              *msg.IceServer

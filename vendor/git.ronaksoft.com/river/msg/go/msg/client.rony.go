@@ -1678,6 +1678,46 @@ func (x *ClientNotificationDismissTime) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientNotificationDismissTime, x)
 }
 
+const C_ClientError int64 = 2520362971
+
+type poolClientError struct {
+	pool sync.Pool
+}
+
+func (p *poolClientError) Get() *ClientError {
+	x, ok := p.pool.Get().(*ClientError)
+	if !ok {
+		x = &ClientError{}
+	}
+	return x
+}
+
+func (p *poolClientError) Put(x *ClientError) {
+	if x == nil {
+		return
+	}
+	x.Error = ""
+	p.pool.Put(x)
+}
+
+var PoolClientError = poolClientError{}
+
+func (x *ClientError) DeepCopy(z *ClientError) {
+	z.Error = x.Error
+}
+
+func (x *ClientError) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientError) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientError) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientError, x)
+}
+
 func init() {
 	registry.RegisterConstructor(1354863379, "ClientGetMediaHistory")
 	registry.RegisterConstructor(1095038539, "ClientSendMessageMedia")
@@ -1710,4 +1750,5 @@ func init() {
 	registry.RegisterConstructor(1698398006, "ClientDismissNotification")
 	registry.RegisterConstructor(4106535811, "ClientGetNotificationDismissTime")
 	registry.RegisterConstructor(3077814065, "ClientNotificationDismissTime")
+	registry.RegisterConstructor(2520362971, "ClientError")
 }

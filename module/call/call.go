@@ -44,7 +44,7 @@ type call struct {
 }
 
 func New(callback *Callback) *call {
-	r := &call{
+	c := &call{
 		peerConnections: make(map[int32]*Connection),
 		peer:            nil,
 		activeCallID:    0,
@@ -60,11 +60,31 @@ func New(callback *Callback) *call {
 		callback:   callback,
 	}
 
-	r.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{
-		msg.C_UpdatePhoneCall: r.updatePhoneCall,
+	c.RegisterHandlers(
+		map[int64]domain.LocalHandler{
+			msg.C_ClientCallToggleVideo:                 c.toggleVideoHandler,
+			msg.C_ClientCallToggleAudio:                 c.toggleAudioHandler,
+			msg.C_ClientCallTryReconnect:                c.tryReconnectHandler,
+			msg.C_ClientCallDestroy:                     c.destroyHandler,
+			msg.C_ClientCallAreAllAudio:                 c.areAllAudioHandler,
+			msg.C_ClientCallStart:                       c.startHandler,
+			msg.C_ClientCallJoin:                        c.joinHandler,
+			msg.C_ClientCallAccept:                      c.acceptHandler,
+			msg.C_ClientCallReject:                      c.rejectHandler,
+			msg.C_ClientCallGroupAddParticipant:         c.groupAddParticipantHandler,
+			msg.C_ClientCallGroupRemoveParticipant:      c.groupRemoveParticipantHandler,
+			msg.C_ClientCallGroupGetParticipantByUserID: c.groupGetParticipantByUserIDHandler,
+			msg.C_ClientCallGroupGetParticipantByConnId: c.groupGetParticipantByConnIdHandler,
+			msg.C_ClientCallGroupGetParticipantList:     c.groupGetParticipantListHandler,
+			msg.C_ClientCallGroupMuteParticipant:        c.groupMuteParticipantHandler,
+		},
+	)
+
+	c.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{
+		msg.C_UpdatePhoneCall: c.updatePhoneCall,
 	})
 
-	return r
+	return c
 }
 
 func (c *call) Name() string {
