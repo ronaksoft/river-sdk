@@ -390,6 +390,7 @@ func (c *call) groupRemoveParticipant(callID int64, userIDs []int64, timeout boo
 	if uErr == nil {
 		c.callUpdate(msg.CallUpdate_ParticipantRemoved, updateData)
 	}
+
 	return
 }
 
