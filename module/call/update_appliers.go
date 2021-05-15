@@ -19,7 +19,7 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, er
 		}
 
 		now := domain.Now().Unix()
-		if !(x.Timestamp == 0 || now-x.Timestamp > 60) {
+		if !(x.Timestamp == 0 || now-x.Timestamp < 60) {
 			return
 		}
 
