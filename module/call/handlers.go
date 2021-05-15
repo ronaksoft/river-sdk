@@ -96,6 +96,63 @@ func (c *call) areAllAudioHandler(in, out *rony.MessageEnvelope, da domain.Callb
 	da.OnComplete(out)
 }
 
+func (c *call) iceCandidateHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+	req := &msg.ClientCallSendIceCandidate{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+
+	err := c.iceCandidate(req.ConnId, req.Candidate)
+	if err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+
+	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
+	da.OnComplete(out)
+}
+
+func (c *call) iceConnectionStatusChangeHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+	req := &msg.ClientCallSendIceConnectionStatus{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+
+	err := c.iceConnectionStatusChange(req.ConnId, req.State, req.HasIceError)
+	if err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+
+	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
+	da.OnComplete(out)
+}
+
+func (c *call) mediaSettingsChangeHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+	req := &msg.ClientCallSendMediaSettings{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+
+	err := c.mediaSettingsChange(req.ConnId, req.MediaSettings)
+	if err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+
+	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
+	da.OnComplete(out)
+}
+
 func (c *call) startHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientCallStart{}
 	if err := req.Unmarshal(in.Message); err != nil {

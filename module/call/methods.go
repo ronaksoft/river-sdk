@@ -77,6 +77,66 @@ func (c *call) areAllAudio() (ok bool, err error) {
 	return
 }
 
+func (c *call) iceCandidate(connId int32, candidate *msg.CallRTCIceCandidate) (err error) {
+	if c.activeCallID == 0 {
+		err = ErrNoActiveCall
+		return
+	}
+
+	err = c.sendIceCandidate(c.activeCallID, connId, candidate)
+	return
+}
+
+func (c *call) iceConnectionStatusChange(connId int32, state string, hasIceError bool) (err error) {
+	if c.activeCallID == 0 {
+		err = ErrNoActiveCall
+		return
+	}
+
+	conn, hasConn := c.peerConnections[connId]
+	if !hasConn {
+		err = ErrInvalidConnId
+		return
+	}
+
+	conn.mu.Lock()
+	conn.IceConnectionState = state
+	conn.mu.Unlock()
+
+	if !hasIceError {
+		update := msg.CallUpdateConnectionStatusChanged{
+			ConnectionID: connId,
+			State:        state,
+		}
+		updateData, err := update.Marshal()
+		if err != nil {
+			return
+		}
+		c.callUpdate(msg.CallUpdate_ConnectionStatusChanged, updateData)
+		c.checkAllConnected()
+	}
+	err = c.checkDisconnection(connId, state, hasIceError)
+	return
+}
+
+func (c *call) mediaSettingsChange(connId int32, mediaSettings *msg.CallMediaSettings) (err error) {
+	if c.activeCallID == 0 {
+		err = ErrNoActiveCall
+		return
+	}
+
+	info := c.getCallInfo(c.activeCallID)
+	if info == nil {
+		err = ErrInvalidCallId
+		return
+	}
+
+	info.mu.Lock()
+	info.participants[connId].MediaSettings = mediaSettings
+	info.mu.Unlock()
+	return
+}
+
 func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, callID int64) (id int64, err error) {
 	c.peer = peer
 	initRes, err := c.apiInit(peer, callID)
@@ -416,7 +476,7 @@ func (c *call) initCallParticipants(callID int64, participants []*msg.InputUser)
 				Video:       true,
 			},
 			Started: false,
-			Muted: false,
+			Muted:   false,
 		}
 		callParticipantMap[participant.UserID] = idx
 	}
@@ -456,7 +516,7 @@ func (c *call) initParticipants(callID int64, participants []*msg.PhoneParticipa
 					Video:       true,
 				},
 				Started: false,
-				Muted: false,
+				Muted:   false,
 			}
 			callParticipantMap[participant.Peer.UserID] = participant.ConnectionId
 		}
@@ -538,7 +598,7 @@ func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequ
 				Video:       true,
 			},
 			Started: false,
-			Muted: false,
+			Muted:   false,
 		}
 		callParticipantMap[participant.Peer.UserID] = participant.ConnectionId
 	}
@@ -684,15 +744,10 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	}
 
 	// Client should listen to icecandidate and send it to SDK
-	// TODO execute local command then call -> c.sendIceCandidate()
 
 	// Client should listen to iceconnectionstatechange and send it to SDK
-	// TODO call update handlers -> msg.CallUpdate_ConnectionStatusChanged
-	// TODO check all connected
-	// TODO checkDisconnection(connId, pc.iceConnectionState
 
 	// Client should listen to icecandidateerror and send it to SDK
-	// TODO checkDisconnection(connId, pc.iceConnectionState, true)
 
 	conn := &Connection{
 		CallConnection: msg.CallConnection{
@@ -783,7 +838,7 @@ func (c *call) callUser(peer *msg.InputPeer, initiator bool, phoneParticipants [
 	return
 }
 
-func (c *call) sendIceCandidate(callID int64, candidate *msg.CallRTCIceCandidate, connId int32) (err error) {
+func (c *call) sendIceCandidate(callID int64, connId int32, candidate *msg.CallRTCIceCandidate) (err error) {
 	if candidate == nil {
 		return nil
 	}
@@ -837,7 +892,7 @@ func (c *call) flushIceCandidates(callID int64, connId int32) {
 
 	for _, candidate := range conn.IceQueue {
 		go func(ic *msg.CallRTCIceCandidate) {
-			_ = c.sendIceCandidate(callID, ic, connId)
+			_ = c.sendIceCandidate(callID, connId, ic)
 		}(candidate)
 	}
 }
@@ -1075,6 +1130,7 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 		conn.mu.Unlock()
 		currentConnId, _, valid := c.getConnId(c.activeCallID, c.userID)
 		if !valid {
+			err = ErrInvalidCallId
 			return
 		}
 

@@ -226,8 +226,8 @@ func (p *poolClientCallSendIceCandidate) Put(x *ClientCallSendIceCandidate) {
 		return
 	}
 	x.ConnId = 0
-	PoolPhoneActionIceExchange.Put(x.Ice)
-	x.Ice = nil
+	PoolCallRTCIceCandidate.Put(x.Candidate)
+	x.Candidate = nil
 	p.pool.Put(x)
 }
 
@@ -235,13 +235,13 @@ var PoolClientCallSendIceCandidate = poolClientCallSendIceCandidate{}
 
 func (x *ClientCallSendIceCandidate) DeepCopy(z *ClientCallSendIceCandidate) {
 	z.ConnId = x.ConnId
-	if x.Ice != nil {
-		if z.Ice == nil {
-			z.Ice = PoolPhoneActionIceExchange.Get()
+	if x.Candidate != nil {
+		if z.Candidate == nil {
+			z.Candidate = PoolCallRTCIceCandidate.Get()
 		}
-		x.Ice.DeepCopy(z.Ice)
+		x.Candidate.DeepCopy(z.Candidate)
 	} else {
-		z.Ice = nil
+		z.Candidate = nil
 	}
 }
 
