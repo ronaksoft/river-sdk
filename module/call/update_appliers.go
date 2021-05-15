@@ -19,9 +19,11 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, er
 		}
 
 		now := domain.Now().Unix()
-		if !(x.Timestamp == 0 || now-x.Timestamp < 60) {
+		if !(x.Timestamp == 0 || now-x.Timestamp > 60) {
 			return
 		}
+
+		logs.Info("updatePhoneCall", zap.Int32("action", int32(x.Action)))
 
 		data, err := parseCallAction(x.Action, x.ActionData)
 		if err != nil {
