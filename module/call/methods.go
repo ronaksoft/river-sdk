@@ -107,12 +107,11 @@ func (c *call) iceConnectionStatusChange(connId int32, state string, hasIceError
 			ConnectionID: connId,
 			State:        state,
 		}
-		var updateData []byte
-		updateData, err = update.Marshal()
-		if err != nil {
+		updateData, uErr := update.Marshal()
+		if uErr == nil {
+			c.callUpdate(msg.CallUpdate_ConnectionStatusChanged, updateData)
 			return
 		}
-		c.callUpdate(msg.CallUpdate_ConnectionStatusChanged, updateData)
 		c.checkAllConnected()
 	}
 	err = c.checkDisconnection(connId, state, hasIceError)
