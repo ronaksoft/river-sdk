@@ -62,6 +62,8 @@ func New() *message {
 			msg.C_UpdateReadHistoryInbox:     r.updateReadHistoryInbox,
 			msg.C_UpdateReadHistoryOutbox:    r.updateReadHistoryOutbox,
 			msg.C_UpdateReadMessagesContents: r.updateReadMessagesContents,
+			msg.C_UpdatePhoneCallStarted:     r.updatePhoneCallStarted,
+			msg.C_UpdatePhoneCallEnded:       r.updatePhoneCallEnded,
 		},
 	)
 	r.RegisterMessageAppliers(
