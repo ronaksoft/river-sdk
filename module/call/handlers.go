@@ -229,7 +229,7 @@ func (c *call) rejectHandler(in, out *rony.MessageEnvelope, da domain.Callback) 
 	da.OnComplete(out)
 }
 
-func (c *call) groupGetParticipantByUserIDHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) getParticipantByUserIDHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientCallGetParticipantByUserID{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -248,7 +248,7 @@ func (c *call) groupGetParticipantByUserIDHandler(in, out *rony.MessageEnvelope,
 	da.OnComplete(out)
 }
 
-func (c *call) groupGetParticipantByConnIdHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) getParticipantByConnIdHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientCallGetParticipantByConnId{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -267,7 +267,7 @@ func (c *call) groupGetParticipantByConnIdHandler(in, out *rony.MessageEnvelope,
 	da.OnComplete(out)
 }
 
-func (c *call) groupGetParticipantListHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) getParticipantListHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientCallGetParticipantList{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -288,7 +288,7 @@ func (c *call) groupGetParticipantListHandler(in, out *rony.MessageEnvelope, da 
 	da.OnComplete(out)
 }
 
-func (c *call) groupMuteParticipantHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) muteParticipantHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientCallMuteParticipant{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
