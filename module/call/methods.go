@@ -110,7 +110,6 @@ func (c *call) iceConnectionStatusChange(connId int32, state string, hasIceError
 		updateData, uErr := update.Marshal()
 		if uErr == nil {
 			c.callUpdate(msg.CallUpdate_ConnectionStatusChanged, updateData)
-			return
 		}
 		c.checkAllConnected()
 	}
