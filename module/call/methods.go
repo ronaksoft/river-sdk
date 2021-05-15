@@ -1532,6 +1532,7 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 			c.callUpdate(msg.CallUpdate_CallRequested, updateData)
 		}
 	} else if c.shouldAccept(in) {
+		c.initCallRequest(in, data)
 		streamState := c.getStreamState()
 		_ = c.accept(c.activeCallID, streamState.Video)
 	}
