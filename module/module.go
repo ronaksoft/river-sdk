@@ -58,11 +58,11 @@ type Base struct {
 	messageAppliers map[int64]domain.MessageApplier
 }
 
-func (b Base) Init(sdk SDK) {
+func (b *Base) Init(sdk SDK) {
 	b.sdk = sdk
 }
 
-func (b Base) Execute(in *rony.MessageEnvelope, da domain.Callback) {
+func (b *Base) Execute(in *rony.MessageEnvelope, da domain.Callback) {
 	out := &rony.MessageEnvelope{}
 	h := b.handlers[in.Constructor]
 	if h == nil {
@@ -74,30 +74,30 @@ func (b Base) Execute(in *rony.MessageEnvelope, da domain.Callback) {
 	h(in, out, da)
 }
 
-func (b Base) RegisterUpdateAppliers(appliers map[int64]domain.UpdateApplier) {
+func (b *Base) RegisterUpdateAppliers(appliers map[int64]domain.UpdateApplier) {
 	b.updateAppliers = appliers
 }
 
-func (b Base) UpdateAppliers() map[int64]domain.UpdateApplier {
+func (b *Base) UpdateAppliers() map[int64]domain.UpdateApplier {
 	return b.updateAppliers
 }
 
-func (b Base) RegisterMessageAppliers(appliers map[int64]domain.MessageApplier) {
+func (b *Base) RegisterMessageAppliers(appliers map[int64]domain.MessageApplier) {
 	b.messageAppliers = appliers
 }
 
-func (b Base) MessageAppliers() map[int64]domain.MessageApplier {
+func (b *Base) MessageAppliers() map[int64]domain.MessageApplier {
 	return b.messageAppliers
 }
 
-func (b Base) RegisterHandlers(handlers map[int64]domain.LocalHandler) {
+func (b *Base) RegisterHandlers(handlers map[int64]domain.LocalHandler) {
 	b.handlers = handlers
 }
 
-func (b Base) LocalHandlers() map[int64]domain.LocalHandler {
+func (b *Base) LocalHandlers() map[int64]domain.LocalHandler {
 	return b.handlers
 }
 
-func (b Base) SDK() SDK {
+func (b *Base) SDK() SDK {
 	return b.sdk
 }

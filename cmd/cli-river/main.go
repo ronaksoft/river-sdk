@@ -138,6 +138,7 @@ func main() {
 			DbID:                   _DbID,
 			MainDelegate:           new(MainDelegate),
 			FileDelegate:           new(FileDelegate),
+			CallDelegate:           new(CallDelegate),
 			LogLevel:               int(zapcore.InfoLevel),
 			DocumentAudioDirectory: "./_files/audio",
 			DocumentVideoDirectory: "./_files/video",

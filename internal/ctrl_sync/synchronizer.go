@@ -499,13 +499,6 @@ func (ctrl *Controller) MessageApplier(messages []*rony.MessageEnvelope) {
 
 // UpdateApplier receives update to cache them in client DB
 func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outOfSync bool) {
-	logs.Debug("SyncCtrl calls UpdateApplier",
-		zap.Int64("ctrl.GetUpdateID", ctrl.GetUpdateID()),
-		zap.Int64("MaxID", updateContainer.MaxUpdateID),
-		zap.Int64("MinID", updateContainer.MinUpdateID),
-		zap.Int("Count", len(updateContainer.Updates)),
-	)
-
 	ctrl.lastUpdateReceived = tools.NanoTime()
 
 	udpContainer := &msg.UpdateContainer{
@@ -530,24 +523,41 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 	waitGroup.Wait()
 	pools.ReleaseWaitGroup(waitGroup)
 
+	logs.Debug("SyncCtrl receives UpdateContainer",
+		zap.Int64("ctrl.GetUpdateID", ctrl.GetUpdateID()),
+		zap.Int64("MaxID", updateContainer.MaxUpdateID),
+		zap.Int64("MinID", updateContainer.MinUpdateID),
+		zap.Int("Count", len(updateContainer.Updates)),
+	)
+
 	for _, update := range updateContainer.Updates {
+
 		if outOfSync && update.UpdateID != 0 {
 			continue
 		}
+		fmt.Println(ctrl.updateAppliers)
 		applier, ok := ctrl.updateAppliers[update.Constructor]
 		if ok {
+			logs.Debug("SyncCtrl applies Update",
+				zap.Int64("ctrl.GetUpdateID", ctrl.GetUpdateID()),
+				zap.Int64("MaxID", updateContainer.MaxUpdateID),
+				zap.Int64("MinID", updateContainer.MinUpdateID),
+				zap.String("C", registry.ConstructorName(update.Constructor)),
+			)
+
 			externalHandlerUpdates, err := applier(update)
 			if err != nil {
 				logs.Error("SyncCtrl got error on update applier", zap.Error(err))
 				return
 			}
-			logs.Debug("SyncCtrl applied update", zap.String("C", registry.ConstructorName(update.Constructor)))
+			logs.Info("SyncCtrl applied update", zap.String("C", registry.ConstructorName(update.Constructor)))
 			switch update.Constructor {
 			case msg.C_UpdateMessageID:
 			default:
 				udpContainer.Updates = append(udpContainer.Updates, externalHandlerUpdates...)
 			}
 		} else {
+			logs.Info("SyncCtrl did not find update applier", zap.String("C", registry.ConstructorName(update.Constructor)))
 			udpContainer.Updates = append(udpContainer.Updates, update)
 		}
 		if update.UpdateID != 0 {
