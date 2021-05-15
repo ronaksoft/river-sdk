@@ -25,6 +25,15 @@ const (
 	TempCallID = int64(-27001)
 )
 
+type Config struct {
+	TeamID     int64
+	TeamAccess uint64
+	UserID     int64
+	AuthID     int64
+	DeviceType msg.CallDeviceType
+	Callback   *Callback
+}
+
 type call struct {
 	module.Base
 
@@ -43,21 +52,22 @@ type call struct {
 	callback *Callback
 }
 
-func New(callback *Callback) *call {
+func New(config *Config) *call {
 	c := &call{
+		mu:              nil,
 		peerConnections: make(map[int32]*Connection),
 		peer:            nil,
 		activeCallID:    0,
 		callInfo:        make(map[int64]*Info),
 		iceServer:       nil,
-		userID:          0,
-		authID:          0,
+		userID:          config.UserID,
+		authID:          config.AuthID,
 		teamInput: teamInput{
-			teamID:     domain.GetCurrTeamID(),
-			teamAccess: domain.GetCurrTeamAccess(),
+			teamID:     config.TeamID,
+			teamAccess: config.TeamAccess,
 		},
-		deviceType: msg.CallDeviceType_CallDeviceUnknown,
-		callback:   callback,
+		deviceType: config.DeviceType,
+		callback:   config.Callback,
 	}
 
 	c.RegisterHandlers(
