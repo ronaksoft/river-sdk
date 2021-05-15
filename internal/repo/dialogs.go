@@ -237,6 +237,28 @@ func (r *repoDialogs) UpdatePinned(in *msg.UpdateDialogPinned) error {
 	})
 }
 
+func (r *repoDialogs) UpdateCallStarted(in *msg.UpdatePhoneCallStarted) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		dialog, err := getDialog(txn, in.TeamID, in.Peer.ID, in.Peer.Type)
+		if err != nil {
+			return err
+		}
+		dialog.ActiveCallID = in.CallId
+		return saveDialog(txn, dialog)
+	})
+}
+
+func (r *repoDialogs) UpdateCallEnded(in *msg.UpdatePhoneCallEnded) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
+		dialog, err := getDialog(txn, in.TeamID, in.Peer.ID, in.Peer.Type)
+		if err != nil {
+			return err
+		}
+		dialog.ActiveCallID = 0
+		return saveDialog(txn, dialog)
+	})
+}
+
 func (r *repoDialogs) UpdatePinMessageID(teamID int64, peerID int64, peerType int32, messageID int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		dialog, err := getDialog(txn, teamID, peerID, peerType)

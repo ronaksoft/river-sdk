@@ -566,3 +566,35 @@ func (r *message) updateDialogPinned(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelo
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }
+
+func (r *message) updatePhoneCallStarted(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := new(msg.UpdatePhoneCallStarted)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Debug("SyncCtrl applies UpdatePhoneCallStarted",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
+	_ = repo.Dialogs.UpdateCallStarted(x)
+	res := []*msg.UpdateEnvelope{u}
+	return res, nil
+}
+
+func (r *message) updatePhoneCallEnded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := new(msg.UpdatePhoneCallEnded)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	logs.Debug("SyncCtrl applies UpdatePhoneCallEnded",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
+	_ = repo.Dialogs.UpdateCallEnded(x)
+	res := []*msg.UpdateEnvelope{u}
+	return res, nil
+}

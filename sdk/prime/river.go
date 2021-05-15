@@ -269,15 +269,25 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		},
 	)
 
-	callModule := call.New(&call.Callback{
-		OnUpdate:        r.callDelegate.OnUpdate,
-		InitStream:      r.callDelegate.InitStream,
-		InitConnection:  r.callDelegate.InitConnection,
-		CloseConnection: r.callDelegate.CloseConnection,
-		GetAnswerSDP:    r.callDelegate.GetAnswerSDP,
-		GetOfferSDP:     r.callDelegate.GetOfferSDP,
-		SetAnswerSDP:    r.callDelegate.SetAnswerSDP,
-		AddIceCandidate: r.callDelegate.AddIceCandidate,
+	// Set current team
+	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
+
+	callModule := call.New(&call.Config{
+		TeamID:     domain.GetCurrTeamID(),
+		TeamAccess: domain.GetCurrTeamAccess(),
+		UserID:     r.ConnInfo.UserID,
+		AuthID:     r.ConnInfo.AuthID,
+		DeviceType: msg.CallDeviceType_CallDeviceUnknown,
+		Callback: &call.Callback{
+			OnUpdate:        r.callDelegate.OnUpdate,
+			InitStream:      r.callDelegate.InitStream,
+			InitConnection:  r.callDelegate.InitConnection,
+			CloseConnection: r.callDelegate.CloseConnection,
+			GetAnswerSDP:    r.callDelegate.GetAnswerSDP,
+			GetOfferSDP:     r.callDelegate.GetOfferSDP,
+			SetAnswerSDP:    r.callDelegate.SetAnswerSDP,
+			AddIceCandidate: r.callDelegate.AddIceCandidate,
+		},
 	})
 
 	r.registerModule(
@@ -289,9 +299,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize River Connection
 	logs.Info("River SetConfig done!")
-
-	// Set current team
-	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
 }
 
 func (r *River) onNetworkConnect() (err error) {

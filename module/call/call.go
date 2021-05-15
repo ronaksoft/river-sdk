@@ -17,13 +17,22 @@ import (
 )
 
 const (
-	RetryInterval    = 10000
+	RetryInterval    = 10
 	RetryLimit       = 6
 	ReconnectTry     = 3
-	ReconnectTimeout = 15000
+	ReconnectTimeout = 15
 
 	TempCallID = int64(-27001)
 )
+
+type Config struct {
+	TeamID     int64
+	TeamAccess uint64
+	UserID     int64
+	AuthID     int64
+	DeviceType msg.CallDeviceType
+	Callback   *Callback
+}
 
 type call struct {
 	module.Base
@@ -43,28 +52,53 @@ type call struct {
 	callback *Callback
 }
 
-func New(callback *Callback) *call {
-	r := &call{
+func New(config *Config) *call {
+	c := &call{
+		mu:              nil,
 		peerConnections: make(map[int32]*Connection),
 		peer:            nil,
 		activeCallID:    0,
 		callInfo:        make(map[int64]*Info),
 		iceServer:       nil,
-		userID:          0,
-		authID:          0,
+		userID:          config.UserID,
+		authID:          config.AuthID,
 		teamInput: teamInput{
-			teamID:     domain.GetCurrTeamID(),
-			teamAccess: domain.GetCurrTeamAccess(),
+			teamID:     config.TeamID,
+			teamAccess: config.TeamAccess,
 		},
-		deviceType: msg.CallDeviceType_CallDeviceUnknown,
-		callback:   callback,
+		deviceType: config.DeviceType,
+		callback:   config.Callback,
 	}
 
-	r.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{
-		msg.C_UpdatePhoneCall: r.updatePhoneCall,
+	c.RegisterHandlers(
+		map[int64]domain.LocalHandler{
+			msg.C_ClientCallToggleVideo:             c.toggleVideoHandler,
+			msg.C_ClientCallToggleAudio:             c.toggleAudioHandler,
+			msg.C_ClientCallTryReconnect:            c.tryReconnectHandler,
+			msg.C_ClientCallDestroy:                 c.destroyHandler,
+			msg.C_ClientCallAreAllAudio:             c.areAllAudioHandler,
+			msg.C_ClientCallSendIceCandidate:        c.iceCandidateHandler,
+			msg.C_ClientCallSendIceConnectionStatus: c.iceConnectionStatusChangeHandler,
+			msg.C_ClientCallSendMediaSettings:       c.mediaSettingsChangeHandler,
+			msg.C_ClientCallStart:                   c.startHandler,
+			msg.C_ClientCallJoin:                    c.joinHandler,
+			msg.C_ClientCallAccept:                  c.acceptHandler,
+			msg.C_ClientCallReject:                  c.rejectHandler,
+			msg.C_ClientCallGetParticipantByUserID:  c.getParticipantByUserIDHandler,
+			msg.C_ClientCallGetParticipantByConnId:  c.getParticipantByConnIdHandler,
+			msg.C_ClientCallGetParticipantList:      c.getParticipantListHandler,
+			msg.C_ClientCallMuteParticipant:         c.muteParticipantHandler,
+			msg.C_ClientCallGroupAddParticipant:     c.groupAddParticipantHandler,
+			msg.C_ClientCallGroupRemoveParticipant:  c.groupRemoveParticipantHandler,
+			msg.C_ClientCallGroupUpdateAdmin:        c.groupUpdateAdminHandler,
+		},
+	)
+
+	c.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{
+		msg.C_UpdatePhoneCall: c.updatePhoneCall,
 	})
 
-	return r
+	return c
 }
 
 func (c *call) Name() string {
