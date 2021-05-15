@@ -8,7 +8,7 @@ import (
 )
 
 func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope, err error) {
-	go func() {
+	//go func() {
 		if u.Constructor != msg.C_UpdatePhoneCall {
 			return
 		}
@@ -69,7 +69,7 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope
 		case msg.PhoneCallAction_PhoneCallRestarted:
 			c.callRestarted(update)
 		}
-	}()
+	//}()
 
 	res = []*msg.UpdateEnvelope{u}
 	return
