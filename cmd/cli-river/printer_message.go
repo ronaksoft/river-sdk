@@ -246,7 +246,7 @@ func printUsersMany(envelope *rony.MessageEnvelope) {
 	for _, x := range x.Users {
 		tableUsers.Append([]string{
 			fmt.Sprintf("%d", x.ID),
-			 x.FirstName,
+			x.FirstName,
 			x.LastName,
 			x.Username,
 			fmt.Sprintf("%d", x.Photo.PhotoID),

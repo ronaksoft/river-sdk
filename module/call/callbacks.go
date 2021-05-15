@@ -1,7 +1,7 @@
 package call
 
 type Callback struct {
-	OnUpdate        func(constructor int32, b []byte)
+	OnUpdate        func(updateType int32, b []byte)
 	InitStream      func(audio, video bool) (err error)
 	InitConnection  func(connId int32, b []byte) (id int64, err error)
 	CloseConnection func(connId int32, all bool) (err error)

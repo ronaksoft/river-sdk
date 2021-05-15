@@ -2,6 +2,8 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -153,6 +155,48 @@ func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, access
 
 func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
 	// _Shell.Println("File Progress Canceled", reqID, hasError)
+}
+
+type CallDelegate struct{}
+
+func (c *CallDelegate) OnUpdate(action int32, b []byte) {
+	logs.Info("CallDelegate On UpdateReceived", zap.String("C", msg.CallUpdate(action).String()))
+}
+
+func (c *CallDelegate) InitStream(audio, video bool) (err error) {
+	logs.Info("CallDelegate On InitStream", zap.Bool("Audio", audio), zap.Bool("Vide", video))
+	return nil
+}
+
+func (c *CallDelegate) InitConnection(connId int32, b []byte) (id int64, err error) {
+	logs.Info("CallDelegate On InitConnection", zap.Int32("ConnID", connId))
+	return
+}
+
+func (c *CallDelegate) CloseConnection(connId int32, all bool) (err error) {
+	logs.Info("CallDelegate On CloseConnection", zap.Int32("ConnID", connId), zap.Bool("All", all))
+	return nil
+}
+
+func (c *CallDelegate) GetAnswerSDP(connId int32, req []byte) (res []byte, err error) {
+	logs.Info("CallDelegate On GetAnswerSDP", zap.Int32("ConnID", connId))
+	return nil, domain.ErrNotFound
+
+}
+
+func (c *CallDelegate) GetOfferSDP(connId int32) (res []byte, err error) {
+	logs.Info("CallDelegate On GetOfferSDP", zap.Int32("ConnID", connId))
+	return nil, domain.ErrNotFound
+}
+
+func (c *CallDelegate) SetAnswerSDP(connId int32, b []byte) (err error) {
+	logs.Info("CallDelegate On SetAnswerSDP", zap.Int32("ConnID", connId))
+	return nil
+}
+
+func (c *CallDelegate) AddIceCandidate(connId int32, b []byte) (err error) {
+	logs.Info("CallDelegate On AddIceCandidate", zap.Int32("ConnID", connId))
+	return nil
 }
 
 type RequestDelegate struct {

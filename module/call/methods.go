@@ -1986,6 +1986,6 @@ func (c *call) checkCallTimeout(connId int32) {
 	}
 }
 
-func (c *call) callUpdate(constructor msg.CallUpdate, b []byte) {
-	c.callback.OnUpdate(int32(constructor), b)
+func (c *call) callUpdate(updateType msg.CallUpdate, b []byte) {
+	c.callback.OnUpdate(int32(updateType), b)
 }

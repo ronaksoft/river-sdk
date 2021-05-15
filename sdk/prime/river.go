@@ -181,7 +181,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.fileDelegate = conf.FileDelegate
 	r.callDelegate = conf.CallDelegate
 
-	// set loglevel
+	// set log level
 	logs.SetLogLevel(conf.LogLevel)
 
 	// set log file path
