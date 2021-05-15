@@ -600,6 +600,172 @@ func (x *ClientCallReject) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientCallReject, x)
 }
 
+const C_ClientCallGetParticipantByUserID int64 = 1253505450
+
+type poolClientCallGetParticipantByUserID struct {
+	pool sync.Pool
+}
+
+func (p *poolClientCallGetParticipantByUserID) Get() *ClientCallGetParticipantByUserID {
+	x, ok := p.pool.Get().(*ClientCallGetParticipantByUserID)
+	if !ok {
+		x = &ClientCallGetParticipantByUserID{}
+	}
+	return x
+}
+
+func (p *poolClientCallGetParticipantByUserID) Put(x *ClientCallGetParticipantByUserID) {
+	if x == nil {
+		return
+	}
+	x.CallID = 0
+	x.UserID = 0
+	p.pool.Put(x)
+}
+
+var PoolClientCallGetParticipantByUserID = poolClientCallGetParticipantByUserID{}
+
+func (x *ClientCallGetParticipantByUserID) DeepCopy(z *ClientCallGetParticipantByUserID) {
+	z.CallID = x.CallID
+	z.UserID = x.UserID
+}
+
+func (x *ClientCallGetParticipantByUserID) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientCallGetParticipantByUserID) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientCallGetParticipantByUserID) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientCallGetParticipantByUserID, x)
+}
+
+const C_ClientCallGetParticipantByConnId int64 = 3279593330
+
+type poolClientCallGetParticipantByConnId struct {
+	pool sync.Pool
+}
+
+func (p *poolClientCallGetParticipantByConnId) Get() *ClientCallGetParticipantByConnId {
+	x, ok := p.pool.Get().(*ClientCallGetParticipantByConnId)
+	if !ok {
+		x = &ClientCallGetParticipantByConnId{}
+	}
+	return x
+}
+
+func (p *poolClientCallGetParticipantByConnId) Put(x *ClientCallGetParticipantByConnId) {
+	if x == nil {
+		return
+	}
+	x.ConnId = 0
+	p.pool.Put(x)
+}
+
+var PoolClientCallGetParticipantByConnId = poolClientCallGetParticipantByConnId{}
+
+func (x *ClientCallGetParticipantByConnId) DeepCopy(z *ClientCallGetParticipantByConnId) {
+	z.ConnId = x.ConnId
+}
+
+func (x *ClientCallGetParticipantByConnId) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientCallGetParticipantByConnId) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientCallGetParticipantByConnId) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientCallGetParticipantByConnId, x)
+}
+
+const C_ClientCallGetParticipantList int64 = 348508034
+
+type poolClientCallGetParticipantList struct {
+	pool sync.Pool
+}
+
+func (p *poolClientCallGetParticipantList) Get() *ClientCallGetParticipantList {
+	x, ok := p.pool.Get().(*ClientCallGetParticipantList)
+	if !ok {
+		x = &ClientCallGetParticipantList{}
+	}
+	return x
+}
+
+func (p *poolClientCallGetParticipantList) Put(x *ClientCallGetParticipantList) {
+	if x == nil {
+		return
+	}
+	x.CallID = 0
+	x.ExcludeCurrent = false
+	p.pool.Put(x)
+}
+
+var PoolClientCallGetParticipantList = poolClientCallGetParticipantList{}
+
+func (x *ClientCallGetParticipantList) DeepCopy(z *ClientCallGetParticipantList) {
+	z.CallID = x.CallID
+	z.ExcludeCurrent = x.ExcludeCurrent
+}
+
+func (x *ClientCallGetParticipantList) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientCallGetParticipantList) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientCallGetParticipantList) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientCallGetParticipantList, x)
+}
+
+const C_ClientCallMuteParticipant int64 = 2518831668
+
+type poolClientCallMuteParticipant struct {
+	pool sync.Pool
+}
+
+func (p *poolClientCallMuteParticipant) Get() *ClientCallMuteParticipant {
+	x, ok := p.pool.Get().(*ClientCallMuteParticipant)
+	if !ok {
+		x = &ClientCallMuteParticipant{}
+	}
+	return x
+}
+
+func (p *poolClientCallMuteParticipant) Put(x *ClientCallMuteParticipant) {
+	if x == nil {
+		return
+	}
+	x.UserID = 0
+	x.Muted = false
+	p.pool.Put(x)
+}
+
+var PoolClientCallMuteParticipant = poolClientCallMuteParticipant{}
+
+func (x *ClientCallMuteParticipant) DeepCopy(z *ClientCallMuteParticipant) {
+	z.UserID = x.UserID
+	z.Muted = x.Muted
+}
+
+func (x *ClientCallMuteParticipant) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientCallMuteParticipant) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientCallMuteParticipant) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientCallMuteParticipant, x)
+}
+
 const C_ClientCallGroupAddParticipant int64 = 1850196430
 
 type poolClientCallGroupAddParticipant struct {
@@ -737,172 +903,6 @@ func (x *ClientCallGroupUpdateAdmin) Unmarshal(b []byte) error {
 
 func (x *ClientCallGroupUpdateAdmin) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientCallGroupUpdateAdmin, x)
-}
-
-const C_ClientCallGroupGetParticipantByUserID int64 = 2720532073
-
-type poolClientCallGroupGetParticipantByUserID struct {
-	pool sync.Pool
-}
-
-func (p *poolClientCallGroupGetParticipantByUserID) Get() *ClientCallGroupGetParticipantByUserID {
-	x, ok := p.pool.Get().(*ClientCallGroupGetParticipantByUserID)
-	if !ok {
-		x = &ClientCallGroupGetParticipantByUserID{}
-	}
-	return x
-}
-
-func (p *poolClientCallGroupGetParticipantByUserID) Put(x *ClientCallGroupGetParticipantByUserID) {
-	if x == nil {
-		return
-	}
-	x.CallID = 0
-	x.UserID = 0
-	p.pool.Put(x)
-}
-
-var PoolClientCallGroupGetParticipantByUserID = poolClientCallGroupGetParticipantByUserID{}
-
-func (x *ClientCallGroupGetParticipantByUserID) DeepCopy(z *ClientCallGroupGetParticipantByUserID) {
-	z.CallID = x.CallID
-	z.UserID = x.UserID
-}
-
-func (x *ClientCallGroupGetParticipantByUserID) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientCallGroupGetParticipantByUserID) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientCallGroupGetParticipantByUserID) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientCallGroupGetParticipantByUserID, x)
-}
-
-const C_ClientCallGroupGetParticipantByConnId int64 = 736387249
-
-type poolClientCallGroupGetParticipantByConnId struct {
-	pool sync.Pool
-}
-
-func (p *poolClientCallGroupGetParticipantByConnId) Get() *ClientCallGroupGetParticipantByConnId {
-	x, ok := p.pool.Get().(*ClientCallGroupGetParticipantByConnId)
-	if !ok {
-		x = &ClientCallGroupGetParticipantByConnId{}
-	}
-	return x
-}
-
-func (p *poolClientCallGroupGetParticipantByConnId) Put(x *ClientCallGroupGetParticipantByConnId) {
-	if x == nil {
-		return
-	}
-	x.ConnId = 0
-	p.pool.Put(x)
-}
-
-var PoolClientCallGroupGetParticipantByConnId = poolClientCallGroupGetParticipantByConnId{}
-
-func (x *ClientCallGroupGetParticipantByConnId) DeepCopy(z *ClientCallGroupGetParticipantByConnId) {
-	z.ConnId = x.ConnId
-}
-
-func (x *ClientCallGroupGetParticipantByConnId) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientCallGroupGetParticipantByConnId) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientCallGroupGetParticipantByConnId) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientCallGroupGetParticipantByConnId, x)
-}
-
-const C_ClientCallGroupGetParticipantList int64 = 2563436193
-
-type poolClientCallGroupGetParticipantList struct {
-	pool sync.Pool
-}
-
-func (p *poolClientCallGroupGetParticipantList) Get() *ClientCallGroupGetParticipantList {
-	x, ok := p.pool.Get().(*ClientCallGroupGetParticipantList)
-	if !ok {
-		x = &ClientCallGroupGetParticipantList{}
-	}
-	return x
-}
-
-func (p *poolClientCallGroupGetParticipantList) Put(x *ClientCallGroupGetParticipantList) {
-	if x == nil {
-		return
-	}
-	x.CallID = 0
-	x.ExcludeCurrent = false
-	p.pool.Put(x)
-}
-
-var PoolClientCallGroupGetParticipantList = poolClientCallGroupGetParticipantList{}
-
-func (x *ClientCallGroupGetParticipantList) DeepCopy(z *ClientCallGroupGetParticipantList) {
-	z.CallID = x.CallID
-	z.ExcludeCurrent = x.ExcludeCurrent
-}
-
-func (x *ClientCallGroupGetParticipantList) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientCallGroupGetParticipantList) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientCallGroupGetParticipantList) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientCallGroupGetParticipantList, x)
-}
-
-const C_ClientCallGroupMuteParticipant int64 = 4111177326
-
-type poolClientCallGroupMuteParticipant struct {
-	pool sync.Pool
-}
-
-func (p *poolClientCallGroupMuteParticipant) Get() *ClientCallGroupMuteParticipant {
-	x, ok := p.pool.Get().(*ClientCallGroupMuteParticipant)
-	if !ok {
-		x = &ClientCallGroupMuteParticipant{}
-	}
-	return x
-}
-
-func (p *poolClientCallGroupMuteParticipant) Put(x *ClientCallGroupMuteParticipant) {
-	if x == nil {
-		return
-	}
-	x.UserID = 0
-	x.Muted = false
-	p.pool.Put(x)
-}
-
-var PoolClientCallGroupMuteParticipant = poolClientCallGroupMuteParticipant{}
-
-func (x *ClientCallGroupMuteParticipant) DeepCopy(z *ClientCallGroupMuteParticipant) {
-	z.UserID = x.UserID
-	z.Muted = x.Muted
-}
-
-func (x *ClientCallGroupMuteParticipant) Marshal() ([]byte, error) {
-	return proto.Marshal(x)
-}
-
-func (x *ClientCallGroupMuteParticipant) Unmarshal(b []byte) error {
-	return proto.UnmarshalOptions{}.Unmarshal(b, x)
-}
-
-func (x *ClientCallGroupMuteParticipant) PushToContext(ctx *edge.RequestCtx) {
-	ctx.PushMessage(C_ClientCallGroupMuteParticipant, x)
 }
 
 const C_CallMediaSettings int64 = 1147111688
@@ -2108,13 +2108,13 @@ func init() {
 	registry.RegisterConstructor(2382593398, "ClientCallJoin")
 	registry.RegisterConstructor(2726334873, "ClientCallAccept")
 	registry.RegisterConstructor(3026524692, "ClientCallReject")
+	registry.RegisterConstructor(1253505450, "ClientCallGetParticipantByUserID")
+	registry.RegisterConstructor(3279593330, "ClientCallGetParticipantByConnId")
+	registry.RegisterConstructor(348508034, "ClientCallGetParticipantList")
+	registry.RegisterConstructor(2518831668, "ClientCallMuteParticipant")
 	registry.RegisterConstructor(1850196430, "ClientCallGroupAddParticipant")
 	registry.RegisterConstructor(2417422237, "ClientCallGroupRemoveParticipant")
 	registry.RegisterConstructor(3544832701, "ClientCallGroupUpdateAdmin")
-	registry.RegisterConstructor(2720532073, "ClientCallGroupGetParticipantByUserID")
-	registry.RegisterConstructor(736387249, "ClientCallGroupGetParticipantByConnId")
-	registry.RegisterConstructor(2563436193, "ClientCallGroupGetParticipantList")
-	registry.RegisterConstructor(4111177326, "ClientCallGroupMuteParticipant")
 	registry.RegisterConstructor(1147111688, "CallMediaSettings")
 	registry.RegisterConstructor(2652007354, "CallParticipant")
 	registry.RegisterConstructor(807700466, "CallParticipants")

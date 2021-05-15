@@ -5,7 +5,6 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -62,7 +61,7 @@ func (c *call) areAllAudio() (ok bool, err error) {
 	}
 
 	ok = true
-	participants, err := c.groupGetParticipantList(c.activeCallID, true)
+	participants, err := c.getParticipantList(c.activeCallID, true)
 	if err != nil {
 		return
 	}
@@ -108,7 +107,8 @@ func (c *call) iceConnectionStatusChange(connId int32, state string, hasIceError
 			ConnectionID: connId,
 			State:        state,
 		}
-		updateData, err := update.Marshal()
+		var updateData []byte
+		updateData, err = update.Marshal()
 		if err != nil {
 			return err
 		}
@@ -272,6 +272,87 @@ func (c *call) reject(callID int64, duration int32, reason msg.DiscardReason, ta
 	return
 }
 
+func (c *call) getParticipantByUserID(callID int64, userID int64) (participant *msg.CallParticipant, err error) {
+	connId, info, valid := c.getConnId(callID, userID)
+	if !valid {
+		err = ErrInvalidCallId
+		return
+	}
+
+	info.mu.RLock()
+	participant = info.participants[connId]
+	info.mu.RUnlock()
+	return
+}
+
+func (c *call) getParticipantByConnId(connId int32) (participant *msg.CallParticipant, err error) {
+	if c.activeCallID == 0 {
+		err = ErrNoActiveCall
+		return
+	}
+
+	info := c.getCallInfo(c.activeCallID)
+	if info == nil {
+		err = ErrInvalidCallId
+		return
+	}
+
+	info.mu.RLock()
+	participant = info.participants[connId]
+	info.mu.RUnlock()
+	return
+}
+
+func (c *call) getParticipantList(callID int64, excludeCurrent bool) (participants []*msg.CallParticipant, err error) {
+	info := c.getCallInfo(callID)
+	if info == nil {
+		err = ErrInvalidCallId
+		return
+	}
+
+	c.mu.RLock()
+	for _, participant := range info.participants {
+		if excludeCurrent == false || participant.PhoneParticipant.Peer.UserID == c.userID {
+			if conn, ok := c.peerConnections[participant.PhoneParticipant.ConnectionId]; ok && conn.StreamID != 0 {
+				participant.Started = true
+			}
+			participants = append(participants, participant)
+		}
+	}
+	c.mu.RUnlock()
+
+	return
+}
+
+func (c *call) muteParticipant(userID int64, muted bool) (err error) {
+	if c.activeCallID == 0 {
+		err = ErrNoActiveCall
+		return
+	}
+
+	connId, info, valid := c.getConnId(c.activeCallID, userID)
+	if !valid {
+		err = ErrInvalidCallId
+		return
+	}
+
+	info.mu.Lock()
+	info.participants[connId].Muted = muted
+	info.mu.Unlock()
+
+	update := msg.CallUpdateParticipantMuted{
+		ConnectionID: connId,
+		Muted:        muted,
+		UserID:       userID,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_ParticipantMuted, updateData)
+	}
+
+	return
+}
+
 func (c *call) groupAddParticipant(callID int64, participants []*msg.InputUser) (err error) {
 	if c.peer == nil {
 		err = ErrInvalidPeerInput
@@ -340,106 +421,6 @@ func (c *call) groupUpdateAdmin(callID int64, userID int64, admin bool) (err err
 	updateData, uErr := update.Marshal()
 	if uErr == nil {
 		c.callUpdate(msg.CallUpdate_ParticipantAdminUpdated, updateData)
-	}
-
-	return
-}
-
-func (c *call) groupUpdateAdminHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
-	req := &msg.ClientCallGroupUpdateAdmin{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
-		return
-	}
-
-	err := c.groupUpdateAdmin(req.CallID, req.UserID, req.Admin)
-	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
-		return
-	}
-
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
-}
-
-func (c *call) groupGetParticipantByUserID(callID int64, userID int64) (participant *msg.CallParticipant, err error) {
-	connId, info, valid := c.getConnId(callID, userID)
-	if !valid {
-		err = ErrInvalidCallId
-		return
-	}
-
-	info.mu.RLock()
-	participant = info.participants[connId]
-	info.mu.RUnlock()
-	return
-}
-
-func (c *call) groupGetParticipantByConnId(connId int32) (participant *msg.CallParticipant, err error) {
-	if c.activeCallID == 0 {
-		err = ErrNoActiveCall
-		return
-	}
-
-	info := c.getCallInfo(c.activeCallID)
-	if info == nil {
-		err = ErrInvalidCallId
-		return
-	}
-
-	info.mu.RLock()
-	participant = info.participants[connId]
-	info.mu.RUnlock()
-	return
-}
-
-func (c *call) groupGetParticipantList(callID int64, excludeCurrent bool) (participants []*msg.CallParticipant, err error) {
-	info := c.getCallInfo(callID)
-	if info == nil {
-		err = ErrInvalidCallId
-		return
-	}
-
-	c.mu.RLock()
-	for _, participant := range info.participants {
-		if excludeCurrent == false || participant.PhoneParticipant.Peer.UserID == c.userID {
-			if conn, ok := c.peerConnections[participant.PhoneParticipant.ConnectionId]; ok && conn.StreamID != 0 {
-				participant.Started = true
-			}
-			participants = append(participants, participant)
-		}
-	}
-	c.mu.RUnlock()
-
-	return
-}
-
-func (c *call) groupMuteParticipant(userID int64, muted bool) (err error) {
-	if c.activeCallID == 0 {
-		err = ErrNoActiveCall
-		return
-	}
-
-	connId, info, valid := c.getConnId(c.activeCallID, userID)
-	if !valid {
-		err = ErrInvalidCallId
-		return
-	}
-
-	info.mu.Lock()
-	info.participants[connId].Muted = muted
-	info.mu.Unlock()
-
-	update := msg.CallUpdateParticipantMuted{
-		ConnectionID: connId,
-		Muted:        muted,
-		UserID:       userID,
-	}
-	updateData, uErr := update.Marshal()
-	if uErr == nil {
-		c.callUpdate(msg.CallUpdate_ParticipantMuted, updateData)
 	}
 
 	return
