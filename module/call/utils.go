@@ -26,7 +26,7 @@ type UpdatePhoneCall struct {
 type Connection struct {
 	msg.CallConnection
 	mu              *sync.RWMutex
-	connectTimout   *time.Timer
+	connectTicker   *time.Ticker
 	reconnectTimout *time.Timer
 }
 

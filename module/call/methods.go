@@ -33,8 +33,8 @@ func (c *call) tryReconnect(connId int32) (err error) {
 func (c *call) destroy(callID int64) {
 	closeFn := func(conn *Connection) {
 		_ = c.callback.CloseConnection(conn.ConnId, true)
-		if conn.connectTimout != nil {
-			conn.connectTimout.Stop()
+		if conn.connectTicker != nil {
+			conn.connectTicker.Stop()
 		}
 		if conn.reconnectTimout != nil {
 			conn.reconnectTimout.Stop()
@@ -692,6 +692,31 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 	for _, participantSDP := range callResults {
 		fmt.Println(participantSDP)
 		// retry here
+		if pc, ok := c.peerConnections[participantSDP.ConnectionId]; ok {
+			pc.connectTicker = time.NewTicker(time.Duration(RetryInterval) * time.Second)
+			go func(participant *msg.PhoneParticipantSDP) {
+				select {
+				case <-pc.connectTicker.C:
+					if pc, ok := c.peerConnections[participant.ConnectionId]; ok {
+						pc.mu.Lock()
+						pc.Try++
+						pc.mu.Unlock()
+						_, innerErr := c.callUserSingle(peer, participant, c.activeCallID)
+						if innerErr == nil {
+							logs.Warn("callUserSingle", zap.Error(innerErr))
+						}
+						if pc.Try >= RetryLimit {
+							if pc.connectTicker != nil {
+								pc.connectTicker.Stop()
+							}
+							if initiator {
+								c.checkCallTimeout(participant.ConnectionId)
+							}
+						}
+					}
+				}
+			}(participantSDP)
+		}
 	}
 	_, _ = c.callUser(peer, initiator, callResults, c.activeCallID)
 	return
@@ -746,7 +771,7 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 			Try:                 0,
 		},
 		mu:              &sync.RWMutex{},
-		connectTimout:   nil,
+		connectTicker:   nil,
 		reconnectTimout: nil,
 	}
 
@@ -816,6 +841,15 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 func (c *call) callUser(peer *msg.InputPeer, initiator bool, phoneParticipants []*msg.PhoneParticipantSDP, callID int64) (res *msg.PhoneCall, err error) {
 	randomID := domain.RandomInt64(0)
 	res, err = c.apiRequest(peer, randomID, initiator, phoneParticipants, callID, false)
+	if err == nil && callID == 0 {
+		c.activeCallID = res.ID
+	}
+	return
+}
+
+func (c *call) callUserSingle(peer *msg.InputPeer, phoneParticipant *msg.PhoneParticipantSDP, callID int64) (res *msg.PhoneCall, err error) {
+	randomID := domain.RandomInt64(0)
+	res, err = c.apiRequest(peer, randomID, false, []*msg.PhoneParticipantSDP{phoneParticipant}, callID, true)
 	return
 }
 
@@ -1078,7 +1112,7 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 		conn.Reconnecting = true
 		conn.ReconnectingTry++
 		if conn.ReconnectingTry <= ReconnectTry {
-			conn.reconnectTimout = time.AfterFunc(time.Duration(ReconnectTimeout)*time.Millisecond, func() {
+			conn.reconnectTimout = time.AfterFunc(time.Duration(ReconnectTimeout)*time.Second, func() {
 				if _, ok := c.peerConnections[connId]; ok {
 					c.peerConnections[connId].Reconnecting = false
 				}
@@ -1356,8 +1390,8 @@ func (c *call) clearRetryInterval(connId int32, onlyClearInterval bool) {
 		return
 	}
 
-	if pc.connectTimout != nil {
-		pc.connectTimout.Stop()
+	if pc.connectTicker != nil {
+		pc.connectTicker.Stop()
 	}
 
 	if onlyClearInterval == false && c.activeCallID == 0 {
@@ -1905,6 +1939,50 @@ func (c *call) callRestarted(in *UpdatePhoneCall) {
 			Type: sdp.Type,
 		}
 		c.sendSdpOffer(connId, sdpOffer)
+	}
+}
+
+func (c *call) checkCallTimeout(connId int32) {
+	if c.activeCallID == 0 {
+		return
+	}
+
+	if c.peer == nil {
+		return
+	}
+
+	info := c.getCallInfo(c.activeCallID)
+	if info == nil {
+		return
+	}
+
+	if len(info.acceptedParticipants) == 0 {
+		_ = c.reject(c.activeCallID, 0, msg.DiscardReason_DiscardReasonMissed, nil)
+		update := msg.CallUpdateCallTimeout{}
+		updateData, uErr := update.Marshal()
+		if uErr == nil {
+			c.callUpdate(msg.CallUpdate_CallTimeout, updateData)
+		}
+		logs.Info("[webrtc] call timeout", zap.Int32("ConnId", connId))
+	} else if c.peer.GetType() == msg.PeerType_PeerGroup {
+		var notAnsweringUserIDs []int64
+		info.mu.RLock()
+		for _, conn := range info.participants {
+			matched := false
+			for _, connId := range info.acceptedParticipants {
+				if conn.PhoneParticipant.ConnectionId == connId {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				notAnsweringUserIDs = append(notAnsweringUserIDs, conn.PhoneParticipant.Peer.UserID)
+			}
+		}
+		info.mu.RUnlock()
+		if len(notAnsweringUserIDs) > 0 {
+			_ = c.groupRemoveParticipant(c.activeCallID, notAnsweringUserIDs, true)
+		}
 	}
 }
 

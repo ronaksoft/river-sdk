@@ -17,10 +17,10 @@ import (
 )
 
 const (
-	RetryInterval    = 10000
+	RetryInterval    = 10
 	RetryLimit       = 6
 	ReconnectTry     = 3
-	ReconnectTimeout = 15000
+	ReconnectTimeout = 15
 
 	TempCallID = int64(-27001)
 )
