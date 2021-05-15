@@ -110,13 +110,13 @@ func (c *call) iceConnectionStatusChange(connId int32, state string, hasIceError
 		var updateData []byte
 		updateData, err = update.Marshal()
 		if err != nil {
-			return err
+			return
 		}
 		c.callUpdate(msg.CallUpdate_ConnectionStatusChanged, updateData)
 		c.checkAllConnected()
 	}
 	err = c.checkDisconnection(connId, state, hasIceError)
-	return nil
+	return
 }
 
 func (c *call) mediaSettingsChange(connId int32, mediaSettings *msg.CallMediaSettings) (err error) {
