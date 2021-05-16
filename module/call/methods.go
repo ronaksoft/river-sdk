@@ -121,6 +121,33 @@ func (c *call) iceConnectionStatusChange(connId int32, state string, hasIceError
 	return
 }
 
+// Client should listen to track and send it to SDK
+func (c *call) trackUpdate(connId int32, streamID string) (err error) {
+	if c.activeCallID == 0 {
+		err = ErrNoActiveCall
+		return
+	}
+
+	conn, hasConn := c.peerConnections[connId]
+	if !hasConn {
+		err = ErrInvalidConnId
+		return
+	}
+
+	conn.mu.Lock()
+	conn.Init = true
+	conn.Reconnecting = false
+	conn.ReconnectingTry = 0
+	conn.StreamID = streamID
+	// clear reconnect timeout
+	if conn.connectTicker != nil {
+		conn.connectTicker.Stop()
+	}
+	conn.mu.Unlock()
+
+	return
+}
+
 func (c *call) mediaSettingsChange(mediaSettings *msg.CallMediaSettings) (err error) {
 	if c.activeCallID == 0 {
 		err = ErrNoActiveCall
@@ -320,7 +347,7 @@ func (c *call) getParticipantList(callID int64, excludeCurrent bool) (participan
 	c.mu.RLock()
 	for _, participant := range info.participants {
 		if excludeCurrent == false || participant.PhoneParticipant.Peer.UserID == c.userID {
-			if conn, ok := c.peerConnections[participant.PhoneParticipant.ConnectionId]; ok && conn.StreamID != 0 {
+			if conn, ok := c.peerConnections[participant.PhoneParticipant.ConnectionId]; ok && conn.StreamID != "" {
 				participant.Started = true
 			}
 			participants = append(participants, participant)
@@ -790,7 +817,7 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 			Reconnecting:        false,
 			ReconnectingTry:     0,
 			ScreenShareStreamID: 0,
-			StreamID:            0,
+			StreamID:            "",
 			IntervalID:          0,
 			Try:                 0,
 		},
@@ -806,12 +833,6 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 		conn = pc
 		conn.RTCPeerConnectionID = rtcConnId
 	}
-
-	// Client should listen to track and send it to SDK
-	conn.Init = true
-	conn.Reconnecting = false
-	conn.ReconnectingTry = 0
-	// clear reconnect timeout
 
 	if remote {
 		if sdp != nil {

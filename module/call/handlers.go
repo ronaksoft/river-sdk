@@ -134,6 +134,25 @@ func (c *call) iceConnectionStatusChangeHandler(in, out *rony.MessageEnvelope, d
 	da.OnComplete(out)
 }
 
+func (c *call) trackUpdateHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+	req := &msg.ClientCallSendTrack{}
+	if err := req.Unmarshal(in.Message); err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+
+	err := c.trackUpdate(req.ConnId, req.StreamID)
+	if err != nil {
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
+		return
+	}
+
+	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
+	da.OnComplete(out)
+}
+
 func (c *call) mediaSettingsChangeHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientCallSendMediaSettings{}
 	if err := req.Unmarshal(in.Message); err != nil {
