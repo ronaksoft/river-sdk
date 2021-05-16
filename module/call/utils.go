@@ -47,7 +47,7 @@ type Info struct {
 	acceptedParticipants   []int32
 	allConnected           bool
 	dialed                 bool
-	mediaSettings          MediaSettings
+	mediaSettings          *msg.CallMediaSettings
 	participantMap         map[int64]int32
 	participants           map[int32]*msg.CallParticipant
 	requestParticipantIds  []int64

@@ -42,9 +42,10 @@ type call struct {
 	peer            *msg.InputPeer
 	activeCallID    int64
 	callInfo        map[int64]*Info
-	iceServer       []*msg.IceServer
-	userID          int64
-	authID          int64
+
+	iceServer []*msg.IceServer
+	userID    int64
+	authID    int64
 
 	teamInput  teamInput
 	deviceType msg.CallDeviceType
@@ -59,9 +60,9 @@ func New(config *Config) *call {
 		peer:            nil,
 		activeCallID:    0,
 		callInfo:        make(map[int64]*Info),
-		iceServer:       nil,
-		userID:          config.UserID,
-		authID:          config.AuthID,
+		iceServer: nil,
+		userID:    config.UserID,
+		authID:    config.AuthID,
 		teamInput: teamInput{
 			teamID:     config.TeamID,
 			teamAccess: config.TeamAccess,

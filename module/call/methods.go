@@ -54,7 +54,11 @@ func (c *call) destroy(callID int64) {
 }
 
 func (c *call) areAllAudio() (ok bool, err error) {
-	streamState := c.getStreamState()
+	streamState, err := c.getMediaSettings()
+	if err != nil {
+		return
+	}
+
 	if streamState.Video {
 		ok = false
 		return
@@ -117,7 +121,7 @@ func (c *call) iceConnectionStatusChange(connId int32, state string, hasIceError
 	return
 }
 
-func (c *call) mediaSettingsChange(connId int32, mediaSettings *msg.CallMediaSettings) (err error) {
+func (c *call) mediaSettingsChange(mediaSettings *msg.CallMediaSettings) (err error) {
 	if c.activeCallID == 0 {
 		err = ErrNoActiveCall
 		return
@@ -130,7 +134,7 @@ func (c *call) mediaSettingsChange(connId int32, mediaSettings *msg.CallMediaSet
 	}
 
 	info.mu.Lock()
-	info.participants[connId].MediaSettings = mediaSettings
+	info.mediaSettings = mediaSettings
 	info.mu.Unlock()
 	return
 }
@@ -229,7 +233,11 @@ func (c *call) accept(callID int64, video bool) (err error) {
 					return
 				}
 
-				streamState := c.getStreamState()
+				streamState, innerErr := c.getMediaSettings()
+				if innerErr != nil {
+					return
+				}
+
 				c.mediaSettingsInit(streamState)
 				c.propagateMediaSettings(MediaSettingsIn{
 					Audio:       &streamState.Audio,
@@ -425,12 +433,22 @@ func (c *call) groupUpdateAdmin(callID int64, userID int64, admin bool) (err err
 	return
 }
 
-func (c *call) getStreamState() MediaSettings {
-	return MediaSettings{
-		Audio:       true,
-		ScreenShare: false,
-		Video:       true,
+func (c *call) getMediaSettings() (ms *msg.CallMediaSettings, err error) {
+	if c.activeCallID == 0 {
+		err = ErrNoActiveCall
+		return
 	}
+
+	info := c.getCallInfo(c.activeCallID)
+	if info == nil {
+		err = ErrInvalidCallId
+		return
+	}
+
+	c.mu.RLock()
+	ms = info.mediaSettings
+	c.mu.RUnlock()
+	return
 }
 
 func (c *call) initCallParticipants(callID int64, participants []*msg.InputUser) {
@@ -461,20 +479,23 @@ func (c *call) initCallParticipants(callID int64, participants []*msg.InputUser)
 		callParticipantMap[participant.UserID] = idx
 	}
 
-	mediaState := c.getStreamState()
 	c.mu.Lock()
 	c.callInfo[callID] = &Info{
 		acceptedParticipantIds: nil,
 		acceptedParticipants:   nil,
 		allConnected:           false,
 		dialed:                 false,
-		mediaSettings:          mediaState,
-		participantMap:         callParticipantMap,
-		participants:           callParticipants,
-		requestParticipantIds:  nil,
-		requests:               nil,
-		iceServer:              nil,
-		mu:                     &sync.RWMutex{},
+		mediaSettings: &msg.CallMediaSettings{
+			Audio:       false,
+			ScreenShare: false,
+			Video:       false,
+		},
+		participantMap:        callParticipantMap,
+		participants:          callParticipants,
+		requestParticipantIds: nil,
+		requests:              nil,
+		iceServer:             nil,
+		mu:                    &sync.RWMutex{},
 	}
 	c.mu.Unlock()
 }
@@ -506,20 +527,23 @@ func (c *call) initParticipants(callID int64, participants []*msg.PhoneParticipa
 	if info, ok := c.callInfo[callID]; !ok {
 		if bootstrap {
 			callParticipants, callParticipantMap := fn(make(map[int32]*msg.CallParticipant), make(map[int64]int32))
-			mediaState := c.getStreamState()
 			c.mu.Lock()
 			c.callInfo[callID] = &Info{
 				acceptedParticipantIds: nil,
 				acceptedParticipants:   nil,
 				allConnected:           false,
 				dialed:                 false,
-				mediaSettings:          mediaState,
-				participantMap:         callParticipantMap,
-				participants:           callParticipants,
-				requestParticipantIds:  nil,
-				requests:               nil,
-				iceServer:              nil,
-				mu:                     &sync.RWMutex{},
+				mediaSettings: &msg.CallMediaSettings{
+					Audio:       false,
+					ScreenShare: false,
+					Video:       false,
+				},
+				participantMap:        callParticipantMap,
+				participants:          callParticipants,
+				requestParticipantIds: nil,
+				requests:              nil,
+				iceServer:             nil,
+				mu:                    &sync.RWMutex{},
 			}
 			c.mu.Unlock()
 		}
@@ -583,20 +607,23 @@ func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequ
 		callParticipantMap[participant.Peer.UserID] = participant.ConnectionId
 	}
 
-	mediaState := c.getStreamState()
 	c.mu.Lock()
 	c.callInfo[in.CallID] = &Info{
 		acceptedParticipantIds: nil,
 		acceptedParticipants:   nil,
 		allConnected:           false,
 		dialed:                 false,
-		mediaSettings:          mediaState,
-		participantMap:         callParticipantMap,
-		participants:           callParticipants,
-		requestParticipantIds:  []int64{in.UserID},
-		requests:               []*UpdatePhoneCall{in},
-		iceServer:              nil,
-		mu:                     &sync.RWMutex{},
+		mediaSettings: &msg.CallMediaSettings{
+			Audio:       false,
+			ScreenShare: false,
+			Video:       false,
+		},
+		participantMap:        callParticipantMap,
+		participants:          callParticipants,
+		requestParticipantIds: []int64{in.UserID},
+		requests:              []*UpdatePhoneCall{in},
+		iceServer:             nil,
+		mu:                    &sync.RWMutex{},
 	}
 	c.mu.Unlock()
 	return
@@ -1032,7 +1059,7 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn) {
 	return
 }
 
-func (c *call) mediaSettingsInit(in MediaSettings) {
+func (c *call) mediaSettingsInit(in *msg.CallMediaSettings) {
 	if c.activeCallID == 0 {
 		return
 	}
@@ -1533,8 +1560,11 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 		}
 	} else if c.shouldAccept(in) {
 		c.initCallRequest(in, data)
-		streamState := c.getStreamState()
-		_ = c.accept(c.activeCallID, streamState.Video)
+		video := false
+		if streamState, err := c.getMediaSettings(); err == nil {
+			video = streamState.Video
+		}
+		_ = c.accept(c.activeCallID, video)
 	}
 }
 
@@ -1579,7 +1609,11 @@ func (c *call) callAccepted(in *UpdatePhoneCall) {
 	pc.mu.Unlock()
 	c.flushIceCandidates(in.CallID, connId)
 
-	streamState := c.getStreamState()
+	streamState, err := c.getMediaSettings()
+	if err != nil {
+		return
+	}
+
 	c.propagateMediaSettings(MediaSettingsIn{
 		Audio:       &streamState.Audio,
 		ScreenShare: &streamState.ScreenShare,

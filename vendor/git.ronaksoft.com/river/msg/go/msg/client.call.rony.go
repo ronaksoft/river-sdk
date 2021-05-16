@@ -321,7 +321,6 @@ func (p *poolClientCallSendMediaSettings) Put(x *ClientCallSendMediaSettings) {
 	if x == nil {
 		return
 	}
-	x.ConnId = 0
 	PoolCallMediaSettings.Put(x.MediaSettings)
 	x.MediaSettings = nil
 	p.pool.Put(x)
@@ -330,7 +329,6 @@ func (p *poolClientCallSendMediaSettings) Put(x *ClientCallSendMediaSettings) {
 var PoolClientCallSendMediaSettings = poolClientCallSendMediaSettings{}
 
 func (x *ClientCallSendMediaSettings) DeepCopy(z *ClientCallSendMediaSettings) {
-	z.ConnId = x.ConnId
 	if x.MediaSettings != nil {
 		if z.MediaSettings == nil {
 			z.MediaSettings = PoolCallMediaSettings.Get()
