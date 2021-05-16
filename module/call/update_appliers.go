@@ -37,8 +37,8 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope
 		Data:            data,
 	}
 
-	logs.Info("update", zap.Any("action", x.Action), zap.Any("data", data))
 	if data == nil {
+		logs.Debug("Update data is nil")
 		return
 	}
 

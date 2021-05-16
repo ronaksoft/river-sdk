@@ -1532,7 +1532,7 @@ func (c *call) shouldAccept(in *UpdatePhoneCall) bool {
 
 func (c *call) callRequested(in *UpdatePhoneCall) {
 	data := in.Data.(*msg.PhoneActionRequested)
-	if c.activeCallID != in.CallID {
+	if c.activeCallID != 0 && c.activeCallID != in.CallID {
 		c.callBusy(in)
 		return
 	}
