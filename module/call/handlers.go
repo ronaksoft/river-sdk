@@ -142,7 +142,7 @@ func (c *call) mediaSettingsChangeHandler(in, out *rony.MessageEnvelope, da doma
 		return
 	}
 
-	err := c.mediaSettingsChange(req.ConnId, req.MediaSettings)
+	err := c.mediaSettingsChange(req.MediaSettings)
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		da.OnComplete(out)
