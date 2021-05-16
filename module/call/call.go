@@ -55,14 +55,14 @@ type call struct {
 
 func New(config *Config) *call {
 	c := &call{
-		mu:              nil,
+		mu:              &sync.RWMutex{},
 		peerConnections: make(map[int32]*Connection),
 		peer:            nil,
 		activeCallID:    0,
 		callInfo:        make(map[int64]*Info),
-		iceServer: nil,
-		userID:    config.UserID,
-		authID:    config.AuthID,
+		iceServer:       nil,
+		userID:          config.UserID,
+		authID:          config.AuthID,
 		teamInput: teamInput{
 			teamID:     config.TeamID,
 			teamAccess: config.TeamAccess,
