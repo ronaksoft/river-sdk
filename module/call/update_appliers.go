@@ -19,7 +19,7 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope
 			return
 		}
 
-		logs.Info("updatePhoneCall", zap.Int32("action", int32(x.Action)))
+		logs.Debug("updatePhoneCall", zap.Int32("action", int32(x.Action)))
 
 		now := domain.Now().Unix()
 		if !(x.Timestamp == 0 || now-x.Timestamp < 60) {
