@@ -252,7 +252,7 @@ func (c *call) accept(callID int64, video bool) (err error) {
 	initFn := func() error {
 		wg := sync.WaitGroup{}
 		for _, request := range info.requests {
-			wg.Add(0)
+			wg.Add(1)
 			go func(req *UpdatePhoneCall) {
 				defer wg.Done()
 				_, innerErr := c.initConnections(c.peer, callID, false, req)
