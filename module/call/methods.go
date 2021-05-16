@@ -1553,7 +1553,7 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 				Type:       msg.PeerType(in.PeerType),
 				AccessHash: in.AccessHash,
 			},
-			CallID: 0,
+			CallID: in.CallID,
 		}
 		updateData, uErr := update.Marshal()
 		if uErr == nil {
