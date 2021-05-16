@@ -535,7 +535,6 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 		if outOfSync && update.UpdateID != 0 {
 			continue
 		}
-		fmt.Println(ctrl.updateAppliers)
 		applier, ok := ctrl.updateAppliers[update.Constructor]
 		if ok {
 			logs.Debug("SyncCtrl applies Update",
