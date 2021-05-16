@@ -8,14 +8,18 @@ import (
 )
 
 var (
-	ErrActionNotFound     = errors.New("action not found")
-	ErrInvalidCallId      = errors.New("invalid call id")
-	ErrInvalidConnId      = errors.New("invalid conn id")
-	ErrInvalidPeerInput   = errors.New("invalid peer input")
-	ErrInvalidCallRequest = errors.New("invalid call request")
-	ErrNoActiveCall       = errors.New("no active call")
-	ErrNoSDP              = errors.New("no sdp")
-	ErrNoCallRequest      = errors.New("no call request")
+	ErrActionNotFound        = errors.New("action not found")
+	ErrInvalidCallId         = errors.New("invalid call id")
+	ErrInvalidConnId         = errors.New("invalid conn id")
+	ErrInvalidPeerInput      = errors.New("invalid peer input")
+	ErrInvalidCallRequest    = errors.New("invalid call request")
+	ErrNoActiveCall          = errors.New("no active call")
+	ErrNoSDP                 = errors.New("no sdp")
+	ErrCannotSetAnswerSDP    = errors.New("cannot set answer sdp")
+	ErrNoCallRequest         = errors.New("no call request")
+	ErrCannotInitStream      = errors.New("cannot init stream")
+	ErrCannotInitConnection  = errors.New("cannot init connection")
+	ErrCannotCloseConnection = errors.New("cannot close connection")
 )
 
 type UpdatePhoneCall struct {

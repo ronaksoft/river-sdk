@@ -252,8 +252,9 @@ func (c *call) accept(callID int64, video bool) (err error) {
 	}
 
 	if !info.dialed {
-		err = c.callback.InitStream(true, video)
-		if err != nil {
+		ok := c.callback.InitStream(true, video)
+		if !ok {
+			err = ErrCannotInitStream
 			return
 		}
 
@@ -765,13 +766,10 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	callInitReq := &msg.PhoneInit{
 		IceServers: iceServer,
 	}
-	callInitData, err := callInitReq.Marshal()
-	if err != nil {
-		return
-	}
 
-	rtcConnId, err := c.callback.InitConnection(connId, callInitData)
-	if err != nil {
+	rtcConnId := c.CallbackInitConnection(connId, callInitReq)
+	if rtcConnId == -1 {
+		err = ErrCannotInitConnection
 		return
 	}
 
@@ -825,20 +823,7 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 				Type: sdp.Type,
 			}
 
-			var offerSDPData []byte
-			offerSDPData, err = offerSDP.Marshal()
-			if err != nil {
-				return
-			}
-
-			var clientAnswerSDP []byte
-			clientAnswerSDP, err = c.callback.GetAnswerSDP(connId, offerSDPData)
-			if err != nil {
-				return
-			}
-
-			sdpAnswer = &msg.PhoneActionSDPAnswer{}
-			err = sdpAnswer.Unmarshal(clientAnswerSDP)
+			sdpAnswer, err = c.CallbackSetOfferGetAnswerSDP(connId, offerSDP)
 			if err != nil {
 				return
 			}
@@ -849,16 +834,15 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	} else {
 		// Client should create offer
 		// Client should setLocalDescription and pass the offer to SDK
-		var clientOfferSDP []byte
-		clientOfferSDP, err = c.callback.GetOfferSDP(connId)
+		sdpOffer := &msg.PhoneActionSDPOffer{}
+		sdpOffer, err = c.CallbackGetOfferSDP(connId)
 		if err != nil {
 			return
 		}
 
-		sdpAnswer = &msg.PhoneActionSDPAnswer{}
-		err = sdpAnswer.Unmarshal(clientOfferSDP)
-		if err != nil {
-			return
+		sdpAnswer = &msg.PhoneActionSDPAnswer{
+			SDP:  sdpOffer.SDP,
+			Type: sdpOffer.Type,
 		}
 	}
 	return
@@ -944,8 +928,9 @@ func (c *call) modifyMediaStream(video bool) (err error) {
 		return
 	}
 
-	err = c.callback.InitStream(true, video)
-	if err != nil {
+	ok := c.callback.InitStream(true, video)
+	if !ok {
+		err = ErrCannotInitStream
 		return
 	}
 
@@ -961,8 +946,9 @@ func (c *call) upgradeConnection(video bool) (err error) {
 		return
 	}
 
-	err = c.callback.InitStream(true, video)
-	if err != nil {
+	ok := c.callback.InitStream(true, video)
+	if !ok {
+		err = ErrCannotInitStream
 		return
 	}
 
@@ -983,19 +969,12 @@ func (c *call) upgradeConnection(video bool) (err error) {
 	for _, connId := range connIds {
 		wg.Add(1)
 		go func(cid int32) {
-			var clientOfferSDP []byte
-			clientOfferSDP, err = c.callback.GetOfferSDP(cid)
-			if err != nil {
+			offerSDP, innerErr := c.CallbackGetOfferSDP(cid)
+			if innerErr != nil {
 				return
 			}
 
-			sdpOffer := &msg.PhoneActionSDPOffer{}
-			err = sdpOffer.Unmarshal(clientOfferSDP)
-			if err != nil {
-				return
-			}
-
-			c.sendSdpOffer(cid, sdpOffer)
+			c.sendSdpOffer(cid, offerSDP)
 			wg.Done()
 		}(connId)
 	}
@@ -1128,8 +1107,9 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 	if !conn.Reconnecting &&
 		((isIceError && c.peerConnections[connId].Init && (state == "disconnected" || state == "failed" || state == "closed")) ||
 			state == "disconnected") {
-		err = c.callback.CloseConnection(connId, false)
-		if err != nil {
+		ok := c.callback.CloseConnection(connId, false)
+		if !ok {
+			err = ErrCannotCloseConnection
 			return
 		}
 
@@ -1590,17 +1570,13 @@ func (c *call) callAccepted(in *UpdatePhoneCall) {
 	info.participants[connId].DeviceType = data.DeviceType
 	info.mu.Unlock()
 
-	sdp := &msg.PhoneActionSDPAnswer{
+	answerSdp := &msg.PhoneActionSDPAnswer{
 		SDP:  data.SDP,
 		Type: data.Type,
 	}
-	sdpData, err := sdp.Marshal()
-	if err != nil {
-		return
-	}
 
-	err = c.callback.SetAnswerSDP(connId, sdpData)
-	if err != nil {
+	sdpOK := c.CallbackSetAnswerSDP(connId, answerSdp)
+	if !sdpOK {
 		return
 	}
 
@@ -1743,12 +1719,8 @@ func (c *call) sdpOfferUpdated(in *UpdatePhoneCall) {
 		SDP:  data.SDP,
 		Type: data.Type,
 	}
-	offerSDPAction, err := offerSDP.Marshal()
-	if err != nil {
-		return
-	}
 
-	clientAnswerSDP, err := c.callback.GetAnswerSDP(connId, offerSDPAction)
+	sdpAnswer, err := c.CallbackSetOfferGetAnswerSDP(connId, offerSDP)
 	if err != nil {
 		return
 	}
@@ -1758,13 +1730,6 @@ func (c *call) sdpOfferUpdated(in *UpdatePhoneCall) {
 	conn.mu.Unlock()
 
 	c.flushIceCandidates(in.CallID, connId)
-
-	sdpAnswer := &msg.PhoneActionSDPAnswer{}
-	err = sdpAnswer.Unmarshal(clientAnswerSDP)
-	if err != nil {
-		return
-	}
-
 	c.sendSdpAnswer(connId, sdpAnswer)
 }
 

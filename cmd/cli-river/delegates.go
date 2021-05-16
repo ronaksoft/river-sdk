@@ -2,7 +2,6 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
@@ -163,40 +162,40 @@ func (c *CallDelegate) OnUpdate(action int32, b []byte) {
 	logs.Info("CallDelegate On UpdateReceived", zap.String("C", msg.CallUpdate(action).String()))
 }
 
-func (c *CallDelegate) InitStream(audio, video bool) (err error) {
+func (c *CallDelegate) InitStream(audio, video bool) bool {
 	logs.Info("CallDelegate On InitStream", zap.Bool("Audio", audio), zap.Bool("Vide", video))
-	return nil
+	return true
 }
 
-func (c *CallDelegate) InitConnection(connId int32, b []byte) (id int64, err error) {
+func (c *CallDelegate) InitConnection(connId int32, b []byte) int64 {
 	logs.Info("CallDelegate On InitConnection", zap.Int32("ConnID", connId))
-	return
+	return 1
 }
 
-func (c *CallDelegate) CloseConnection(connId int32, all bool) (err error) {
+func (c *CallDelegate) CloseConnection(connId int32, all bool) bool {
 	logs.Info("CallDelegate On CloseConnection", zap.Int32("ConnID", connId), zap.Bool("All", all))
-	return nil
+	return true
 }
 
-func (c *CallDelegate) GetAnswerSDP(connId int32, req []byte) (res []byte, err error) {
-	logs.Info("CallDelegate On GetAnswerSDP", zap.Int32("ConnID", connId))
-	return nil, domain.ErrNotFound
-
-}
-
-func (c *CallDelegate) GetOfferSDP(connId int32) (res []byte, err error) {
+func (c *CallDelegate) GetOfferSDP(connId int32) []byte {
 	logs.Info("CallDelegate On GetOfferSDP", zap.Int32("ConnID", connId))
-	return nil, domain.ErrNotFound
+	return nil
 }
 
-func (c *CallDelegate) SetAnswerSDP(connId int32, b []byte) (err error) {
+func (c *CallDelegate) SetOfferGetAnswerSDP(connId int32, req []byte) []byte {
+	logs.Info("CallDelegate On SetOfferGetAnswerSDP", zap.Int32("ConnID", connId))
+	return nil
+
+}
+
+func (c *CallDelegate) SetAnswerSDP(connId int32, b []byte) bool {
 	logs.Info("CallDelegate On SetAnswerSDP", zap.Int32("ConnID", connId))
-	return nil
+	return true
 }
 
-func (c *CallDelegate) AddIceCandidate(connId int32, b []byte) (err error) {
+func (c *CallDelegate) AddIceCandidate(connId int32, b []byte) bool {
 	logs.Info("CallDelegate On AddIceCandidate", zap.Int32("ConnID", connId))
-	return nil
+	return true
 }
 
 type RequestDelegate struct {

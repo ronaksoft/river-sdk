@@ -279,14 +279,14 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		AuthID:     r.ConnInfo.AuthID,
 		DeviceType: msg.CallDeviceType_CallDeviceUnknown,
 		Callback: &call.Callback{
-			OnUpdate:        r.callDelegate.OnUpdate,
-			InitStream:      r.callDelegate.InitStream,
-			InitConnection:  r.callDelegate.InitConnection,
-			CloseConnection: r.callDelegate.CloseConnection,
-			GetAnswerSDP:    r.callDelegate.GetAnswerSDP,
-			GetOfferSDP:     r.callDelegate.GetOfferSDP,
-			SetAnswerSDP:    r.callDelegate.SetAnswerSDP,
-			AddIceCandidate: r.callDelegate.AddIceCandidate,
+			OnUpdate:             r.callDelegate.OnUpdate,
+			InitStream:           r.callDelegate.InitStream,
+			InitConnection:       r.callDelegate.InitConnection,
+			CloseConnection:      r.callDelegate.CloseConnection,
+			GetOfferSDP:          r.callDelegate.GetOfferSDP,
+			SetOfferGetAnswerSDP: r.callDelegate.SetOfferGetAnswerSDP,
+			SetAnswerSDP:         r.callDelegate.SetAnswerSDP,
+			AddIceCandidate:      r.callDelegate.AddIceCandidate,
 		},
 	})
 
