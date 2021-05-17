@@ -1709,12 +1709,8 @@ func (c *call) iceExchange(in *UpdatePhoneCall) {
 		SdpMid:           data.SdpMid,
 		UsernameFragment: data.UsernameFragment,
 	}
-	iceCandidateData, err := iceCandidate.Marshal()
-	if err != nil {
-		return
-	}
 
-	_ = c.callback.AddIceCandidate(connId, iceCandidateData)
+	_ = c.CallbackAddIceCandidate(connId,iceCandidate)
 }
 
 func (c *call) mediaSettingsUpdated(in *UpdatePhoneCall) {
