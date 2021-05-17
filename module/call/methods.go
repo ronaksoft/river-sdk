@@ -260,7 +260,7 @@ func (c *call) accept(callID int64, video bool) (err error) {
 
 	initFn := func() error {
 		wg := sync.WaitGroup{}
-		for idx := len(info.requests); idx >= 0; idx-- {
+		for idx := len(info.requests) - 1; idx >= 0; idx-- {
 			request := info.requests[idx]
 
 			wg.Add(1)
