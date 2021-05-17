@@ -31,6 +31,7 @@ func New() *message {
 			msg.C_MessagesGetDialog:          r.messagesGetDialog,
 			msg.C_MessagesGetDialogs:         r.messagesGetDialogs,
 			msg.C_MessagesGetHistory:         r.messagesGetHistory,
+			msg.C_MessagesGetMediaHistory:    r.messagesGetMediaHistory,
 			msg.C_MessagesReadContents:       r.messagesReadContents,
 			msg.C_MessagesReadHistory:        r.messagesReadHistory,
 			msg.C_MessagesSaveDraft:          r.messagesSaveDraft,
