@@ -194,6 +194,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 		c.initParticipants(c.activeCallID, joinRes.Participants, true)
 		_, err = c.initConnections(peer, c.activeCallID, false, nil)
 		if err != nil {
+			logs.Warn("initConnections", zap.Error(err))
 			return
 		}
 	} else {
@@ -201,6 +202,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 		c.initCallParticipants(TempCallID, participants)
 		_, err = c.initConnections(peer, TempCallID, true, nil)
 		if err != nil {
+			logs.Warn("initConnections", zap.Error(err))
 			return
 		}
 
@@ -267,7 +269,7 @@ func (c *call) accept(callID int64, video bool) (err error) {
 				defer wg.Done()
 				_, innerErr := c.initConnections(c.peer, callID, false, req)
 				if innerErr != nil {
-					logs.Debug("initConnections", zap.Error(innerErr))
+					logs.Warn("initConnections", zap.Error(err))
 					return
 				}
 
@@ -727,11 +729,13 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 		if requestConnId == participant.PhoneParticipant.ConnectionId {
 			wg.Add(1)
 			go func() {
-				phoneCall, innerRes := initAnswerConnection(requestConnId)
-				if innerRes == nil {
+				phoneCall, innerErr := initAnswerConnection(requestConnId)
+				if innerErr == nil {
 					mu.Lock()
 					acceptResults = append(acceptResults, phoneCall)
 					mu.Unlock()
+				} else {
+					logs.Debug("initAnswerConnection", zap.Error(innerErr))
 				}
 				wg.Done()
 			}()
@@ -758,35 +762,40 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 
 	wg.Wait()
 
-	for _, participantSDP := range callResults {
-		// retry each connection
-		if pc, ok := c.peerConnections[participantSDP.ConnectionId]; ok {
-			pc.connectTicker = time.NewTicker(time.Duration(RetryInterval) * time.Second)
-			go func(participant *msg.PhoneParticipantSDP) {
-				select {
-				case <-pc.connectTicker.C:
-					if pc, ok := c.peerConnections[participant.ConnectionId]; ok {
-						pc.mu.Lock()
-						pc.Try++
-						pc.mu.Unlock()
-						_, innerErr := c.callUserSingle(peer, participant, c.activeCallID)
-						if innerErr == nil {
-							logs.Warn("callUserSingle", zap.Error(innerErr))
-						}
-						if pc.Try >= RetryLimit {
-							if pc.connectTicker != nil {
-								pc.connectTicker.Stop()
+	if len(callResults) > 0 {
+		for _, participantSDP := range callResults {
+			// retry each connection
+			if pc, ok := c.peerConnections[participantSDP.ConnectionId]; ok {
+				pc.connectTicker = time.NewTicker(time.Duration(RetryInterval) * time.Second)
+				go func(participant *msg.PhoneParticipantSDP) {
+					select {
+					case <-pc.connectTicker.C:
+						if pc, ok := c.peerConnections[participant.ConnectionId]; ok {
+							pc.mu.Lock()
+							pc.Try++
+							pc.mu.Unlock()
+							_, innerErr := c.callUserSingle(peer, participant, c.activeCallID)
+							if innerErr == nil {
+								logs.Warn("callUserSingle", zap.Error(innerErr))
 							}
-							if initiator {
-								c.checkCallTimeout(participant.ConnectionId)
+							if pc.Try >= RetryLimit {
+								if pc.connectTicker != nil {
+									pc.connectTicker.Stop()
+								}
+								if initiator {
+									c.checkCallTimeout(participant.ConnectionId)
+								}
 							}
 						}
 					}
-				}
-			}(participantSDP)
+				}(participantSDP)
+			}
+		}
+		_, err = c.callUser(peer, initiator, callResults, c.activeCallID)
+		if err != nil {
+			logs.Warn("callUser", zap.Error(err))
 		}
 	}
-	_, _ = c.callUser(peer, initiator, callResults, c.activeCallID)
 	return
 }
 
