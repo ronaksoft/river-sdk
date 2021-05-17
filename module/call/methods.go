@@ -1,7 +1,6 @@
 package call
 
 import (
-	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
@@ -709,7 +708,7 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 		sdpData := request.Data.(*msg.PhoneActionRequested)
 		sdp.SDP = sdpData.SDP
 		sdp.Type = sdpData.Type
-		requestConnId, _, valid := c.getConnId(callID, request.UserID)
+		requestConnId, _, valid = c.getConnId(callID, request.UserID)
 		if valid && callInfo.dialed {
 			return initAnswerConnection(requestConnId)
 		}
@@ -758,8 +757,7 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 	wg.Wait()
 
 	for _, participantSDP := range callResults {
-		fmt.Println(participantSDP)
-		// retry here
+		// retry each connection
 		if pc, ok := c.peerConnections[participantSDP.ConnectionId]; ok {
 			pc.connectTicker = time.NewTicker(time.Duration(RetryInterval) * time.Second)
 			go func(participant *msg.PhoneParticipantSDP) {
