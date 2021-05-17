@@ -417,6 +417,7 @@ func (p *poolClientCallStart) Put(x *ClientCallStart) {
 		PoolInputUser.Put(z)
 	}
 	x.InputUsers = x.InputUsers[:0]
+	x.Video = false
 	x.CallID = 0
 	p.pool.Put(x)
 }
@@ -439,6 +440,7 @@ func (x *ClientCallStart) DeepCopy(z *ClientCallStart) {
 			z.InputUsers = append(z.InputUsers, xx)
 		}
 	}
+	z.Video = x.Video
 	z.CallID = x.CallID
 }
 

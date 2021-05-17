@@ -80,6 +80,7 @@ func (c *call) areAllAudio() (ok bool, err error) {
 	return
 }
 
+// Client should listen to icecandidate and send it to SDK
 func (c *call) iceCandidate(connId int32, candidate *msg.CallRTCIceCandidate) (err error) {
 	if c.activeCallID == 0 {
 		err = ErrNoActiveCall
@@ -90,6 +91,8 @@ func (c *call) iceCandidate(connId int32, candidate *msg.CallRTCIceCandidate) (e
 	return
 }
 
+// Client should listen to iceconnectionstatechange and send it to SDK
+// Client should listen to icecandidateerror and send it to SDK
 func (c *call) iceConnectionStatusChange(connId int32, state string, hasIceError bool) (err error) {
 	if c.activeCallID == 0 {
 		err = ErrNoActiveCall
@@ -166,11 +169,17 @@ func (c *call) mediaSettingsChange(mediaSettings *msg.CallMediaSettings) (err er
 	return
 }
 
-func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, callID int64) (id int64, err error) {
+func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video bool, callID int64) (id int64, err error) {
 	c.peer = peer
 	initRes, err := c.apiInit(peer, callID)
 	if err != nil {
 		logs.Warn("Init", zap.Error(err))
+		return
+	}
+
+	ok := c.callback.InitStream(true, video)
+	if !ok {
+		err = ErrCannotInitStream
 		return
 	}
 
@@ -251,12 +260,15 @@ func (c *call) accept(callID int64, video bool) (err error) {
 
 	initFn := func() error {
 		wg := sync.WaitGroup{}
-		for _, request := range info.requests {
+		for idx := len(info.requests); idx >= 0; idx-- {
+			request := info.requests[idx]
+
 			wg.Add(1)
 			go func(req *UpdatePhoneCall) {
 				defer wg.Done()
 				_, innerErr := c.initConnections(c.peer, callID, false, req)
 				if innerErr != nil {
+					logs.Debug("initConnections", zap.Error(innerErr))
 					return
 				}
 
@@ -588,17 +600,19 @@ func (c *call) initParticipants(callID int64, participants []*msg.PhoneParticipa
 }
 
 func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequested) {
-	if info, ok := c.callInfo[in.CallID]; ok {
-		requestParticipantIds := info.requestParticipantIds
+	info := c.getCallInfo(in.CallID)
+	if info != nil {
 		hasReq := false
-		for idx := range requestParticipantIds {
-			if requestParticipantIds[idx] == in.UserID {
+		info.mu.RLock()
+		for idx := range info.requestParticipantIds {
+			if info.requestParticipantIds[idx] == in.UserID {
 				hasReq = true
 				break
 			}
 		}
+		info.mu.RUnlock()
 
-		if hasReq {
+		if !hasReq {
 			info.mu.Lock()
 			info.requests = append(info.requests, in)
 			info.requestParticipantIds = append(info.requestParticipantIds, in.UserID)
@@ -799,12 +813,6 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 		err = ErrCannotInitConnection
 		return
 	}
-
-	// Client should listen to icecandidate and send it to SDK
-
-	// Client should listen to iceconnectionstatechange and send it to SDK
-
-	// Client should listen to icecandidateerror and send it to SDK
 
 	conn := &Connection{
 		CallConnection: msg.CallConnection{
