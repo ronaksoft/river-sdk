@@ -704,6 +704,7 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 			Type:         sdpOffer.Type,
 		}
 
+		logs.Info("Execute Accept", zap.Int64("PeerID", peer.ID), zap.Int64("ParticipantUserID", p.PhoneParticipant.Peer.UserID))
 		res, innerErr = c.apiAccept(peer, callID, []*msg.PhoneParticipantSDP{phoneParticipant})
 		return
 	}
