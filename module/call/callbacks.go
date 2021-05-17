@@ -89,8 +89,8 @@ func (c *call) CallbackSetOfferGetAnswerSDP(connId int32, offerSdp *msg.PhoneAct
 
 	switch me.Constructor {
 	case msg.C_PhoneActionSDPOffer:
-		sdp := &msg.PhoneActionSDPOffer{}
-		err = sdp.Unmarshal(me.Message)
+		answerSdp = &msg.PhoneActionSDPAnswer{}
+		err = answerSdp.Unmarshal(me.Message)
 		if err != nil {
 			return
 		}

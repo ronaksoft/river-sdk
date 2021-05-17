@@ -692,7 +692,9 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 			return
 		}
 
+		callInfo.mu.RLock()
 		p := callInfo.participants[connId]
+		callInfo.mu.RUnlock()
 		phoneParticipant := &msg.PhoneParticipantSDP{
 			ConnectionId: p.PhoneParticipant.ConnectionId,
 			Peer:         p.PhoneParticipant.Peer,
