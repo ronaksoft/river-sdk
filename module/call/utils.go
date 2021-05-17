@@ -20,6 +20,8 @@ var (
 	ErrCannotInitStream      = errors.New("cannot init stream")
 	ErrCannotInitConnection  = errors.New("cannot init connection")
 	ErrCannotCloseConnection = errors.New("cannot close connection")
+	ErrInvalidRequest        = errors.New("invalid request")
+	ErrInvalidResponse       = errors.New("invalid response")
 )
 
 type UpdatePhoneCall struct {

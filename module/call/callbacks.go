@@ -59,6 +59,8 @@ func (c *call) CallbackGetOfferSDP(connId int32) (offerSdp *msg.PhoneActionSDPOf
 			return
 		}
 		err = errors.New(errObj.Error)
+	default:
+		err = ErrInvalidResponse
 	}
 	return
 }
@@ -101,6 +103,8 @@ func (c *call) CallbackSetOfferGetAnswerSDP(connId int32, offerSdp *msg.PhoneAct
 			return
 		}
 		err = errors.New(errObj.Error)
+	default:
+		err = ErrInvalidResponse
 	}
 	return
 }
