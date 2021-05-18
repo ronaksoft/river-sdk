@@ -1577,13 +1577,15 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 		if uErr == nil {
 			c.callUpdate(msg.CallUpdate_CallRequested, updateData)
 		}
-	} else if c.shouldAccept(in) {
+	} else {
 		c.initCallRequest(in, data)
-		video := false
-		if streamState, err := c.getMediaSettings(); err == nil {
-			video = streamState.Video
+		if c.shouldAccept(in) {
+			video := false
+			if streamState, err := c.getMediaSettings(); err == nil {
+				video = streamState.Video
+			}
+			_ = c.accept(c.activeCallID, video)
 		}
-		_ = c.accept(c.activeCallID, video)
 	}
 }
 
