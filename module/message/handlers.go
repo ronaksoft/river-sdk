@@ -716,6 +716,11 @@ func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, da doma
 		return
 	}
 
+	// We are Online
+	if req.MaxID == 0 {
+		req.MaxID = dialog.TopMessageID
+	}
+
 	// We are Offline/Disconnected
 	if !r.SDK().NetCtrl().Connected() {
 		messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID, req.Limit, req.Cat)
@@ -728,21 +733,20 @@ func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, da doma
 	// Prepare the the result before sending back to the client
 	preSuccessCB := genGetMediaHistoryCB(da.OnComplete, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Cat)
 
-	// We are Online
-	if req.MaxID == 0 {
-		req.MaxID = dialog.TopMessageID
-	}
 	b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.Cat, req.MaxID)
 	if !b {
 		logs.Info("River detected hole (With MaxID Only)",
 			zap.Int64("MaxID", req.MaxID),
 			zap.Int64("PeerID", req.Peer.ID),
+			zap.String("PeerType", req.Peer.Type.String()),
+			zap.String("Cat", req.Cat.String()),
 			zap.Int64("TopMsgID", dialog.TopMessageID),
-			zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
+			zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.Cat)),
 		)
 		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
 		return
 	}
+
 	messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, bar.Max, req.Limit, req.Cat)
 	fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 }
