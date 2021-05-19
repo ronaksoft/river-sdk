@@ -179,7 +179,25 @@ func (c *CallDelegate) CloseConnection(connId int32, all bool) bool {
 
 func (c *CallDelegate) GetOfferSDP(connId int32) []byte {
 	logs.Info("CallDelegate On GetOfferSDP", zap.Int32("ConnID", connId))
-	return nil
+	offerSdp := &msg.PhoneActionSDPOffer{
+		SDP:  "",
+		Type: "",
+	}
+	d, err := offerSdp.Marshal()
+	if err != nil {
+		return nil
+	}
+
+	me := &rony.MessageEnvelope{
+		Constructor: msg.C_PhoneActionSDPOffer,
+		Message:     d,
+	}
+	d, err = me.Marshal()
+	if err != nil {
+		return nil
+	}
+
+	return d
 }
 
 func (c *CallDelegate) SetOfferGetAnswerSDP(connId int32, req []byte) []byte {

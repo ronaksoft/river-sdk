@@ -9,6 +9,15 @@ import (
 	"time"
 )
 
+/*
+   Creation Time: 2021 - May - 19
+   Created by:  (Hamidrezakk)
+   Maintainers:
+      1.  Hamidrezakk
+   Auditor: Hamidrezakk
+   Copyright Ronak Software Group 2021
+*/
+
 func (c *call) toggleVideo(enable bool) (err error) {
 	c.propagateMediaSettings(MediaSettingsIn{
 		Video: &enable,
@@ -1258,7 +1267,7 @@ func (c *call) getConnId(callID, userID int64) (int32, *Info, bool) {
 	}
 
 	info.mu.RLock()
-	connId := int32(info.participantMap[userID])
+	connId := info.participantMap[userID]
 	info.mu.RUnlock()
 	return connId, info, true
 }

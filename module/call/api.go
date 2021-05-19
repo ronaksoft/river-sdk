@@ -10,6 +10,15 @@ import (
 	"sync"
 )
 
+/*
+   Creation Time: 2021 - May - 19
+   Created by:  (Hamidrezakk)
+   Maintainers:
+      1.  Hamidrezakk
+   Auditor: Hamidrezakk
+   Copyright Ronak Software Group 2021
+*/
+
 type teamInput struct {
 	teamID     int64
 	teamAccess uint64

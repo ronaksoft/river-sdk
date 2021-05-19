@@ -6,6 +6,15 @@ import (
 	"github.com/ronaksoft/rony"
 )
 
+/*
+   Creation Time: 2021 - May - 19
+   Created by:  (Hamidrezakk)
+   Maintainers:
+      1.  Hamidrezakk
+   Auditor: Hamidrezakk
+   Copyright Ronak Software Group 2021
+*/
+
 type Callback struct {
 	OnUpdate             func(updateType int32, b []byte)
 	InitStream           func(audio, video bool) bool

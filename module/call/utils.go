@@ -7,6 +7,15 @@ import (
 	"time"
 )
 
+/*
+   Creation Time: 2021 - May - 19
+   Created by:  (Hamidrezakk)
+   Maintainers:
+      1.  Hamidrezakk
+   Auditor: Hamidrezakk
+   Copyright Ronak Software Group 2021
+*/
+
 var (
 	ErrActionNotFound        = errors.New("action not found")
 	ErrInvalidCallId         = errors.New("invalid call id")
@@ -127,55 +136,62 @@ func parseCallAction(constructor msg.PhoneCallAction, data []byte) (out interfac
 			return
 		}
 		return t9, nil
-	case msg.PhoneCallAction_PhoneCallParticipantAdded:
-		t10 := &msg.PhoneActionParticipantAdded{}
+	case msg.PhoneCallAction_PhoneCallAck:
+		t10 := &msg.PhoneActionSDPAnswer{}
 		err = t10.Unmarshal(data)
 		if err != nil {
 			return
 		}
 		return t10, nil
-	case msg.PhoneCallAction_PhoneCallParticipantRemoved:
-		t11 := &msg.PhoneActionParticipantRemoved{}
+	case msg.PhoneCallAction_PhoneCallParticipantAdded:
+		t11 := &msg.PhoneActionParticipantAdded{}
 		err = t11.Unmarshal(data)
 		if err != nil {
 			return
 		}
 		return t11, nil
-	case msg.PhoneCallAction_PhoneCallJoinRequested:
-		t12 := &msg.PhoneActionJoinRequested{}
+	case msg.PhoneCallAction_PhoneCallParticipantRemoved:
+		t12 := &msg.PhoneActionParticipantRemoved{}
 		err = t12.Unmarshal(data)
 		if err != nil {
 			return
 		}
 		return t12, nil
-	case msg.PhoneCallAction_PhoneCallAdminUpdated:
-		t13 := &msg.PhoneActionAdminUpdated{}
+	case msg.PhoneCallAction_PhoneCallJoinRequested:
+		t13 := &msg.PhoneActionJoinRequested{}
 		err = t13.Unmarshal(data)
 		if err != nil {
 			return
 		}
 		return t13, nil
-	case msg.PhoneCallAction_PhoneCallScreenShare:
-		t14 := &msg.PhoneActionScreenShare{}
+	case msg.PhoneCallAction_PhoneCallAdminUpdated:
+		t14 := &msg.PhoneActionAdminUpdated{}
 		err = t14.Unmarshal(data)
 		if err != nil {
 			return
 		}
 		return t14, nil
+	case msg.PhoneCallAction_PhoneCallScreenShare:
+		t15 := &msg.PhoneActionScreenShare{}
+		err = t15.Unmarshal(data)
+		if err != nil {
+			return
+		}
+		return t15, nil
 	case msg.PhoneCallAction_PhoneCallPicked:
-		t15 := &msg.PhoneActionPicked{}
-		err = t15.Unmarshal(data)
+		t16 := &msg.PhoneActionPicked{}
+		err = t16.Unmarshal(data)
 		if err != nil {
 			return
 		}
-		return t15, nil
+		return t16, nil
 	case msg.PhoneCallAction_PhoneCallRestarted:
-		t15 := &msg.PhoneActionRestarted{}
-		err = t15.Unmarshal(data)
+		t17 := &msg.PhoneActionRestarted{}
+		err = t17.Unmarshal(data)
 		if err != nil {
 			return
 		}
-		return t15, nil
+		return t17, nil
 	}
 	return nil, ErrActionNotFound
 }

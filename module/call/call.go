@@ -1,12 +1,3 @@
-/*
-   Creation Time: 2021 - April - 04
-   Created by:  (hamidrezakk)
-   Maintainers:
-      1.  HamidrezaKK (hamidrezakks@gmail.com)
-   Auditor: HamidrezaKK
-   Copyright Ronak Software Group 2021
-*/
-
 package call
 
 import (
@@ -15,6 +6,15 @@ import (
 	"git.ronaksoft.com/river/sdk/module"
 	"sync"
 )
+
+/*
+   Creation Time: 2021 - May - 19
+   Created by:  (Hamidrezakk)
+   Maintainers:
+      1.  Hamidrezakk
+   Auditor: Hamidrezakk
+   Copyright Ronak Software Group 2021
+*/
 
 const (
 	RetryInterval    = 10

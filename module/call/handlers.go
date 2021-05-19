@@ -6,6 +6,15 @@ import (
 	"github.com/ronaksoft/rony"
 )
 
+/*
+   Creation Time: 2021 - May - 19
+   Created by:  (Hamidrezakk)
+   Maintainers:
+      1.  Hamidrezakk
+   Auditor: Hamidrezakk
+   Copyright Ronak Software Group 2021
+*/
+
 func (c *call) toggleVideoHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.ClientCallToggleVideo{}
 	if err := req.Unmarshal(in.Message); err != nil {
