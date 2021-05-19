@@ -1712,7 +1712,7 @@ func (c *call) iceExchange(in *UpdatePhoneCall) {
 		UsernameFragment: data.UsernameFragment,
 	}
 
-	_ = c.CallbackAddIceCandidate(connId,iceCandidate)
+	_ = c.CallbackAddIceCandidate(connId, iceCandidate)
 }
 
 func (c *call) mediaSettingsUpdated(in *UpdatePhoneCall) {
@@ -1729,7 +1729,18 @@ func (c *call) mediaSettingsUpdated(in *UpdatePhoneCall) {
 	info.participants[connId].MediaSettings.ScreenShare = data.ScreenShare
 	info.mu.Unlock()
 
-	// TOO Call -> msg.CallUpdate_MediaSettingsUpdated
+	update := msg.CallUpdateMediaSettingsUpdated{
+		ConnectionID: connId,
+		MediaSettings: &msg.CallMediaSettings{
+			Video:       data.Audio,
+			Audio:       data.Video,
+			ScreenShare: data.ScreenShare,
+		},
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_MediaSettingsUpdated, updateData)
+	}
 }
 
 func (c *call) sdpOfferUpdated(in *UpdatePhoneCall) {
