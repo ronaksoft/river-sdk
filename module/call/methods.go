@@ -1732,8 +1732,8 @@ func (c *call) mediaSettingsUpdated(in *UpdatePhoneCall) {
 	update := msg.CallUpdateMediaSettingsUpdated{
 		ConnectionID: connId,
 		MediaSettings: &msg.CallMediaSettings{
-			Video:       data.Audio,
-			Audio:       data.Video,
+			Video:       data.Video,
+			Audio:       data.Audio,
 			ScreenShare: data.ScreenShare,
 		},
 	}
