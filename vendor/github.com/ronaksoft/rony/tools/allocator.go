@@ -1,10 +1,9 @@
-package store
+package tools
 
 import (
 	"encoding/binary"
 	"fmt"
 	"github.com/ronaksoft/rony/pools"
-	"github.com/ronaksoft/rony/tools"
 	"google.golang.org/protobuf/proto"
 	"reflect"
 )
@@ -36,7 +35,7 @@ func NewAllocator() *Allocator {
 func (bk *Allocator) Gen(v ...interface{}) []byte {
 	b := pools.Buffer.GetLen(1 + getSize(v...))
 	var buf [8]byte
-	b.Fill(prefix, 0, 1)
+	b.CopyFrom(prefix)
 	idx := 1
 	for _, x := range v {
 		t := reflect.TypeOf(x)
@@ -76,7 +75,7 @@ func (bk *Allocator) Gen(v ...interface{}) []byte {
 			}
 
 		case reflect.String:
-			xb := tools.StrToByte(reflect.ValueOf(x).String())
+			xb := StrToByte(reflect.ValueOf(x).String())
 			b.Fill(xb, idx, idx+len(xb))
 			idx += len(xb)
 		default:
@@ -130,7 +129,7 @@ func getSize(v ...interface{}) int {
 			}
 
 		case reflect.String:
-			xb := tools.StrToByte(reflect.ValueOf(x).String())
+			xb := StrToByte(reflect.ValueOf(x).String())
 			s += len(xb)
 		default:
 			panic(fmt.Sprintf("unsupported type: %s", reflect.TypeOf(x).Kind()))

@@ -5,7 +5,6 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/boltdb/bolt"
-	"github.com/ronaksoft/rony/store"
 	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
 	"strings"
@@ -41,7 +40,7 @@ func newDialog(r *repository) *repoDialogs {
 }
 
 func (d *repoDialogs) Save(dialogs ...*msg.Dialog) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -71,7 +70,7 @@ func (d *repoDialogs) Save(dialogs ...*msg.Dialog) error {
 }
 
 func (d *repoDialogs) Delete(teamID int64, peerID int64, peerType int32) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -88,7 +87,7 @@ func (d *repoDialogs) Delete(teamID int64, peerID int64, peerType int32) error {
 }
 
 func (d *repoDialogs) Read(teamID int64, peerID int64, peerType int32) (*msg.Dialog, error) {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	dialog := &msg.Dialog{}
@@ -109,7 +108,7 @@ func (d *repoDialogs) Read(teamID int64, peerID int64, peerType int32) (*msg.Dia
 
 func (d *repoDialogs) List(teamID int64, offset, limit int32) ([]*msg.Dialog, error) {
 	dialogs := make([]*msg.Dialog, 0, limit)
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	err := d.index.View(func(tx *buntdb.Tx) error {

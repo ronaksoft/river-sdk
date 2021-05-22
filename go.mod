@@ -16,7 +16,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.7.0
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
-	github.com/getsentry/sentry-go v0.9.0
+	github.com/getsentry/sentry-go v0.10.0
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
 	github.com/gobwas/pool v0.2.1
 	github.com/gobwas/ws v1.0.4
@@ -28,7 +28,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/ronaksoft/rony v0.6.57
+	github.com/ronaksoft/rony v0.8.1
 	github.com/siongui/instago v0.0.0-20200627103523-54424cb565ea
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.1.1

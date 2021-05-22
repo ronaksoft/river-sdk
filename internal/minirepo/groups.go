@@ -4,7 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/boltdb/bolt"
-	"github.com/ronaksoft/rony/store"
+	"github.com/ronaksoft/rony/tools"
 	"strings"
 )
 
@@ -33,7 +33,7 @@ func newGroup(r *repository) *repoGroups {
 }
 
 func (d *repoGroups) Save(groups ...*msg.Group) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -52,7 +52,7 @@ func (d *repoGroups) Save(groups ...*msg.Group) error {
 }
 
 func (d *repoGroups) Delete(teamID int64, groupID int64) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -66,7 +66,7 @@ func (d *repoGroups) Delete(teamID int64, groupID int64) error {
 }
 
 func (d *repoGroups) Read(teamID int64, groupID int64) (*msg.Group, error) {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	group := &msg.Group{}
@@ -85,7 +85,7 @@ func (d *repoGroups) Read(teamID int64, groupID int64) (*msg.Group, error) {
 }
 
 func (d *repoGroups) ReadMany(teamID int64, groupIDs ...int64) ([]*msg.Group, error) {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	groups := make([]*msg.Group, 0, len(groupIDs))
@@ -108,7 +108,7 @@ func (d *repoGroups) ReadMany(teamID int64, groupIDs ...int64) ([]*msg.Group, er
 }
 
 func (d *repoGroups) Search(phrase string, limit int) []*msg.Group {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	groups := make([]*msg.Group, 0, limit)

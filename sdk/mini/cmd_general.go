@@ -6,6 +6,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"runtime"
@@ -158,9 +159,9 @@ func executeRemoteCommand(
 	if res == nil {
 		res = &rony.MessageEnvelope{}
 		if err != nil {
-			rony.ErrorMessage(res, requestID, "E100", err.Error())
+			errors.New("E100", err.Error()).ToEnvelope(res)
 		} else {
-			rony.ErrorMessage(res, requestID, "E100", "Nil Response")
+			errors.New("E100", "Nil Response").ToEnvelope(res)
 		}
 	}
 

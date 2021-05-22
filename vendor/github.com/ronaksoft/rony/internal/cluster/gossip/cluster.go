@@ -2,18 +2,14 @@ package gossipCluster
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/memberlist"
-	"github.com/hashicorp/raft"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/internal/cluster"
 	"github.com/ronaksoft/rony/internal/log"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
+	"hash/crc64"
 	"io/ioutil"
-	"net"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 )
@@ -26,33 +22,30 @@ import (
    Auditor: Ehsan N. Moosa (E2)
    Copyright Ronak Software Group 2020
 */
+var (
+	crcTable = crc64.MakeTable(crc64.ISO)
+)
 
 type Config struct {
 	ServerID   []byte
 	Bootstrap  bool
-	RaftPort   int
 	ReplicaSet uint64
-	Mode       cluster.Mode
 	GossipPort int
 }
 
 type Cluster struct {
-	cluster.ReplicaMessageHandler
 	dataPath         string
 	cfg              Config
 	mtx              sync.RWMutex
 	localServerID    []byte
 	localGatewayAddr []string
 	localTunnelAddr  []string
-	replicaLeaderID  string
-	replicaMembers   map[uint64]map[string]*Member
-	clusterMembers   map[string]*Member
-
-	// Raft & Gossip
-	raftFSM       raftFSM
-	raft          *raft.Raft
-	gossip        *memberlist.Memberlist
-	rateLimitChan chan struct{}
+	membersByReplica map[uint64]map[string]*Member
+	membersByID      map[string]*Member
+	membersByHash    map[uint64]*Member
+	gossip           *memberlist.Memberlist
+	rateLimitChan    chan struct{}
+	subscriber       cluster.Delegate
 }
 
 func New(dataPath string, cfg Config) *Cluster {
@@ -60,21 +53,16 @@ func New(dataPath string, cfg Config) *Cluster {
 		cfg.GossipPort = 7946
 	}
 
-	switch cfg.Mode {
-	case cluster.MultiReplica, cluster.SingleReplica:
-	default:
-		panic("only singleReplica and multiReplica supported")
-	}
 	c := &Cluster{
-		dataPath:       dataPath,
-		cfg:            cfg,
-		localServerID:  cfg.ServerID,
-		clusterMembers: make(map[string]*Member, 100),
-		replicaMembers: make(map[uint64]map[string]*Member, 100),
-		rateLimitChan:  make(chan struct{}, clusterMessageRateLimit),
+		dataPath:         dataPath,
+		cfg:              cfg,
+		localServerID:    cfg.ServerID,
+		membersByID:      make(map[string]*Member, 4096),
+		membersByReplica: make(map[uint64]map[string]*Member, 1024),
+		membersByHash:    make(map[uint64]*Member, 4096),
+		rateLimitChan:    make(chan struct{}, clusterMessageRateLimit),
 	}
 
-	c.raftFSM = raftFSM{c: c}
 	return c
 }
 
@@ -104,109 +92,28 @@ func (c *Cluster) startGossip() error {
 	return c.updateCluster(gossipUpdateTimeout)
 }
 
-func (c *Cluster) startRaft(notifyChan chan bool) (err error) {
-	// Initialize LogStore for Raft
-	dirPath := filepath.Join(c.dataPath, "raft")
-	_ = os.MkdirAll(dirPath, os.ModePerm)
-
-	// Initialize Raft
-	raftConfig := raft.DefaultConfig()
-	raftConfig.LogLevel = "WARN"
-	raftConfig.NotifyCh = notifyChan
-	raftConfig.Logger = hclog.NewNullLogger()
-	raftConfig.LocalID = raft.ServerID(c.localServerID)
-
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return err
-	}
-
-	var raftAdvertiseAddr *net.TCPAddr
-	var raftBind string
-	for _, addr := range addrs {
-		ipNet, ok := addr.(*net.IPNet)
-		if ok {
-			if ipNet.IP == nil || ipNet.IP.IsLoopback() || ipNet.IP.To4() == nil {
-				continue
-			}
-			raftBind = fmt.Sprintf("%s:%d", ipNet.IP.String(), c.cfg.RaftPort)
-			raftAdvertiseAddr, err = net.ResolveTCPAddr("tcp", raftBind)
-			if err != nil {
-				return err
-			}
-			break
-		}
-	}
-
-	raftTransport, err := raft.NewTCPTransport(raftBind, raftAdvertiseAddr, 3, 10*time.Second, os.Stdout)
-	if err != nil {
-		return err
-	}
-
-	raftSnapshot, err := raft.NewFileSnapshotStore(dirPath, 3, os.Stdout)
-	if err != nil {
-		return err
-	}
-
-	badgerStore := &BadgerStore{}
-	c.raft, err = raft.NewRaft(raftConfig, c.raftFSM, badgerStore, badgerStore, raftSnapshot, raftTransport)
-	if err != nil {
-		return err
-	}
-
-	if c.cfg.Bootstrap {
-		bootConfig := raft.Configuration{
-			Servers: []raft.Server{
-				{
-					ID:      raftConfig.LocalID,
-					Address: raftTransport.LocalAddr(),
-				},
-			},
-		}
-		f := c.raft.BootstrapCluster(bootConfig)
-		if err := f.Error(); err != nil {
-			if err == raft.ErrCantBootstrap {
-				log.Info("Error On Raft Bootstrap", zap.Error(err))
-			} else {
-				log.Warn("Error On Raft Bootstrap", zap.Error(err))
-			}
-
-		}
-	}
-
-	return nil
-}
-
 func (c *Cluster) addMember(m *Member) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
-	// set the raft leader if the newly added member is the leader and is in our replica set
-	if m.replicaSet == c.cfg.ReplicaSet && m.raftState == rony.RaftState_Leader {
-		c.replicaLeaderID = m.serverID
-	}
-
 	// add new member to the cluster
-	c.clusterMembers[m.serverID] = m
-	if c.replicaMembers[m.replicaSet] == nil {
-		c.replicaMembers[m.replicaSet] = make(map[string]*Member, 5)
+	c.membersByID[m.serverID] = m
+	c.membersByHash[m.hash] = m
+	if c.membersByReplica[m.replicaSet] == nil {
+		c.membersByReplica[m.replicaSet] = make(map[string]*Member, 5)
 	}
-	c.replicaMembers[m.replicaSet][m.serverID] = m
+	c.membersByReplica[m.replicaSet][m.serverID] = m
 }
 
 func (c *Cluster) removeMember(en *rony.EdgeNode) {
+	serverID := tools.B2S(en.ServerID)
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
-	serverID := tools.B2S(en.ServerID)
-	if serverID == c.replicaLeaderID {
-		c.replicaLeaderID = ""
-	}
-
-	delete(c.clusterMembers, serverID)
-
-	if c.replicaMembers[en.ReplicaSet] != nil {
-		delete(c.replicaMembers[en.ReplicaSet], serverID)
+	delete(c.membersByID, serverID)
+	delete(c.membersByHash, en.Hash)
+	if c.membersByReplica[en.ReplicaSet] != nil {
+		delete(c.membersByReplica[en.ReplicaSet], serverID)
 	}
 }
 
@@ -215,29 +122,6 @@ func (c *Cluster) Start() {
 	if err != nil {
 		return
 	}
-
-	if c.cfg.Mode == cluster.MultiReplica {
-		notifyChan := make(chan bool, 1)
-		err := c.startRaft(notifyChan)
-		if err != nil {
-			log.Warn("Error On Starting Raft", zap.Error(err))
-			return
-		}
-		go func() {
-			for range notifyChan {
-				err := tools.Try(10, time.Millisecond, func() error {
-					return c.updateCluster(gossipUpdateTimeout)
-				})
-				if err != nil {
-					log.Warn("Rony got error on updating the cluster",
-						zap.Error(err),
-						zap.ByteString("ID", c.localServerID),
-					)
-				}
-			}
-		}()
-	}
-
 }
 
 func (c *Cluster) Join(addr ...string) (int, error) {
@@ -245,24 +129,6 @@ func (c *Cluster) Join(addr ...string) (int, error) {
 }
 
 func (c *Cluster) Shutdown() {
-	//  shutdown raft, if it is enabled
-	if c.cfg.Mode == cluster.MultiReplica {
-		if f := c.raft.Snapshot(); f.Error() != nil {
-			if f.Error() != raft.ErrNothingNewToSnapshot {
-				log.Warn("Error On Shutdown (Raft Snapshot)",
-					zap.Error(f.Error()),
-					zap.ByteString("ServerID", c.localServerID),
-				)
-			} else {
-				log.Info("Error On Shutdown (Raft Snapshot)", zap.Error(f.Error()))
-			}
-
-		}
-		if f := c.raft.Shutdown(); f.Error() != nil {
-			log.Warn("Error On Shutdown (Raft Shutdown)", zap.Error(f.Error()))
-		}
-	}
-
 	// Shutdown gossip
 	err := c.gossip.Leave(gossipLeaveTimeout)
 	if err != nil {
@@ -275,58 +141,54 @@ func (c *Cluster) Shutdown() {
 
 }
 
+func (c *Cluster) ServerID() []byte {
+	return c.localServerID
+}
+
 func (c *Cluster) Members() []cluster.Member {
 	members := make([]cluster.Member, 0, 16)
 	c.mtx.RLock()
-	for _, cm := range c.clusterMembers {
+	for _, cm := range c.membersByID {
 		members = append(members, cm)
 	}
 	c.mtx.RUnlock()
 	return members
+}
+
+func (c *Cluster) MembersByReplicaSet(replicaSets ...uint64) []cluster.Member {
+	members := make([]cluster.Member, 0, 16)
+	c.mtx.RLock()
+	for _, rs := range replicaSets {
+		for _, cm := range c.membersByReplica[rs] {
+			members = append(members, cm)
+		}
+	}
+	c.mtx.RUnlock()
+	return members
+}
+
+func (c *Cluster) MemberByHash(h uint64) cluster.Member {
+	c.mtx.RLock()
+	m := c.membersByHash[h]
+	c.mtx.RUnlock()
+	if m == nil {
+		return nil
+	}
+	return m
+}
+
+func (c *Cluster) MemberByID(serverID string) cluster.Member {
+	c.mtx.RLock()
+	m := c.membersByID[serverID]
+	c.mtx.RUnlock()
+	if m == nil {
+		return nil
+	}
+	return m
 }
 
 func (c *Cluster) TotalReplicas() int {
-	return len(c.replicaMembers)
-}
-
-func (c *Cluster) RaftEnabled() bool {
-	return c.raft != nil
-}
-
-func (c *Cluster) RaftState() raft.RaftState {
-	switch c.cfg.Mode {
-	case cluster.SingleReplica:
-		return raft.Leader
-	case cluster.MultiReplica:
-		return c.raft.State()
-	default:
-		panic("unsupported replica mode")
-	}
-}
-
-func (c *Cluster) RaftApply(cmd []byte) raft.ApplyFuture {
-	switch c.cfg.Mode {
-	case cluster.SingleReplica:
-		return nil
-	case cluster.MultiReplica:
-		return c.raft.Apply(cmd, raftApplyTimeout)
-	default:
-		panic("unsupported replica mode")
-	}
-}
-
-func (c *Cluster) RaftMembers(replicaSet uint64) []cluster.Member {
-	members := make([]cluster.Member, 0, 8)
-	c.mtx.RLock()
-	for _, cm := range c.replicaMembers[replicaSet] {
-		members = append(members, cm)
-	}
-	c.mtx.RUnlock()
-	return members
-}
-
-func (c *Cluster) RaftLeaderID() string {
-	return c.replicaLeaderID
+	return len(c.membersByReplica)
 }
 
 func (c *Cluster) SetGatewayAddrs(hostPorts []string) error {
@@ -345,4 +207,8 @@ func (c *Cluster) Addr() string {
 
 func (c *Cluster) ReplicaSet() uint64 {
 	return c.cfg.ReplicaSet
+}
+
+func (c *Cluster) Subscribe(d cluster.Delegate) {
+	c.subscriber = d
 }

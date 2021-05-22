@@ -1,4 +1,4 @@
-package store
+package localdb
 
 import (
 	"time"
@@ -21,9 +21,19 @@ const (
 )
 
 type Config struct {
-	DB                  *LocalDB
+	DirPath             string
 	ConflictRetries     int
 	ConflictMaxInterval time.Duration
 	BatchWorkers        int
 	BatchSize           int
+}
+
+func DefaultConfig(dataPath string) Config {
+	return Config{
+		DirPath:             dataPath,
+		ConflictRetries:     100,
+		ConflictMaxInterval: time.Millisecond,
+		BatchSize:           defaultBatchSize,
+		BatchWorkers:        defaultBatchWorkers,
+	}
 }

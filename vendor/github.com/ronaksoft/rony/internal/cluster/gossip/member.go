@@ -6,7 +6,6 @@ import (
 	"github.com/ronaksoft/rony"
 	"google.golang.org/protobuf/proto"
 	"net"
-	"sync"
 )
 
 /*
@@ -19,25 +18,18 @@ import (
 */
 
 type Member struct {
-	mtx         sync.RWMutex
 	idx         int
 	serverID    string
 	replicaSet  uint64
-	ShardRange  [2]uint32
+	hash        uint64
 	gatewayAddr []string
 	tunnelAddr  []string
 	ClusterAddr net.IP
 	ClusterPort uint16
-	raftPort    int
-	raftState   rony.RaftState
 }
 
 func (m *Member) ServerID() string {
 	return m.serverID
-}
-
-func (m *Member) RaftState() rony.RaftState {
-	return m.raftState
 }
 
 func (m *Member) ReplicaSet() uint64 {
@@ -52,10 +44,6 @@ func (m *Member) TunnelAddr() []string {
 	return m.tunnelAddr
 }
 
-func (m *Member) RaftPort() int {
-	return m.raftPort
-}
-
 func (m *Member) Proto(p *rony.Edge) *rony.Edge {
 	if p == nil {
 		p = &rony.Edge{}
@@ -63,7 +51,6 @@ func (m *Member) Proto(p *rony.Edge) *rony.Edge {
 	p.ReplicaSet = m.replicaSet
 	p.ServerID = m.serverID
 	p.HostPorts = append(p.HostPorts, m.gatewayAddr...)
-	p.Leader = m.raftState == rony.RaftState_Leader
 	return p
 }
 
@@ -71,13 +58,9 @@ func (m *Member) Merge(en *rony.EdgeNode) {
 	m.replicaSet = en.GetReplicaSet()
 	m.gatewayAddr = append(m.gatewayAddr[:0], en.GetGatewayAddr()...)
 	m.tunnelAddr = append(m.tunnelAddr[:0], en.GetTunnelAddr()...)
-
-	// merge raft
-	m.raftPort = int(en.GetRaftPort())
-	m.raftState = en.GetRaftState()
 }
 
-func (m *Member) TunnelConn() (net.Conn, error) {
+func (m *Member) Dial() (net.Conn, error) {
 	if len(m.tunnelAddr) == 0 {
 		return nil, ErrNoTunnelAddrs
 	}
@@ -107,6 +90,7 @@ func newMember(sm *memberlist.Node) (*Member, error) {
 
 	m := &Member{
 		serverID:    string(en.ServerID),
+		hash:        en.Hash,
 		ClusterAddr: sm.Addr,
 		ClusterPort: sm.Port,
 	}

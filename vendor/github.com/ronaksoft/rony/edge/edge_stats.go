@@ -16,8 +16,6 @@ import (
 // Stats exports some internal metrics data
 type Stats struct {
 	Address         string
-	RaftMembers     int
-	RaftState       string
 	ReplicaSet      uint64
 	Members         int
 	MembershipScore int
@@ -28,12 +26,11 @@ type Stats struct {
 
 // Stats exports some internal metrics data packed in 'Stats' struct
 func (edge *Server) Stats() *Stats {
-	s := Stats{
-		GatewayProtocol: edge.gatewayProtocol,
-	}
+	s := Stats{}
 
 	if edge.gateway != nil {
 		s.GatewayAddr = edge.gateway.Addr()
+		s.GatewayProtocol = edge.gateway.Protocol()
 	}
 
 	if edge.tunnel != nil {
@@ -44,8 +41,6 @@ func (edge *Server) Stats() *Stats {
 		s.ReplicaSet = edge.cluster.ReplicaSet()
 		s.Address = edge.cluster.Addr()
 		s.Members = len(edge.cluster.Members())
-		s.RaftMembers = len(edge.cluster.RaftMembers(s.ReplicaSet))
-		s.RaftState = edge.cluster.RaftState().String()
 	}
 
 	return &s

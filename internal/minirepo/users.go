@@ -5,7 +5,6 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/boltdb/bolt"
-	"github.com/ronaksoft/rony/store"
 	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
 	"strings"
@@ -43,7 +42,7 @@ func newUser(r *repository) *repoUsers {
 	return rd
 }
 
-func (d *repoUsers) getUser(alloc *store.Allocator, b *bolt.Bucket, userID int64) (*msg.User, error) {
+func (d *repoUsers) getUser(alloc *tools.Allocator, b *bolt.Bucket, userID int64) (*msg.User, error) {
 	v := b.Get(alloc.Gen(userID))
 	if len(v) == 0 {
 		return nil, domain.ErrNotFound
@@ -53,7 +52,7 @@ func (d *repoUsers) getUser(alloc *store.Allocator, b *bolt.Bucket, userID int64
 	return u, nil
 }
 
-func (d *repoUsers) saveContact(alloc *store.Allocator, tx *bolt.Tx, contact *msg.ContactUser, lastSeen int64) error {
+func (d *repoUsers) saveContact(alloc *tools.Allocator, tx *bolt.Tx, contact *msg.ContactUser, lastSeen int64) error {
 	b := tx.Bucket(bucketContacts)
 	err := b.Put(
 		alloc.Gen(contact.ID),
@@ -77,7 +76,7 @@ func (d *repoUsers) saveContact(alloc *store.Allocator, tx *bolt.Tx, contact *ms
 }
 
 func (d *repoUsers) DeleteContact(userID int64) {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	_ = d.db.Update(func(tx *bolt.Tx) error {
@@ -93,7 +92,7 @@ func (d *repoUsers) DeleteContact(userID int64) {
 }
 
 func (d *repoUsers) SaveUser(users ...*msg.User) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -145,7 +144,7 @@ func (d *repoUsers) SaveAllContacts(newContacts *msg.ContactsMany) error {
 		}
 	}
 
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 	err = d.db.Update(func(tx *bolt.Tx) error {
 		for _, cu := range newContacts.ContactUsers {
@@ -181,7 +180,7 @@ func (d *repoUsers) ReadAllContacts() (*msg.ContactsMany, error) {
 		return nil, err
 	}
 
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	for _, c := range res.ContactUsers {
@@ -198,7 +197,7 @@ func (d *repoUsers) ReadAllContacts() (*msg.ContactsMany, error) {
 }
 
 func (d *repoUsers) ReadUser(userID int64) (*msg.User, error) {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	var (
@@ -217,7 +216,7 @@ func (d *repoUsers) ReadUser(userID int64) (*msg.User, error) {
 }
 
 func (d *repoUsers) ReadMany(userIDs ...int64) ([]*msg.User, error) {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	var (

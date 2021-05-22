@@ -10,6 +10,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
@@ -72,7 +73,8 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da domain.
 	if thumbID != 0 {
 		err := r.uploadFile(in, nil, thumbID, reqMedia.ThumbFilePath, reqMedia.Peer.ID)
 		if err != nil {
-			rony.ErrorMessage(out, in.RequestID, "E100", err.Error())
+			out.RequestID = in.RequestID
+			errors.New("E100", err.Error()).ToEnvelope(out)
 			da.OnComplete(out)
 			return
 		}
@@ -118,7 +120,8 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da domain.
 	} else {
 		err := r.uploadFile(in, da, fileID, reqMedia.FilePath, reqMedia.Peer.ID)
 		if err != nil {
-			rony.ErrorMessage(out, in.RequestID, "E100", err.Error())
+			out.RequestID = in.RequestID
+			errors.New("E100", err.Error()).ToEnvelope(out)
 			da.OnComplete(out)
 			return
 		}

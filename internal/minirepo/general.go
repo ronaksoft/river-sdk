@@ -3,7 +3,7 @@ package minirepo
 import (
 	"encoding/binary"
 	"github.com/boltdb/bolt"
-	"github.com/ronaksoft/rony/store"
+	"github.com/ronaksoft/rony/tools"
 )
 
 /*
@@ -31,7 +31,7 @@ func newGeneral(r *repository) *repoGenerals {
 }
 
 func (d *repoGenerals) Save(key, val []byte) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -45,7 +45,7 @@ func (d *repoGenerals) Save(key, val []byte) error {
 }
 
 func (d *repoGenerals) SaveInt64(key []byte, val int64) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -61,7 +61,7 @@ func (d *repoGenerals) SaveInt64(key []byte, val int64) error {
 }
 
 func (d *repoGenerals) SaveUInt64(key []byte, val uint64) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -77,7 +77,7 @@ func (d *repoGenerals) SaveUInt64(key []byte, val uint64) error {
 }
 
 func (d *repoGenerals) SaveInt32(key []byte, val int32) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -93,7 +93,7 @@ func (d *repoGenerals) SaveInt32(key []byte, val int32) error {
 }
 
 func (d *repoGenerals) SaveUInt32(key []byte, val uint32) error {
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {

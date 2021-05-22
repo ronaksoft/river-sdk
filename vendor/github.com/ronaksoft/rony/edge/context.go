@@ -5,6 +5,7 @@ import (
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/internal/cluster"
 	"github.com/ronaksoft/rony/internal/log"
+	"github.com/ronaksoft/rony/store"
 	"github.com/ronaksoft/rony/tools"
 	"google.golang.org/protobuf/proto"
 	"reflect"
@@ -26,14 +27,12 @@ type MessageKind byte
 const (
 	_ MessageKind = iota
 	GatewayMessage
-	ReplicaMessage
 	TunnelMessage
 )
 
 var (
 	messageKindNames = map[MessageKind]string{
 		GatewayMessage: "GatewayMessage",
-		ReplicaMessage: "ReplicatedMessage",
 		TunnelMessage:  "TunnelMessage",
 	}
 )
@@ -235,6 +234,10 @@ func (ctx *RequestCtx) Stopped() bool {
 	return ctx.stop
 }
 
+func (ctx *RequestCtx) Store() store.Store {
+	return ctx.edge.store
+}
+
 func (ctx *RequestCtx) Set(key string, v interface{}) {
 	ctx.dispatchCtx.mtx.Lock()
 	ctx.dispatchCtx.kv[key] = v
@@ -266,25 +269,13 @@ func (ctx *RequestCtx) pushRedirect(reason rony.RedirectReason, replicaSet uint6
 	r.Reason = reason
 	r.WaitInSec = 0
 
-	members := ctx.Cluster().RaftMembers(replicaSet)
+	members := ctx.Cluster().MembersByReplicaSet(replicaSet)
 	for _, m := range members {
 		ni := m.Proto(rony.PoolEdge.Get())
-		if ni.Leader {
-			r.Leader = ni
-		} else {
-			r.Followers = append(r.Followers, ni)
-		}
+		r.Edges = append(r.Edges, ni)
 	}
 	ctx.PushMessage(rony.C_Redirect, r)
 	rony.PoolRedirect.Put(r)
-}
-
-func (ctx *RequestCtx) PushRedirectLeader() {
-	if leaderID := ctx.Cluster().RaftLeaderID(); leaderID == "" {
-		ctx.PushError(rony.ErrCodeUnavailable, rony.ErrItemRaftLeader)
-		return
-	}
-	ctx.pushRedirect(rony.RedirectReason_ReplicaMaster, ctx.Cluster().ReplicaSet())
 }
 
 func (ctx *RequestCtx) PushRedirectSession(replicaSet uint64, wait time.Duration) {
@@ -300,10 +291,6 @@ func (ctx *RequestCtx) PushMessage(constructor int64, proto proto.Message) {
 }
 
 func (ctx *RequestCtx) PushCustomMessage(requestID uint64, constructor int64, message proto.Message, kvs ...*rony.KeyValue) {
-	if ctx.dispatchCtx.kind == ReplicaMessage {
-		return
-	}
-
 	envelope := rony.PoolMessageEnvelope.Get()
 	envelope.Fill(requestID, constructor, message)
 	envelope.Header = append(envelope.Header[:0], kvs...)
@@ -311,7 +298,7 @@ func (ctx *RequestCtx) PushCustomMessage(requestID uint64, constructor int64, me
 	switch ctx.dispatchCtx.kind {
 	case GatewayMessage:
 		if ctx.Conn().Persistent() {
-			ctx.edge.gatewayDispatcher.OnMessage(ctx.dispatchCtx, envelope)
+			ctx.edge.dispatcher.OnMessage(ctx.dispatchCtx, envelope)
 		} else {
 			ctx.dispatchCtx.BufferPush(envelope.Clone())
 		}
@@ -322,8 +309,9 @@ func (ctx *RequestCtx) PushCustomMessage(requestID uint64, constructor int64, me
 	rony.PoolMessageEnvelope.Put(envelope)
 }
 
-func (ctx *RequestCtx) PushError(code, item string) {
-	ctx.PushCustomError(code, item, "")
+func (ctx *RequestCtx) PushError(err *rony.Error) {
+	ctx.PushMessage(rony.C_Error, err)
+	ctx.stop = true
 }
 
 func (ctx *RequestCtx) PushCustomError(code, item string, desc string) {
@@ -339,12 +327,12 @@ func (ctx *RequestCtx) Cluster() cluster.Cluster {
 	return ctx.dispatchCtx.edge.cluster
 }
 
-func (ctx *RequestCtx) TryExecuteRemote(attempts int, retryWait time.Duration, replicaSet uint64, onlyLeader bool, req, res *rony.MessageEnvelope) error {
-	return ctx.edge.TryExecuteRemote(attempts, retryWait, replicaSet, onlyLeader, req, res)
+func (ctx *RequestCtx) TryExecuteRemote(attempts int, retryWait time.Duration, replicaSet uint64, req, res *rony.MessageEnvelope) error {
+	return ctx.edge.TryExecuteRemote(attempts, retryWait, replicaSet, req, res)
 }
 
-func (ctx *RequestCtx) ExecuteRemote(replicaSet uint64, onlyLeader bool, req, res *rony.MessageEnvelope) error {
-	return ctx.edge.TryExecuteRemote(1, 0, replicaSet, onlyLeader, req, res)
+func (ctx *RequestCtx) ExecuteRemote(replicaSet uint64, req, res *rony.MessageEnvelope) error {
+	return ctx.edge.TryExecuteRemote(1, 0, replicaSet, req, res)
 }
 
 func (ctx *RequestCtx) ClusterView(replicaSet uint64, edges *rony.Edges) (*rony.Edges, error) {
@@ -352,8 +340,8 @@ func (ctx *RequestCtx) ClusterView(replicaSet uint64, edges *rony.Edges) (*rony.
 	defer rony.PoolMessageEnvelope.Put(req)
 	res := rony.PoolMessageEnvelope.Get()
 	defer rony.PoolMessageEnvelope.Put(res)
-	req.Fill(tools.RandomUint64(0), rony.C_GetNodes, &rony.GetNodes{})
-	err := ctx.ExecuteRemote(replicaSet, true, req, res)
+	req.Fill(tools.RandomUint64(0), rony.C_GetAllNodes, &rony.GetAllNodes{})
+	err := ctx.ExecuteRemote(replicaSet, req, res)
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +384,7 @@ func (ctx *RequestCtx) FindReplicaSet(pageID uint32) (uint64, error) {
 		getPage.PageID = pageID
 		getPage.ReplicaSet = ctx.Cluster().ReplicaSet()
 		req.Fill(uint64(tools.FastRand()<<31|tools.FastRand()), rony.C_GetPage, getPage)
-		err = ctx.ExecuteRemote(1, true, req, res)
+		err = ctx.ExecuteRemote(1, req, res)
 		if err != nil {
 			return 0, err
 		}

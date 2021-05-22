@@ -16,17 +16,12 @@ import (
 */
 
 //go:generate protoc -I=. --go_out=paths=source_relative:. imsg.proto msg.proto options.proto
-//go:generate protoc -I=. --gorony_out=paths=source_relative:. imsg.proto msg.proto
+//go:generate protoc -I=. --gorony_out=paths=source_relative,option=no_edge_dep:. imsg.proto msg.proto
 func init() {}
 
-func ErrorMessage(out *MessageEnvelope, reqID uint64, errCode, errItem string) {
-	errMessage := PoolError.Get()
-	errMessage.Code = errCode
-	errMessage.Items = errItem
-	out.Fill(reqID, C_Error, errMessage)
-	PoolError.Put(errMessage)
-	return
-}
+/*
+	Extra methods for MessageEnvelope
+*/
 
 func (x *MessageEnvelope) Clone() *MessageEnvelope {
 	c := PoolMessageEnvelope.Get()
@@ -53,12 +48,8 @@ func (x *MessageEnvelope) Fill(reqID uint64, constructor int64, p proto.Message,
 	x.Constructor = constructor
 	x.Header = append(x.Header[:0], kvs...)
 
-	mo := proto.MarshalOptions{
-		UseCachedSize: true,
-	}
-	buf := pools.Buffer.GetCap(mo.Size(p))
-	b, _ := mo.MarshalAppend(*buf.Bytes(), p)
-	x.Message = append(x.Message[:0], b...)
+	buf := pools.Buffer.FromProto(p)
+	x.Message = append(x.Message[:0], *buf.Bytes()...)
 	pools.Buffer.Put(buf)
 }
 
@@ -75,6 +66,9 @@ func (x *MessageEnvelope) Set(KVs ...*KeyValue) {
 	x.Header = append(x.Header[:0], KVs...)
 }
 
+/*
+	Extra methods for MessageContainer
+*/
 func (x *MessageContainer) Add(reqID uint64, constructor int64, p proto.Message, kvs ...*KeyValue) {
 	me := PoolMessageEnvelope.Get()
 	me.Fill(reqID, constructor, p, kvs...)
@@ -82,14 +76,9 @@ func (x *MessageContainer) Add(reqID uint64, constructor int64, p proto.Message,
 	x.Length += 1
 }
 
-func (x *RaftCommand) Fill(senderID []byte, e *MessageEnvelope, kvs ...*KeyValue) {
-	x.Sender = append(x.Sender[:0], senderID...)
-	x.Store = append(x.Store[:0], kvs...)
-	if x.Envelope == nil {
-		x.Envelope = PoolMessageEnvelope.Get()
-	}
-	e.DeepCopy(x.Envelope)
-}
+/*
+	Extra methods for TunnelMessage
+*/
 
 func (x *TunnelMessage) Fill(senderID []byte, senderReplicaSet uint64, e *MessageEnvelope, kvs ...*KeyValue) {
 	x.SenderID = append(x.SenderID[:0], senderID...)
@@ -101,10 +90,21 @@ func (x *TunnelMessage) Fill(senderID []byte, senderReplicaSet uint64, e *Messag
 	e.DeepCopy(x.Envelope)
 }
 
+/*
+	Extra methods for Error
+*/
 func (x *Error) Error() string {
 	if len(x.Description) > 0 {
 		return fmt.Sprintf("%s:%s (%s)", x.Code, x.Items, x.Description)
 	} else {
 		return fmt.Sprintf("%s:%s", x.Code, x.Items)
 	}
+}
+
+func (x *Error) Expand() (string, string) {
+	return x.Code, x.Items
+}
+
+func (x *Error) ToEnvelope(me *MessageEnvelope) {
+	me.Fill(me.RequestID, C_Error, x)
 }

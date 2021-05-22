@@ -19,23 +19,21 @@ type (
 
 // HandlerOption is a structure holds all the information required for a handler.
 type HandlerOption struct {
-	constructors     map[int64]struct{}
-	handlers         []Handler
-	inconsistentRead bool
-	tunnel           bool
-	gateway          bool
+	constructors map[int64]struct{}
+	handlers     []Handler
+	tunnel       bool
+	gateway      bool
 
-	// internal user
+	// internal use
 	builtin bool
 }
 
 func NewHandlerOptions() *HandlerOption {
 	return &HandlerOption{
-		constructors:     map[int64]struct{}{},
-		handlers:         nil,
-		gateway:          true,
-		tunnel:           true,
-		inconsistentRead: false,
+		constructors: map[int64]struct{}{},
+		handlers:     nil,
+		gateway:      true,
+		tunnel:       true,
 	}
 }
 
@@ -68,12 +66,6 @@ func (ho *HandlerOption) GatewayOnly() *HandlerOption {
 func (ho *HandlerOption) TunnelOnly() *HandlerOption {
 	ho.tunnel = true
 	ho.gateway = false
-	return ho
-}
-
-// InconsistentRead makes this method (constructor) available on edges in follower state
-func (ho *HandlerOption) InconsistentRead() *HandlerOption {
-	ho.inconsistentRead = true
 	return ho
 }
 

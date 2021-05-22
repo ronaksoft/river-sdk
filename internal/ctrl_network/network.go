@@ -14,6 +14,7 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
@@ -922,11 +923,11 @@ func (ctrl *Controller) HttpCommandWithTimeout(
 		timeoutCB()
 	case context.Canceled:
 		res := &rony.MessageEnvelope{}
-		rony.ErrorMessage(res, messageEnvelope.RequestID, "E100", "Canceled")
+		errors.New("E100", "Canceled").ToEnvelope(res)
 		successCB(res)
 	default:
 		res := &rony.MessageEnvelope{}
-		rony.ErrorMessage(res, messageEnvelope.RequestID, "E100", err.Error())
+		errors.New("E100", err.Error()).ToEnvelope(res)
 		successCB(res)
 	}
 

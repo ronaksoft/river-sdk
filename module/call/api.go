@@ -479,7 +479,8 @@ func (c *call) setTeamInput(teamId int64, teamAccess uint64) {
 func (c *call) executeRemoteCommand(
 	constructor int64, commandBytes []byte,
 	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	instant bool) {
+	instant bool,
+) {
 	logs.Debug("Execute command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
@@ -487,6 +488,8 @@ func (c *call) executeRemoteCommand(
 	rdt := domain.RequestBlocking
 	if instant {
 		rdt |= domain.RequestSkipFlusher
+	} else {
+		rdt |= domain.RequestBatch
 	}
 	_, err := c.SDK().ExecuteWithTeam(
 		c.teamInput.teamID, int64(c.teamInput.teamAccess), constructor, commandBytes,

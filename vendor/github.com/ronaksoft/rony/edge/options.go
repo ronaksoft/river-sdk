@@ -1,7 +1,7 @@
 package edge
 
 import (
-	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 	gossipCluster "github.com/ronaksoft/rony/internal/cluster/gossip"
 	"github.com/ronaksoft/rony/internal/gateway"
 	dummyGateway "github.com/ronaksoft/rony/internal/gateway/dummy"
@@ -29,7 +29,7 @@ func WithDataDir(path string) Option {
 // WithDispatcher enables custom dispatcher to write your specific event handlers.
 func WithDispatcher(d Dispatcher) Option {
 	return func(edge *Server) {
-		edge.gatewayDispatcher = d
+		edge.dispatcher = d
 	}
 }
 
@@ -39,9 +39,7 @@ type GossipClusterConfig = gossipCluster.Config
 // no need to a central key-value store or any other 3rd party service to run the cluster
 func WithGossipCluster(cfg GossipClusterConfig) Option {
 	return func(edge *Server) {
-		c := gossipCluster.New(edge.dataDir, cfg)
-		c.ReplicaMessageHandler = edge.onReplicaMessage
-		edge.cluster = c
+		edge.cluster = gossipCluster.New(edge.dataDir, cfg)
 	}
 }
 
@@ -51,8 +49,8 @@ type TcpGatewayConfig = tcpGateway.Config
 // Only one gateway could be set and if you set another gateway it panics on runtime.
 func WithTcpGateway(config TcpGatewayConfig) Option {
 	return func(edge *Server) {
-		if edge.gatewayProtocol != gateway.Undefined {
-			panic(rony.ErrGatewayAlreadyInitialized)
+		if edge.gateway != nil {
+			panic(errors.ErrGatewayAlreadyInitialized)
 		}
 		if config.Protocol == gateway.Undefined {
 			config.Protocol = gateway.TCP
@@ -64,9 +62,7 @@ func WithTcpGateway(config TcpGatewayConfig) Option {
 		gatewayTcp.MessageHandler = edge.onGatewayMessage
 		gatewayTcp.ConnectHandler = edge.onGatewayConnect
 		gatewayTcp.CloseHandler = edge.onGatewayClose
-		edge.gatewayProtocol = config.Protocol
 		edge.gateway = gatewayTcp
-		return
 	}
 }
 
@@ -76,8 +72,8 @@ type DummyGatewayConfig = dummyGateway.Config
 // Only one gateway could be set and if you set another gateway it panics on runtime.
 func WithTestGateway(config DummyGatewayConfig) Option {
 	return func(edge *Server) {
-		if edge.gatewayProtocol != gateway.Undefined {
-			panic(rony.ErrGatewayAlreadyInitialized)
+		if edge.gateway != nil {
+			panic(errors.ErrGatewayAlreadyInitialized)
 		}
 		gatewayDummy, err := dummyGateway.New(config)
 		if err != nil {
@@ -86,9 +82,7 @@ func WithTestGateway(config DummyGatewayConfig) Option {
 		gatewayDummy.MessageHandler = edge.onGatewayMessage
 		gatewayDummy.ConnectHandler = edge.onGatewayConnect
 		gatewayDummy.CloseHandler = edge.onGatewayClose
-		edge.gatewayProtocol = gateway.Dummy
 		edge.gateway = gatewayDummy
-		return
 	}
 }
 

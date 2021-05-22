@@ -4,7 +4,6 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/ronaksoft/rony/internal/metrics"
 	"github.com/ronaksoft/rony/tools"
-	"path/filepath"
 	"time"
 )
 
@@ -18,30 +17,18 @@ import (
 */
 
 var (
-	db                    *Store
+	db                    *badger.DB
 	flusher               *tools.FlusherPool
 	conflictRetry         int
 	conflictRetryInterval time.Duration
-	vlogTicker            *time.Ticker // runs every 1m, check size of vlog and run GC conditionally.
-	mandatoryVlogTicker   *time.Ticker // runs every 10m, we always run vlog GC.
 )
 
-func MustInit(config Config) {
-	err := Init(config)
-	if err != nil {
-		panic(err)
-	}
-
-}
-
-func Init(config Config) (err error) {
+func Init(config Config) {
 	if db != nil {
 		return
 	}
-	db, err = newDB(config)
-	if err != nil {
-		return
-	}
+	db = config.DB
+
 	if config.ConflictRetries == 0 {
 		config.ConflictRetries = defaultConflictRetries
 	}
@@ -57,46 +44,9 @@ func Init(config Config) (err error) {
 	conflictRetry = config.ConflictRetries
 	conflictRetryInterval = config.ConflictMaxInterval
 	flusher = tools.NewFlusherPool(int32(config.BatchWorkers), int32(config.BatchSize), writeFlushFunc)
-	vlogTicker = time.NewTicker(time.Minute)
-	mandatoryVlogTicker = time.NewTicker(time.Minute * 10)
-	go runVlogGC(db, 1<<30)
-	return nil
 }
 
-func runVlogGC(db *badger.DB, threshold int64) {
-	// Get initial size on start.
-	_, lastVlogSize := db.Size()
-
-	runGC := func() {
-		var err error
-		for err == nil {
-			// If a GC is successful, immediately run it again.
-			err = db.RunValueLogGC(0.7)
-		}
-		_, lastVlogSize = db.Size()
-	}
-
-	for {
-		select {
-		case <-vlogTicker.C:
-			_, currentVlogSize := db.Size()
-			if currentVlogSize < lastVlogSize+threshold {
-				continue
-			}
-			runGC()
-		case <-mandatoryVlogTicker.C:
-			runGC()
-		}
-	}
-}
-
-func newDB(config Config) (*badger.DB, error) {
-	opt := badger.DefaultOptions(filepath.Join(config.DirPath, "badger"))
-	opt.Logger = nil
-	return badger.Open(opt)
-}
-
-func writeFlushFunc(targetID string, entries []tools.FlushEntry) {
+func writeFlushFunc(_ string, entries []tools.FlushEntry) {
 	wb := db.NewWriteBatch()
 	for idx := range entries {
 		_ = wb.SetEntry(entries[idx].Value().(*Entry))
@@ -105,27 +55,14 @@ func writeFlushFunc(targetID string, entries []tools.FlushEntry) {
 }
 
 // DB returns the underlying object of the database
-func DB() *badger.DB {
+func DB() *LocalDB {
 	return db
-}
-
-// Shutdown stops all the background go-routines and closed the underlying database
-func Shutdown() {
-	if vlogTicker != nil {
-		vlogTicker.Stop()
-	}
-	if mandatoryVlogTicker != nil {
-		mandatoryVlogTicker.Stop()
-	}
-	if db != nil {
-		_ = db.Close()
-	}
 }
 
 // Update executes a function, creating and managing a read-write transaction
 // for the user. Error returned by the function is relayed by the Update method.
 // It retries in case of badger.ErrConflict returned.
-func Update(fn func(txn *Txn) error) (err error) {
+func Update(fn func(txn *LTxn) error) (err error) {
 	retry := conflictRetry
 Retry:
 	err = db.Update(fn)
@@ -141,7 +78,7 @@ Retry:
 
 // View executes a function creating and managing a read-only transaction for the user. Error
 // returned by the function is relayed by the View method. It retries in case of badger.ErrConflict returned.
-func View(fn func(txn *Txn) error) (err error) {
+func View(fn func(txn *LTxn) error) (err error) {
 	retry := conflictRetry
 Retry:
 	err = db.View(fn)

@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"github.com/hashicorp/raft"
 	"github.com/ronaksoft/rony"
 	"net"
 )
@@ -15,45 +14,33 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-type ReplicaMessageHandler func(raftCmd *rony.RaftCommand) error
-
-type Mode string
-
-const (
-	// SingleReplica if set then each replica set is only one node. i.e. raft is OFF.
-	SingleReplica Mode = "singleReplica"
-	// MultiReplica if set then each replica set is a raft cluster
-	MultiReplica Mode = "multiReplica"
-)
-
 type Cluster interface {
-	Raft
 	Start()
-	Members() []Member
-	Join(addr ...string) (int, error)
 	Shutdown()
+	Join(addr ...string) (int, error)
+	Members() []Member
+	MembersByReplicaSet(replicaSets ...uint64) []Member
+	MemberByID(string) Member
+	MemberByHash(uint64) Member
 	ReplicaSet() uint64
+	ServerID() []byte
 	TotalReplicas() int
 	Addr() string
 	SetGatewayAddrs(hostPorts []string) error
 	SetTunnelAddrs(hostPorts []string) error
-}
-
-type Raft interface {
-	RaftEnabled() bool
-	RaftMembers(replicaSet uint64) []Member
-	RaftState() raft.RaftState
-	RaftApply(cmd []byte) raft.ApplyFuture
-	RaftLeaderID() string
+	Subscribe(d Delegate)
 }
 
 type Member interface {
 	Proto(info *rony.Edge) *rony.Edge
 	ServerID() string
-	RaftState() rony.RaftState
 	ReplicaSet() uint64
 	GatewayAddr() []string
 	TunnelAddr() []string
-	TunnelConn() (net.Conn, error)
-	RaftPort() int
+	Dial() (net.Conn, error)
+}
+
+type Delegate interface {
+	OnJoin(hash uint64)
+	OnLeave(hash uint64)
 }

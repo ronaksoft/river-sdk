@@ -3,9 +3,11 @@ package edge
 import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/internal/cluster"
 	"github.com/ronaksoft/rony/internal/gateway"
 	"github.com/ronaksoft/rony/store"
+	"github.com/ronaksoft/rony/tools"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,15 +25,15 @@ type Builtin struct {
 	cluster  cluster.Cluster
 	gateway  gateway.Gateway
 	serverID string
-	rs       uint64
 }
 
 func newBuiltin(serverID string, gw gateway.Gateway, c cluster.Cluster) *Builtin {
-	return &Builtin{
+	b := &Builtin{
 		cluster:  c,
 		gateway:  gw,
 		serverID: serverID,
 	}
+	return b
 }
 
 func (pm *Builtin) GetNodes(ctx *RequestCtx, in *rony.MessageEnvelope) {
@@ -41,7 +43,7 @@ func (pm *Builtin) GetNodes(ctx *RequestCtx, in *rony.MessageEnvelope) {
 	defer rony.PoolEdges.Put(res)
 	err := req.Unmarshal(in.Message)
 	if err != nil {
-		ctx.PushError(rony.ErrCodeInvalid, rony.ErrItemRequest)
+		ctx.PushError(errors.ErrInvalidRequest)
 		return
 	}
 
@@ -50,28 +52,51 @@ func (pm *Builtin) GetNodes(ctx *RequestCtx, in *rony.MessageEnvelope) {
 			ReplicaSet: 0,
 			ServerID:   pm.serverID,
 			HostPorts:  pm.gateway.Addr(),
-			Leader:     true,
 		})
 	} else if len(req.ReplicaSet) == 0 {
-		members := pm.cluster.RaftMembers(pm.cluster.ReplicaSet())
+		members := pm.cluster.MembersByReplicaSet(pm.cluster.ReplicaSet())
 		for _, m := range members {
 			res.Nodes = append(res.Nodes, m.Proto(nil))
 		}
 	} else {
-		for _, rs := range req.ReplicaSet {
-			members := pm.cluster.RaftMembers(rs)
-			for _, m := range members {
-				res.Nodes = append(res.Nodes, m.Proto(nil))
-			}
+		members := pm.cluster.MembersByReplicaSet(req.ReplicaSet...)
+		for _, m := range members {
+			res.Nodes = append(res.Nodes, m.Proto(nil))
+		}
+	}
+
+	ctx.PushMessage(rony.C_Edges, res)
+}
+
+func (pm *Builtin) GetAllNodes(ctx *RequestCtx, in *rony.MessageEnvelope) {
+	req := rony.PoolGetNodes.Get()
+	defer rony.PoolGetNodes.Put(req)
+	res := rony.PoolEdges.Get()
+	defer rony.PoolEdges.Put(res)
+	err := req.Unmarshal(in.Message)
+	if err != nil {
+		ctx.PushError(errors.ErrInvalidRequest)
+		return
+	}
+
+	if pm.cluster == nil {
+		res.Nodes = append(res.Nodes, &rony.Edge{
+			ReplicaSet: 0,
+			ServerID:   pm.serverID,
+			HostPorts:  pm.gateway.Addr(),
+		})
+	} else {
+		members := pm.cluster.Members()
+		for _, m := range members {
+			res.Nodes = append(res.Nodes, m.Proto(nil))
 		}
 	}
 	ctx.PushMessage(rony.C_Edges, res)
-	return
 }
 
 func (pm *Builtin) GetPage(ctx *RequestCtx, in *rony.MessageEnvelope) {
 	if pm.cluster.ReplicaSet() != 1 {
-		ctx.PushError(rony.ErrCodeUnavailable, rony.ErrItemRequest)
+		ctx.PushError(errors.ErrUnavailableRequest)
 		return
 	}
 
@@ -81,11 +106,11 @@ func (pm *Builtin) GetPage(ctx *RequestCtx, in *rony.MessageEnvelope) {
 	defer rony.PoolPage.Put(res)
 	err := proto.UnmarshalOptions{Merge: true}.Unmarshal(in.Message, req)
 	if err != nil {
-		ctx.PushError(rony.ErrCodeInvalid, rony.ErrItemRequest)
+		ctx.PushError(errors.ErrInvalidRequest)
 		return
 	}
 
-	alloc := store.NewAllocator()
+	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	err = store.Update(func(txn *badger.Txn) (err error) {
@@ -101,7 +126,7 @@ func (pm *Builtin) GetPage(ctx *RequestCtx, in *rony.MessageEnvelope) {
 		return rony.SavePageWithTxn(txn, alloc, res)
 	})
 	if err != nil {
-		ctx.PushError(rony.ErrCodeInternal, err.Error())
+		ctx.PushError(errors.GenInternalErr(err.Error(), err))
 		return
 	}
 	ctx.PushMessage(rony.C_Page, res)
