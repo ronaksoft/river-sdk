@@ -1435,7 +1435,7 @@ func (c *call) getInputUserFromUpdate(in *UpdatePhoneCall) *msg.InputPeer {
 	return inputPeer
 }
 
-func (c *call) clearRetryInterval(connId int32, onlyClearInterval bool) {
+func (c *call) clearRetryInterval(connId int32) {
 	c.mu.RLock()
 	pc, ok := c.peerConnections[connId]
 	c.mu.RUnlock()
@@ -1447,14 +1447,14 @@ func (c *call) clearRetryInterval(connId int32, onlyClearInterval bool) {
 	if pc.connectTicker != nil {
 		pc.connectTicker.Stop()
 	}
+}
 
-	if onlyClearInterval == false && c.activeCallID == 0 {
-		c.mu.Lock()
-		if info, ok := c.callInfo[c.activeCallID]; ok {
-			info.acceptedParticipants = append(info.acceptedParticipants, connId)
-		}
-		c.mu.Unlock()
+func (c *call) appendToAcceptedList(connId int32) {
+	c.mu.Lock()
+	if info, ok := c.callInfo[c.activeCallID]; ok {
+		info.acceptedParticipants = append(info.acceptedParticipants, connId)
 	}
+	c.mu.Unlock()
 }
 
 func (c *call) removeParticipant(userID int64, callID *int64) bool {
@@ -1645,7 +1645,8 @@ func (c *call) callAccepted(in *UpdatePhoneCall) {
 		ScreenShare: &streamState.ScreenShare,
 		Video:       &streamState.Video,
 	})
-	c.clearRetryInterval(connId, false)
+	c.clearRetryInterval(connId)
+	c.appendToAcceptedList(connId)
 	logs.Info("[webrtc] accept signal", zap.Int32("connId", connId))
 
 	update := msg.CallUpdateCallAccepted{
@@ -1663,7 +1664,8 @@ func (c *call) callDiscarded(in *UpdatePhoneCall) {
 		return
 	}
 
-	c.clearRetryInterval(connId, false)
+	c.clearRetryInterval(connId)
+	c.appendToAcceptedList(connId)
 
 	data := in.Data.(*msg.PhoneActionDiscarded)
 	if in.PeerType == int32(msg.PeerType_PeerUser) || data.Terminate {
@@ -1828,7 +1830,7 @@ func (c *call) callAcknowledged(in *UpdatePhoneCall) {
 		return
 	}
 
-	c.clearRetryInterval(connId, true)
+	//c.clearRetryInterval(connId)
 	update := msg.CallUpdateCallAck{
 		ConnectionID: connId,
 	}
