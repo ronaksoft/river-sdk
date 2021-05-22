@@ -486,7 +486,7 @@ func (c *call) executeRemoteCommand(
 
 	rdt := domain.RequestBlocking
 	if instant {
-		rdt |= domain.RequestServerForced
+		rdt |= domain.RequestSkipFlusher
 	}
 	_, err := c.SDK().ExecuteWithTeam(
 		c.teamInput.teamID, int64(c.teamInput.teamAccess), constructor, commandBytes,
