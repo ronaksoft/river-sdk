@@ -6,7 +6,7 @@ import (
 	"github.com/ronaksoft/rony/pools"
 )
 
-type RequestDelegateFlag int32
+type RequestDelegateFlag = int32
 
 // Request Flags
 const (
