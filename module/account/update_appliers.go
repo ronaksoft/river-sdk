@@ -23,22 +23,22 @@ func (r *account) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	logs.Debug("SyncCtrl applies UpdateAccountPrivacy",
+	logs.Debug("AccountModule applies UpdateAccountPrivacy",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
 	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyChatInvite, x.ChatInvite)
-	logs.WarnOnErr("SyncCtrl got error on set privacy (ChatInvite)", err)
+	logs.WarnOnErr("AccountModule got error on set privacy (ChatInvite)", err)
 	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyLastSeen, x.LastSeen)
-	logs.WarnOnErr("SyncCtrl got error on set privacy (LastSeen)", err)
+	logs.WarnOnErr("AccountModule got error on set privacy (LastSeen)", err)
 	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyPhoneNumber, x.PhoneNumber)
-	logs.WarnOnErr("SyncCtrl got error on set privacy (PhoneNumber)", err)
+	logs.WarnOnErr("AccountModule got error on set privacy (PhoneNumber)", err)
 	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyProfilePhoto, x.ProfilePhoto)
-	logs.WarnOnErr("SyncCtrl got error on set privacy (ProfilePhoto)", err)
+	logs.WarnOnErr("AccountModule got error on set privacy (ProfilePhoto)", err)
 	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyForwardedMessage, x.ForwardedMessage)
-	logs.WarnOnErr("SyncCtrl got error on set privacy (ForwardedMessage)", err)
+	logs.WarnOnErr("AccountModule got error on set privacy (ForwardedMessage)", err)
 	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyCall, x.Call)
-	logs.WarnOnErr("SyncCtrl got error on set privacy (Call)", err)
+	logs.WarnOnErr("AccountModule got error on set privacy (Call)", err)
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }

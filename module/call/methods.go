@@ -1251,13 +1251,9 @@ func (c *call) callSendRestart(connId int32, sender bool) (err error) {
 
 func (c *call) getCallInfo(callID int64) *Info {
 	c.mu.RLock()
-	info, ok := c.callInfo[callID]
+	info := c.callInfo[callID]
 	c.mu.RUnlock()
-	if ok {
-		return info
-	} else {
-		return nil
-	}
+	return info
 }
 
 func (c *call) getConnId(callID, userID int64) (int32, *Info, bool) {
@@ -1298,10 +1294,9 @@ func (c *call) getInputUserByConnId(callID int64, connID int32) (inputUser *msg.
 	d, ok := info.participants[connID]
 	info.mu.RUnlock()
 	if ok {
-		return d.PhoneParticipant.Peer
-	} else {
-		return nil
+		inputUser = d.PhoneParticipant.Peer
 	}
+	return
 }
 
 func (c *call) getInputUserByUserIDs(callID int64, userIDs []int64) (inputUser []*msg.InputUser) {
@@ -1314,7 +1309,7 @@ func (c *call) getInputUserByUserIDs(callID int64, userIDs []int64) (inputUser [
 	info.mu.RLock()
 	for _, userID := range userIDs {
 		if connId, ok := info.participantMap[userID]; ok {
-			if participant, ok2 := info.participants[connId]; ok2 {
+			if participant, ok := info.participants[connId]; ok {
 				inputUser = append(inputUser, participant.PhoneParticipant.Peer)
 			}
 		}
@@ -1384,11 +1379,7 @@ func (c *call) sendCallAck(in *UpdatePhoneCall) {
 }
 
 func (c *call) sendSdpAnswer(connId int32, sdp *msg.PhoneActionSDPAnswer) {
-	if c.activeCallID == 0 {
-		return
-	}
-
-	if c.peer == nil {
+	if c.activeCallID == 0 || c.peer == nil {
 		return
 	}
 
@@ -1403,11 +1394,7 @@ func (c *call) sendSdpAnswer(connId int32, sdp *msg.PhoneActionSDPAnswer) {
 }
 
 func (c *call) sendSdpOffer(connId int32, sdp *msg.PhoneActionSDPOffer) {
-	if c.activeCallID == 0 {
-		return
-	}
-
-	if c.peer == nil {
+	if c.activeCallID == 0 || c.peer == nil {
 		return
 	}
 
@@ -1830,7 +1817,7 @@ func (c *call) callAcknowledged(in *UpdatePhoneCall) {
 		return
 	}
 
-	//c.clearRetryInterval(connId)
+	// c.clearRetryInterval(connId)
 	update := msg.CallUpdateCallAck{
 		ConnectionID: connId,
 	}
@@ -1960,8 +1947,8 @@ func (c *call) joinRequested(in *UpdatePhoneCall) {
 }
 
 func (c *call) screenShareUpdated(in *UpdatePhoneCall) {
-	//data := in.Data.(*msg.PhoneActionScreenShare)
-	//fmt.Println(data)
+	// data := in.Data.(*msg.PhoneActionScreenShare)
+	// fmt.Println(data)
 }
 
 func (c *call) callPicked(in *UpdatePhoneCall) {

@@ -40,27 +40,27 @@ func (r *bot) botResults(e *rony.MessageEnvelope) {
 	br := &msg.BotResults{}
 	err := br.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("SyncCtrl couldn't unmarshal BotResults", zap.Error(err))
+		logs.Error("BotModule couldn't unmarshal BotResults", zap.Error(err))
 		return
 	}
 
 	for _, m := range br.Results {
 		if m == nil || m.Message == nil || m.Type != msg.MediaType_MediaTypeDocument || m.Message.MediaData == nil {
-			logs.Info("SyncCtrl botResults message or media is nil or not mediaDocument", zap.Error(err))
+			logs.Info("BotModule botResults message or media is nil or not mediaDocument", zap.Error(err))
 			continue
 		}
 
 		md := &msg.MediaDocument{}
 		err := md.Unmarshal(m.Message.MediaData)
 		if err != nil {
-			logs.Error("SyncCtrl couldn't unmarshal BotResults MediaDocument", zap.Error(err))
+			logs.Error("BotModule couldn't unmarshal BotResults MediaDocument", zap.Error(err))
 			continue
 		}
 
 		err = repo.Files.SaveMessageMediaDocument(md)
 
 		if err != nil {
-			logs.Error("SyncCtrl couldn't save botResults media document", zap.Error(err))
+			logs.Error("BotModule couldn't save botResults media document", zap.Error(err))
 		}
 	}
 }

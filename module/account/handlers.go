@@ -44,12 +44,12 @@ func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da domain
 
 	val, err := json.Marshal(req)
 	if err != nil {
-		logs.Error("River::accountRegisterDevice()-> Json Marshal()", zap.Error(err))
+		logs.Error("AccountModule::accountRegisterDevice()-> Json Marshal()", zap.Error(err))
 		return
 	}
 	err = repo.System.SaveString(domain.SkDeviceToken, string(val))
 	if err != nil {
-		logs.Error("River::accountRegisterDevice()-> SaveString()", zap.Error(err))
+		logs.Error("AccountModule::accountRegisterDevice()-> SaveString()", zap.Error(err))
 		return
 	}
 	// send the request to server
@@ -66,12 +66,12 @@ func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da doma
 
 	val, err := json.Marshal(&msg.AccountRegisterDevice{})
 	if err != nil {
-		logs.Error("River::accountUnregisterDevice()-> Json Marshal()", zap.Error(err))
+		logs.Error("AccountModule::accountUnregisterDevice()-> Json Marshal()", zap.Error(err))
 		return
 	}
 	err = repo.System.SaveString(domain.SkDeviceToken, string(val))
 	if err != nil {
-		logs.Error("River::accountUnregisterDevice()-> SaveString()", zap.Error(err))
+		logs.Error("AccountModule::accountUnregisterDevice()-> SaveString()", zap.Error(err))
 		return
 	}
 
