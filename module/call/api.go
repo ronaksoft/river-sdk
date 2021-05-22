@@ -7,7 +7,6 @@ import (
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
-	"sync"
 )
 
 /*
@@ -34,18 +33,13 @@ func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_PhoneInit:
 			xx := &msg.PhoneInit{}
@@ -62,7 +56,7 @@ func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneInitCall, reqBytes, timeoutCallback, successCallback, true)
-	wg.Wait()
+
 	return
 }
 
@@ -81,18 +75,13 @@ func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, p
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_PhoneCall:
 			xx := &msg.PhoneCall{}
@@ -109,7 +98,6 @@ func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, p
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneRequestCall, reqBytes, timeoutCallback, successCallback, !batch)
-	wg.Wait()
 	return
 }
 
@@ -126,18 +114,13 @@ func (c *call) apiAccept(peer *msg.InputPeer, callID int64, participants []*msg.
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_PhoneCall:
 			xx := &msg.PhoneCall{}
@@ -154,7 +137,6 @@ func (c *call) apiAccept(peer *msg.InputPeer, callID int64, participants []*msg.
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneAcceptCall, reqBytes, timeoutCallback, successCallback, true)
-	wg.Wait()
 	return
 }
 
@@ -171,18 +153,13 @@ func (c *call) apiReject(peer *msg.InputPeer, callID int64, reason msg.DiscardRe
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_Bool:
 			xx := &msg.Bool{}
@@ -199,7 +176,6 @@ func (c *call) apiReject(peer *msg.InputPeer, callID int64, reason msg.DiscardRe
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneDiscardCall, reqBytes, timeoutCallback, successCallback, true)
-	wg.Wait()
 	return
 }
 
@@ -214,18 +190,13 @@ func (c *call) apiJoin(peer *msg.InputPeer, callID int64) (res *msg.PhonePartici
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_PhoneParticipants:
 			xx := &msg.PhoneParticipants{}
@@ -242,7 +213,6 @@ func (c *call) apiJoin(peer *msg.InputPeer, callID int64) (res *msg.PhonePartici
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneJoinCall, reqBytes, timeoutCallback, successCallback, true)
-	wg.Wait()
 	return
 }
 
@@ -258,18 +228,13 @@ func (c *call) apiAddParticipant(peer *msg.InputPeer, callID int64, participants
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_PhoneParticipants:
 			xx := &msg.PhoneParticipants{}
@@ -286,7 +251,6 @@ func (c *call) apiAddParticipant(peer *msg.InputPeer, callID int64, participants
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneAddParticipant, reqBytes, timeoutCallback, successCallback, true)
-	wg.Wait()
 	return
 }
 
@@ -303,18 +267,13 @@ func (c *call) apiRemoveParticipant(peer *msg.InputPeer, callID int64, participa
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_Bool:
 			xx := &msg.Bool{}
@@ -331,7 +290,6 @@ func (c *call) apiRemoveParticipant(peer *msg.InputPeer, callID int64, participa
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneRemoveParticipant, reqBytes, timeoutCallback, successCallback, true)
-	wg.Wait()
 	return
 }
 
@@ -346,18 +304,13 @@ func (c *call) apiGetParticipant(peer *msg.InputPeer, callID int64) (res *msg.Ph
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_PhoneParticipants:
 			xx := &msg.PhoneParticipants{}
@@ -374,7 +327,7 @@ func (c *call) apiGetParticipant(peer *msg.InputPeer, callID int64) (res *msg.Ph
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneGetParticipants, reqBytes, timeoutCallback, successCallback, true)
-	wg.Wait()
+
 	return
 }
 
@@ -391,18 +344,13 @@ func (c *call) apiUpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_Bool:
 			xx := &msg.Bool{}
@@ -419,7 +367,7 @@ func (c *call) apiUpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneUpdateAdmin, reqBytes, timeoutCallback, successCallback, true)
-	wg.Wait()
+
 	return
 }
 
@@ -437,18 +385,13 @@ func (c *call) apiSendUpdate(peer *msg.InputPeer, callID int64, participants []*
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	// Timeout Callback
 	timeoutCallback := func() {
 		err = domain.ErrRequestTimeout
-		wg.Done()
 	}
 
 	// Success Callback
 	successCallback := func(x *rony.MessageEnvelope) {
-		defer wg.Done()
 		switch x.Constructor {
 		case msg.C_Bool:
 			xx := &msg.Bool{}
@@ -465,7 +408,6 @@ func (c *call) apiSendUpdate(peer *msg.InputPeer, callID int64, participants []*
 	}
 
 	c.executeRemoteCommand(msg.C_PhoneUpdateCall, reqBytes, timeoutCallback, successCallback, instant)
-	wg.Wait()
 	return
 }
 
@@ -491,12 +433,9 @@ func (c *call) executeRemoteCommand(
 	} else {
 		rdt |= domain.RequestBatch
 	}
-	_, err := c.SDK().ExecuteWithTeam(
+	_, _ = c.SDK().ExecuteWithTeam(
 		c.teamInput.teamID, int64(c.teamInput.teamAccess), constructor, commandBytes,
 		domain.NewCallback(timeoutCB, successCB, nil),
 		rdt,
 	)
-	if err != nil {
-		logs.Warn("Call module got error on executing remote command")
-	}
 }

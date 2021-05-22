@@ -69,19 +69,22 @@ func (r *River) executeCommand(
 	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate RequestDelegate,
 ) (requestID int64, err error) {
 	if registry.ConstructorName(constructor) == "" {
-		return 0, domain.ErrInvalidConstructor
+		err = domain.ErrInvalidConstructor
+		return
 	}
 
-	commandBytesDump := deepCopy(commandBytes)
-
-	waitGroup := new(sync.WaitGroup)
 	requestID = domain.SequentialUniqueID()
+
+	var (
+		commandBytesDump = deepCopy(commandBytes)
+		waitGroup        = &sync.WaitGroup{}
+		blockingMode     = delegate.Flags()&domain.RequestBlocking != 0
+		serverForce      = delegate.Flags()&domain.RequestServerForced != 0
+	)
+
 	logs.Debug("River executes command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
-
-	blockingMode := delegate.Flags()&domain.RequestBlocking != 0
-	serverForce := delegate.Flags()&domain.RequestServerForced != 0
 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.
