@@ -496,44 +496,4 @@ func (c *call) executeRemoteCommand(
 	if err != nil {
 		logs.Warn("Call module got error on executing remote command")
 	}
-
-}
-
-func (c *call) executeRemoteCommandLegacy(
-	constructor int64, commandBytes []byte,
-	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	instant bool) {
-	logs.Debug("Execute command",
-		zap.String("C", registry.ConstructorName(constructor)),
-	)
-
-	requestID := uint64(domain.SequentialUniqueID())
-	teamID := c.teamInput.teamID
-	teamAccess := c.teamInput.teamAccess
-	// if c.tempTeamInput != nil {
-	//	teamID = c.tempTeamInput.teamID
-	//	teamAccess = c.tempTeamInput.teamAccess
-	//	c.tempTeamInput = nil
-	// }
-
-	header := domain.TeamHeader(teamID, teamAccess)
-	// If the constructor is a realtime command, then just send it to the server
-	if instant {
-		c.SDK().NetCtrl().WebsocketCommand(&rony.MessageEnvelope{
-			Header:      header,
-			Constructor: constructor,
-			RequestID:   requestID,
-			Message:     commandBytes,
-		}, timeoutCB, successCB, true, true, true)
-	} else {
-		c.SDK().QueueCtrl().EnqueueCommand(
-			&rony.MessageEnvelope{
-				Header:      header,
-				Constructor: constructor,
-				RequestID:   requestID,
-				Message:     commandBytes,
-			},
-			timeoutCB, successCB, true,
-		)
-	}
 }
