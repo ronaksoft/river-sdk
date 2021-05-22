@@ -557,7 +557,6 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 				udpContainer.Updates = append(udpContainer.Updates, externalHandlerUpdates...)
 			}
 		} else {
-			logs.Info("SyncCtrl did not find update applier", zap.String("C", registry.ConstructorName(update.Constructor)))
 			udpContainer.Updates = append(udpContainer.Updates, update)
 		}
 		if update.UpdateID != 0 {
