@@ -21,10 +21,10 @@ func (r *user) usersMany(e *rony.MessageEnvelope) {
 	x := new(msg.UsersMany)
 	err := x.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("SyncCtrl couldn't unmarshal UsersMany", zap.Error(err))
+		logs.Error("UserModule couldn't unmarshal UsersMany", zap.Error(err))
 		return
 	}
-	logs.Debug("SyncCtrl applies usersMany",
+	logs.Debug("UserModule applies usersMany",
 		zap.Int("Users", len(x.Users)),
 	)
 	_ = repo.Users.Save(x.Users...)

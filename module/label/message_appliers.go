@@ -22,14 +22,14 @@ func (r *label) labelsMany(e *rony.MessageEnvelope) {
 	u := &msg.LabelsMany{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("SyncCtrl couldn't unmarshal LabelsMany", zap.Error(err))
+		logs.Error("LabelModule couldn't unmarshal LabelsMany", zap.Error(err))
 		return
 	}
 
-	logs.Debug("SyncCtrl applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
+	logs.Debug("LabelModule applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
 
 	err = repo.Labels.Save(domain.GetTeamID(e), u.Labels...)
-	logs.WarnOnErr("SyncCtrl got error on applying LabelsMany", err)
+	logs.WarnOnErr("LabelModule got error on applying LabelsMany", err)
 
 	return
 }
@@ -38,11 +38,11 @@ func (r *label) labelItems(e *rony.MessageEnvelope) {
 	u := &msg.LabelItems{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("SyncCtrl couldn't unmarshal LabelItems", zap.Error(err))
+		logs.Error("LabelModule couldn't unmarshal LabelItems", zap.Error(err))
 		return
 	}
 
-	logs.Debug("SyncCtrl applies LabelItems")
+	logs.Debug("LabelModule applies LabelItems")
 
 	_ = repo.Messages.Save(u.Messages...)
 	_ = repo.Users.Save(u.Users...)

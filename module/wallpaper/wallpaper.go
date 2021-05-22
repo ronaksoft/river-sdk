@@ -41,12 +41,12 @@ func (r *wallpaper) wallpapersMany(e *rony.MessageEnvelope) {
 	u := &msg.WallPapersMany{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("SyncCtrl couldn't unmarshal wallpapersMany", zap.Error(err))
+		logs.Error("WallpaperModule couldn't unmarshal wallpapersMany", zap.Error(err))
 		return
 	}
 
 	err = repo.Wallpapers.SaveWallpapers(u)
 	if err != nil {
-		logs.Error("SyncCtrl got error on saving wallpapersMany", zap.Error(err))
+		logs.Error("WallpaperModule got error on saving wallpapersMany", zap.Error(err))
 	}
 }

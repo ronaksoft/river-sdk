@@ -22,20 +22,20 @@ func (r *system) systemConfig(e *rony.MessageEnvelope) {
 	u := &msg.SystemConfig{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("SyncCtrl couldn't unmarshal SystemConfig", zap.Error(err))
+		logs.Error("SystemModule couldn't unmarshal SystemConfig", zap.Error(err))
 		return
 	}
 
-	logs.Debug("SyncCtrl applies SystemConfig")
+	logs.Debug("SystemModule applies SystemConfig")
 
 	sysConfBytes, _ := u.Marshal()
 	domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
 	err = domain.SysConfig.Unmarshal(sysConfBytes)
 	if err != nil {
-		logs.Error("SyncCtrl got error on unmarshalling SystemConfig", zap.Error(err))
+		logs.Error("SystemModule got error on unmarshalling SystemConfig", zap.Error(err))
 	}
 	err = repo.System.SaveBytes("SysConfig", sysConfBytes)
 	if err != nil {
-		logs.Error("SyncCtrl got error on saving SystemConfig", zap.Error(err))
+		logs.Error("SystemModule got error on saving SystemConfig", zap.Error(err))
 	}
 }
