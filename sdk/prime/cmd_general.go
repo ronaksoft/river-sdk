@@ -80,8 +80,8 @@ func (r *River) executeCommand(
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
-	blockingMode := delegate.Flags()&RequestBlocking != 0
-	serverForce := delegate.Flags()&RequestServerForced != 0
+	blockingMode := delegate.Flags()&domain.RequestBlocking != 0
+	serverForce := delegate.Flags()&domain.RequestServerForced != 0
 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
 	// save 'delegate' into delegates list to be fetched later.
@@ -169,14 +169,16 @@ func executeRemoteCommand(
 	)
 
 	blocking := false
-	dontWaitForNetwork := false
+	skipWaitForNetwork := false
+	skipNetworkFlusher := false
 	d, ok := getDelegate(r, requestID)
 	if ok {
-		blocking = d.Flags()&RequestBlocking != 0
-		dontWaitForNetwork = d.Flags()&RequestSkipWaitForNetwork != 0
+		blocking = d.Flags()&domain.RequestBlocking != 0
+		skipWaitForNetwork = d.Flags()&domain.RequestSkipWaitForNetwork != 0
+		skipNetworkFlusher = d.Flags()&domain.RequestSkipFlusher != 0
 	}
 
-	if dontWaitForNetwork {
+	if skipWaitForNetwork {
 		go func() {
 			select {
 			case <-time.After(domain.WebsocketRequestTimeout):
@@ -205,7 +207,7 @@ func executeRemoteCommand(
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
-		}, da.OnTimeout, da.OnComplete, blocking, true)
+		}, da.OnTimeout, da.OnComplete, blocking, true, skipNetworkFlusher)
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&rony.MessageEnvelope{

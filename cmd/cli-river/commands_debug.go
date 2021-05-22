@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"go.uber.org/zap/zapcore"
 	"io/ioutil"
 	"mime"
@@ -159,7 +158,7 @@ func sendCode(c *ishell.Context, phone string) {
 	}
 	reqBytes, _ := req.Marshal()
 	reqDelegate := new(RequestDelegate)
-	reqDelegate.FlagsVal = riversdk.RequestBlocking
+	reqDelegate.FlagsVal = domain.RequestBlocking
 	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthSendCode, reqBytes, reqDelegate); err != nil {
 		c.Println("Command Failed:", err)
 	} else {
@@ -187,7 +186,7 @@ func login(c *ishell.Context, phone string) {
 	}
 	reqBytes, _ := req.Marshal()
 	reqDelegate := new(RequestDelegate)
-	reqDelegate.FlagsVal = riversdk.RequestBlocking
+	reqDelegate.FlagsVal = domain.RequestBlocking
 	os.Remove("./_phone")
 	os.Remove("./_phoneCodeHash")
 	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate); err != nil {

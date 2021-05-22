@@ -262,6 +262,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			},
 			true,
 			false,
+			true,
 			domain.WebsocketRequestTimeoutLong,
 		)
 		waitGroup.Wait()

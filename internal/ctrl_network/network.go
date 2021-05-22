@@ -714,7 +714,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 // WebsocketCommandWithTimeout run request immediately in blocking or non-blocking mode
 func (ctrl *Controller) WebsocketCommandWithTimeout(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	blockingMode, isUICallback bool, timeout time.Duration,
+	blockingMode, isUICallback bool, direct bool, timeout time.Duration,
 ) {
 	defer logs.RecoverPanic(
 		"NetCtrl::WebsocketCommandWithTimeout",
@@ -736,7 +736,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, timeout, timeoutCB, isUICallback,
 	)
 	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
-		err := ctrl.WebsocketSend(req, blockingMode)
+		err := ctrl.WebsocketSend(req, direct)
 		if err != nil {
 			logs.Warn("NetCtrl got error from NetCtrl",
 				zap.String("Error", err.Error()),
@@ -792,9 +792,9 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 
 func (ctrl *Controller) WebsocketCommand(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	blockingMode, isUICallback bool,
+	blockingMode, isUICallback bool, direct bool,
 ) {
-	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, blockingMode, isUICallback, domain.WebsocketRequestTimeout)
+	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, blockingMode, isUICallback, direct, domain.WebsocketRequestTimeout)
 }
 
 // SendHttp encrypt and send request to server and receive and decrypt its response

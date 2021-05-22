@@ -524,7 +524,7 @@ func (c *call) executeRemoteCommandLegacy(
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
-		}, timeoutCB, successCB, true, true)
+		}, timeoutCB, successCB, true, true, true)
 	} else {
 		c.SDK().QueueCtrl().EnqueueCommand(
 			&rony.MessageEnvelope{
