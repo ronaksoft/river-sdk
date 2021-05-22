@@ -53,7 +53,7 @@ func (ctrl *Controller) GetServerSalt() {
 		},
 		true,
 		false,
-		true,
+		domain.RequestSkipFlusher,
 	)
 }
 
@@ -87,7 +87,7 @@ func (ctrl *Controller) GetSystemConfig() {
 		},
 		true,
 		false,
-		true,
+		domain.RequestSkipFlusher,
 	)
 }
 
@@ -150,7 +150,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 		},
 		true,
 		false,
-		true,
+		domain.RequestSkipFlusher,
 	)
 
 	// Set the flag for network controller
@@ -194,7 +194,7 @@ func (ctrl *Controller) GetServerTime() (err error) {
 				err = domain.ParseServerError(m.Message)
 			}
 		},
-		true, false, true,
+		true, false, domain.RequestSkipFlusher,
 	)
 	return
 }
@@ -433,7 +433,7 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup, retry int) {
 				waitGroup.Done()
 			}
 			// Controller applier will take care of this
-		}, false, false, true)
+		}, false, false, domain.RequestSkipFlusher)
 }
 
 func (ctrl *Controller) UpdateStatus(online bool) {
@@ -464,7 +464,7 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 		},
 		false,
 		false,
-		false,
+		0,
 	)
 }
 

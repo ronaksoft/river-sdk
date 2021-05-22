@@ -102,7 +102,7 @@ func New(config Config) *Controller {
 	ctrl.sendRoutines = map[string]*tools.FlusherPool{
 		"Messages": tools.NewFlusherPool(1, 250, ctrl.sendFlushFunc),
 		"General":  tools.NewFlusherPool(3, 250, ctrl.sendFlushFunc),
-		"Batch":    tools.NewFlusherPool(1, 250, ctrl.sendFlushFunc),
+		"Batch":    tools.NewFlusherPoolWithWaitTime(1, 250, 250*time.Millisecond, ctrl.sendFlushFunc),
 	}
 
 	ctrl.unauthorizedRequests = map[int64]bool{
@@ -619,7 +619,7 @@ func (ctrl *Controller) incMessageSeq() int64 {
 }
 
 // WebsocketSend if 'direct' sends immediately otherwise it put it in flusher
-func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, direct bool) error {
+func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, flag domain.RequestDelegateFlag) error {
 	defer logs.RecoverPanic(
 		"NetCtrl::WebsocketSend",
 		domain.M{
@@ -634,14 +634,19 @@ func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, direct 
 	)
 
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
-	if direct || unauthorized {
+	if flag&domain.RequestSkipFlusher != 0 || unauthorized {
 		return ctrl.writeToWebsocket(msgEnvelope)
 	}
 	switch msgEnvelope.Constructor {
 	case msg.C_MessagesSend, msg.C_MessagesSendMedia, msg.C_MessagesForward:
 		ctrl.sendRoutines["Messages"].Enter("", tools.NewEntry(msgEnvelope))
 	default:
-		ctrl.sendRoutines["General"].Enter("", tools.NewEntry(msgEnvelope))
+		if flag&domain.RequestBatch != 0 {
+			ctrl.sendRoutines["Batch"].Enter("", tools.NewEntry(msgEnvelope))
+		} else {
+			ctrl.sendRoutines["General"].Enter("", tools.NewEntry(msgEnvelope))
+		}
+
 	}
 
 	return nil
@@ -725,7 +730,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 // WebsocketCommandWithTimeout run request immediately in blocking or non-blocking mode
 func (ctrl *Controller) WebsocketCommandWithTimeout(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	blockingMode, isUICallback bool, direct bool, timeout time.Duration,
+	blockingMode, isUICallback bool, flag domain.RequestDelegateFlag, timeout time.Duration,
 ) {
 	defer logs.RecoverPanic(
 		"NetCtrl::WebsocketCommandWithTimeout",
@@ -747,7 +752,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, timeout, timeoutCB, isUICallback,
 	)
 	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
-		err := ctrl.WebsocketSend(req, direct)
+		err := ctrl.WebsocketSend(req, flag)
 		if err != nil {
 			logs.Warn("NetCtrl got error from NetCtrl",
 				zap.String("Error", err.Error()),
@@ -803,9 +808,9 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 
 func (ctrl *Controller) WebsocketCommand(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	blockingMode, isUICallback bool, direct bool,
+	blockingMode, isUICallback bool, flag domain.RequestDelegateFlag,
 ) {
-	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, blockingMode, isUICallback, direct, domain.WebsocketRequestTimeout)
+	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, blockingMode, isUICallback, flag, domain.WebsocketRequestTimeout)
 }
 
 // SendHttp encrypt and send request to server and receive and decrypt its response

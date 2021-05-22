@@ -170,12 +170,10 @@ func executeRemoteCommand(
 
 	blocking := false
 	skipWaitForNetwork := false
-	skipNetworkFlusher := false
 	d, ok := getDelegate(r, requestID)
 	if ok {
 		blocking = d.Flags()&domain.RequestBlocking != 0
 		skipWaitForNetwork = d.Flags()&domain.RequestSkipWaitForNetwork != 0
-		skipNetworkFlusher = d.Flags()&domain.RequestSkipFlusher != 0
 	}
 
 	if skipWaitForNetwork {
@@ -207,7 +205,7 @@ func executeRemoteCommand(
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
-		}, da.OnTimeout, da.OnComplete, blocking, true, skipNetworkFlusher)
+		}, da.OnTimeout, da.OnComplete, blocking, true, d.Flags())
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&rony.MessageEnvelope{

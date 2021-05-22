@@ -147,7 +147,7 @@ func (ctrl *Controller) executor(req request) {
 	reqCB.DepartureTime = tools.NanoTime()
 
 	// Try to send it over wire, if error happened put it back into the queue
-	if err := ctrl.networkCtrl.WebsocketSend(req.MessageEnvelope, false); err != nil {
+	if err := ctrl.networkCtrl.WebsocketSend(req.MessageEnvelope, 0); err != nil {
 		logs.Info("QueueCtrl re-push the request into the queue", zap.Error(err))
 		ctrl.addToWaitingList(&req)
 		return

@@ -107,7 +107,7 @@ func TestNewController(t *testing.T) {
 	ctrl.Connect()
 	go func() {
 		for {
-			err := ctrl.WebsocketSend(getServerTime(), true)
+			err := ctrl.WebsocketSend(getServerTime(), domain.RequestSkipFlusher)
 			if err != nil {
 				t.Error(err)
 			}
@@ -128,7 +128,7 @@ func TestStartStop(t *testing.T) {
 	ctrl.Start()
 	go func() {
 		for {
-			err := ctrl.WebsocketSend(getServerTime(), true)
+			err := ctrl.WebsocketSend(getServerTime(), domain.RequestSkipFlusher)
 			if err != nil {
 				t.Error(err)
 			}
