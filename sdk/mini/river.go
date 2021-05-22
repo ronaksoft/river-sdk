@@ -28,7 +28,7 @@ func SetLogLevel(l int) {
 }
 
 type RiverConfig struct {
-	ServerHostPort string
+	SeedHostPorts []string
 	// DbPath is the path of the folder holding the sqlite database.
 	DbPath string
 	// DbID is used to save data for different accounts in separate databases. Could be used for multi-account cases.
@@ -72,10 +72,9 @@ type RiverConfig struct {
 // to smooth the connection between client and server are done by this SDK. The underlying storage used
 // by this SDK is Badger V2. 'repo' is the package name selected to handle repository functions.
 type River struct {
-	ConnInfo       *RiverConnection
-	serverHostPort string
-	dbPath         string
-	sentryDSN      string
+	ConnInfo  *RiverConnection
+	dbPath    string
+	sentryDSN string
 
 	// localCommands can be satisfied by client cache
 	localCommands map[int64]domain.LocalHandler
@@ -96,7 +95,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	r.sentryDSN = conf.SentryDSN
 	r.ConnInfo = conf.ConnInfo
-	r.serverHostPort = conf.ServerHostPort
 
 	if conf.MaxInFlightDownloads <= 0 {
 		conf.MaxInFlightDownloads = 10
@@ -126,9 +124,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// Initialize Network Controller
 	r.network = networkCtrl.New(
 		networkCtrl.Config{
-			WebsocketEndpoint: fmt.Sprintf("ws://%s", conf.ServerHostPort),
-			HttpEndpoint:      fmt.Sprintf("http://%s", conf.ServerHostPort),
-			CountryCode:       conf.CountryCode,
+			SeedHosts:   conf.SeedHostPorts,
+			CountryCode: conf.CountryCode,
 		},
 	)
 	r.network.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {}

@@ -32,12 +32,11 @@ import (
 
 // Config network controller config
 type Config struct {
-	WebsocketEndpoint string
-	HttpEndpoint      string
-	HttpTimeout       time.Duration
-	CountryCode       string
-	DumpData          bool
-	DumpPath          string
+	SeedHosts   []string
+	HttpTimeout time.Duration
+	CountryCode string
+	DumpData    bool
+	DumpPath    string
 }
 
 // Controller websocket network controller
@@ -47,11 +46,12 @@ type Controller struct {
 	authKey      []byte
 	authRecalled int32 // atomic boolean for checking if AuthRecall is sent
 	messageSeq   int64
+	endPoints    []string
+	curEndpoint  string
 
 	// Websocket Settings
 	wsWriteLock      sync.Mutex
 	wsDialer         *ws.Dialer
-	wsEndpoint       string
 	wsKeepConnection bool
 	wsConn           net.Conn
 	wsPingsMtx       sync.Mutex
@@ -59,8 +59,7 @@ type Controller struct {
 	wsQuality        int32 // atomic network quality switch
 
 	// Http Settings
-	httpEndpoint string
-	httpClient   *http.Client
+	httpClient *http.Client
 
 	// External Handlers
 	OnMessage             domain.ReceivedMessageHandler
@@ -72,7 +71,6 @@ type Controller struct {
 	// internals
 	connectChannel       chan bool
 	stopChannel          chan bool
-	endpointUpdated      bool
 	unauthorizedRequests map[int64]bool // requests that it should sent unencrypted
 	countryCode          string         // the country
 	sendRoutines         map[string]*tools.FlusherPool
@@ -80,31 +78,26 @@ type Controller struct {
 
 // New constructs the network controller
 func New(config Config) *Controller {
-	ctrl := new(Controller)
-	ctrl.wsPings = make(map[uint64]chan struct{})
-	ctrl.httpEndpoint = config.HttpEndpoint
-	ctrl.countryCode = strings.ToUpper(config.CountryCode)
-	if config.WebsocketEndpoint == "" {
-		ctrl.wsEndpoint = domain.DefaultWebsocketEndpoint
-	} else {
-		ctrl.wsEndpoint = config.WebsocketEndpoint
+	ctrl := &Controller{
+		wsPings:          make(map[uint64]chan struct{}),
+		endPoints:        config.SeedHosts,
+		countryCode:      strings.ToUpper(config.CountryCode),
+		wsKeepConnection: true,
+		stopChannel:      make(chan bool, 1),
+		connectChannel:   make(chan bool),
 	}
-	ctrl.wsKeepConnection = true
 
-	ctrl.createDialer(domain.WebsocketDialTimeout)
 	if config.HttpTimeout == 0 {
 		config.HttpTimeout = domain.HttpRequestTimeout
 	}
-	ctrl.createHttpClient(config.HttpTimeout)
 
-	ctrl.stopChannel = make(chan bool, 1)
-	ctrl.connectChannel = make(chan bool)
+	ctrl.createWebsocketDialer(domain.WebsocketDialTimeout)
+	ctrl.createHttpClient(config.HttpTimeout)
 	ctrl.sendRoutines = map[string]*tools.FlusherPool{
 		"Messages": tools.NewFlusherPool(1, 250, ctrl.sendFlushFunc),
 		"General":  tools.NewFlusherPool(3, 250, ctrl.sendFlushFunc),
 		"Batch":    tools.NewFlusherPoolWithWaitTime(1, 250, 250*time.Millisecond, ctrl.sendFlushFunc),
 	}
-
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
 		msg.C_InitConnect:         true,
@@ -114,7 +107,7 @@ func New(config Config) *Controller {
 
 	return ctrl
 }
-func (ctrl *Controller) createDialer(timeout time.Duration) {
+func (ctrl *Controller) createWebsocketDialer(timeout time.Duration) {
 	ctrl.wsDialer = &ws.Dialer{
 		ReadBufferSize:  32 * 1024, // 32kB
 		WriteBufferSize: 32 * 1024, // 32kB
@@ -149,6 +142,22 @@ func (ctrl *Controller) createDialer(timeout time.Duration) {
 		TLSClient:     nil,
 		TLSConfig:     nil,
 		WrapConn:      nil,
+	}
+}
+func (ctrl *Controller) createHttpClient(timeout time.Duration) {
+	ctrl.httpClient = http.DefaultClient
+	ctrl.httpClient.Timeout = timeout
+	ctrl.httpClient.Transport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		ForceAttemptHTTP2:     false,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   3 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
 	}
 }
 func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntry) {
@@ -219,22 +228,6 @@ func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntr
 	logs.Debug("NetCtrl flushed outgoing messages",
 		zap.Int("Count", itemsCount),
 	)
-}
-func (ctrl *Controller) createHttpClient(timeout time.Duration) {
-	ctrl.httpClient = http.DefaultClient
-	ctrl.httpClient.Timeout = timeout
-	ctrl.httpClient.Transport = &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-		ForceAttemptHTTP2:     false,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   3 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
 }
 
 // watchDog
@@ -520,21 +513,16 @@ func (ctrl *Controller) Connect() {
 			reqHdr := http.Header{}
 			reqHdr.Set("X-Client-Type", fmt.Sprintf("SDK-%s-%s-%s", domain.SDKVersion, domain.ClientPlatform, domain.ClientVersion))
 
-			// Detect the country we are calling from to determine the server Cyrus address
-			if !ctrl.endpointUpdated {
-				ctrl.UpdateEndpoint("")
-				ctrl.endpointUpdated = true
-			}
-
+			ctrl.UpdateEndpoint("")
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
-			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.wsEndpoint)
+			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.curEndpoint)
 			if err != nil {
 				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
 				attempts++
 				if attempts > 2 {
 					attempts = 0
-					logs.Info("NetCtrl got error on Dial", zap.Error(err), zap.String("Endpoint", ctrl.wsEndpoint))
-					ctrl.createDialer(domain.WebsocketDialTimeoutLong)
+					logs.Info("NetCtrl got error on Dial", zap.Error(err), zap.String("Endpoint", ctrl.curEndpoint))
+					ctrl.createWebsocketDialer(domain.WebsocketDialTimeoutLong)
 				}
 				continue
 			}
@@ -567,27 +555,23 @@ func (ctrl *Controller) UpdateEndpoint(country string) {
 	if country != "" {
 		ctrl.countryCode = country
 	}
-	wsEndpointParts := strings.Split(ctrl.wsEndpoint, ".")
-	httpEndpointParts := strings.Split(ctrl.httpEndpoint, ".")
 
+	ctrl.curEndpoint = fmt.Sprintf("ws://%s", ctrl.endPoints[tools.RandomInt(len(ctrl.endPoints))])
+
+	endpointParts := strings.Split(ctrl.curEndpoint, ".")
 	switch ctrl.countryCode {
 	case "IR", "":
-		wsEndpointParts[0] = strings.TrimSuffix(wsEndpointParts[0], "-cf")
-		httpEndpointParts[0] = strings.TrimSuffix(httpEndpointParts[0], "-cf")
+		endpointParts[0] = strings.TrimSuffix(endpointParts[0], "-cf")
 	default:
-		if !strings.HasSuffix(wsEndpointParts[0], "-cf") {
-			wsEndpointParts[0] = fmt.Sprintf("%s-cf", wsEndpointParts[0])
-		}
-		if !strings.HasSuffix(httpEndpointParts[0], "-cf") {
-			httpEndpointParts[0] = fmt.Sprintf("%s-cf", httpEndpointParts[0])
+		if !strings.HasSuffix(endpointParts[0], "-cf") {
+			endpointParts[0] = fmt.Sprintf("%s-cf", endpointParts[0])
 		}
 	}
 
-	ctrl.wsEndpoint = strings.Join(wsEndpointParts, ".")
-	ctrl.httpEndpoint = strings.Join(httpEndpointParts, ".")
+	ctrl.curEndpoint = strings.Join(endpointParts, ".")
 	logs.Info("NetCtrl endpoints updated",
-		zap.String("WS", ctrl.wsEndpoint),
-		zap.String("Http", ctrl.httpEndpoint),
+		zap.String("WS", ctrl.curEndpoint),
+		zap.String("Http", ctrl.curEndpoint),
 		zap.String("Country", ctrl.countryCode),
 	)
 }
@@ -865,7 +849,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 	totalUploadBytes += reqBuff.Len() // len(reqBuff.Len()protoMessageBytes)
 
 	// Send Data
-	httpReq, err := http.NewRequest(http.MethodPost, ctrl.httpEndpoint, reqBuff)
+	httpReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("http://%s", ctrl.curEndpoint), reqBuff)
 	if err != nil {
 		return nil, err
 	}
@@ -903,7 +887,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 	}
 
 	logs.Info("SendHttp",
-		zap.String("URL", ctrl.httpEndpoint),
+		zap.String("URL", ctrl.curEndpoint),
 		zap.String("ReqC", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("ResC", registry.ConstructorName(receivedEncryptedPayload.Envelope.Constructor)),
 		zap.Duration("D", time.Duration(tools.NanoTime()-startTime)),

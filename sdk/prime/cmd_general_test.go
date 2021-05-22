@@ -13,7 +13,7 @@ func init() {
 		DbPath: "./_data/",
 		DbID:   "test",
 		// ServerKeysFilePath:     "./keys.json",
-		ServerHostPort:         "new.river.im",
+		SeedHostPorts:          []string{"edge.river.im"},
 		MainDelegate:           new(MainDelegateDummy),
 		FileDelegate:           new(FileDelegateDummy),
 		LogLevel:               int(zapcore.DebugLevel),

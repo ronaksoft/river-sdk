@@ -91,9 +91,8 @@ func getServerTime() *rony.MessageEnvelope {
 func init() {
 	logs.SetLogLevel(0)
 	ctrl = networkCtrl.New(networkCtrl.Config{
-		WebsocketEndpoint: "ws://edge.river.im",
-		HttpEndpoint:      "http://edge.river.im",
-		CountryCode:       "IR",
+		SeedHosts:   []string{"edge.river.im", "edge.rivermsg.com"},
+		CountryCode: "IR",
 	})
 	ctrl.OnMessage = dummyMessageHandler
 	ctrl.OnGeneralError = dummyErrorHandler
@@ -153,9 +152,8 @@ func TestReconnect(t *testing.T) {
 			go func() {
 				var ctrl *networkCtrl.Controller
 				ctrl = networkCtrl.New(networkCtrl.Config{
-					WebsocketEndpoint: "ws://edge.river.im",
-					HttpEndpoint:      "http://edge.river.im",
-					CountryCode:       "IR",
+					SeedHosts:   []string{"edge.river.im"},
+					CountryCode: "IR",
 				})
 				ctrl.OnMessage = dummyMessageHandler
 				ctrl.OnGeneralError = dummyErrorHandler

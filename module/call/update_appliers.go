@@ -79,7 +79,6 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope
 		c.callRestarted(update)
 	}
 
-
 	res = []*msg.UpdateEnvelope{u}
 	return
 }

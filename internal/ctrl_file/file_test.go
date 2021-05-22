@@ -49,9 +49,8 @@ func init() {
 		"_hdd/_data/video", "_hdd/_data/cache",
 	)
 	_Network = networkCtrl.New(networkCtrl.Config{
-		WebsocketEndpoint: "",
-		HttpEndpoint:      "http://127.0.0.1:8080",
-		HttpTimeout:       10 * time.Second,
+		SeedHosts:   []string{"127.0.0.1:8080"},
+		HttpTimeout: 10 * time.Second,
 	})
 	_File = fileCtrl.New(fileCtrl.Config{
 		Network:              _Network,

@@ -62,22 +62,22 @@ func main() {
 		filePath: connInfoPath,
 	}
 
-	serverHostPort := "river.ronaksoftware.com"
+	var serverHostPorts []string
 	sdkMode := "prime"
 
 	switch len(os.Args) {
 	case 2:
 		switch strings.ToLower(os.Args[1]) {
 		case "production":
-			serverHostPort = "edge.river.im"
+			serverHostPorts = []string{"edge.river.im", "edge.rivermsg.com"}
 		case "staging":
-			serverHostPort = "river.ronaksoftware.com"
+			serverHostPorts = []string{"river.ronaksoftware.com"}
 		case "local":
-			serverHostPort = "localhost"
+			serverHostPorts = []string{"localhost"}
 		case "local2":
-			serverHostPort = "localhost:81"
+			serverHostPorts = []string{"localhost:81"}
 		default:
-			serverHostPort = os.Args[1]
+			serverHostPorts = os.Args[1:]
 		}
 	case 3:
 		switch strings.ToLower(os.Args[1]) {
@@ -87,15 +87,15 @@ func main() {
 		}
 		switch strings.ToLower(os.Args[2]) {
 		case "production":
-			serverHostPort = "edge.river.im"
+			serverHostPorts = []string{"edge.river.im", "edge.rivermsg.com"}
 		case "staging":
-			serverHostPort = "river.ronaksoftware.com"
+			serverHostPorts = []string{"river.ronaksoftware.com"}
 		case "local":
-			serverHostPort = "localhost"
+			serverHostPorts = []string{"localhost"}
 		case "local2":
-			serverHostPort = "localhost:81"
+			serverHostPorts = []string{"localhost:81"}
 		default:
-			serverHostPort = os.Args[1]
+			serverHostPorts = os.Args[1:]
 		}
 	}
 
@@ -103,7 +103,7 @@ func main() {
 	case "mini":
 		_MiniSDK = &mini.River{}
 		_MiniSDK.SetConfig(&mini.RiverConfig{
-			ServerHostPort:         serverHostPort,
+			SeedHostPorts:          serverHostPorts,
 			DbPath:                 _DbPath,
 			DbID:                   _DbID,
 			MainDelegate:           new(MainDelegate),
@@ -133,7 +133,7 @@ func main() {
 	default:
 		_SDK = &riversdk.River{}
 		_SDK.SetConfig(&riversdk.RiverConfig{
-			ServerHostPort:         serverHostPort,
+			SeedHostPorts:          serverHostPorts,
 			DbPath:                 _DbPath,
 			DbID:                   _DbID,
 			MainDelegate:           new(MainDelegate),

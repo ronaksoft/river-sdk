@@ -46,7 +46,7 @@ func SetLogLevel(l int) {
 }
 
 type RiverConfig struct {
-	ServerHostPort string
+	SeedHostPorts []string
 	// DbPath is the path of the folder holding the sqlite database.
 	DbPath string
 	// DbID is used to save data for different accounts in separate databases. Could be used for multi-account cases.
@@ -212,9 +212,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// Initialize Network Controller
 	r.networkCtrl = networkCtrl.New(
 		networkCtrl.Config{
-			WebsocketEndpoint: fmt.Sprintf("ws://%s", conf.ServerHostPort),
-			HttpEndpoint:      fmt.Sprintf("http://%s", conf.ServerHostPort),
-			CountryCode:       conf.CountryCode,
+			SeedHosts:   conf.SeedHostPorts,
+			CountryCode: conf.CountryCode,
 		},
 	)
 	r.networkCtrl.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {
