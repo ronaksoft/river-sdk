@@ -24,6 +24,36 @@ import (
 	"time"
 )
 
+func (r *River) Execute(constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag) (requestID int64, err error) {
+	return r.ExecuteCommand(
+		constructor, commandBytes,
+		domain.NewRequestDelegate(
+			func(b []byte) {
+				me := &rony.MessageEnvelope{}
+				_ = me.Unmarshal(b)
+				cb.OnComplete(me)
+			},
+			func(err error) {
+				cb.OnTimeout()
+			}, flags),
+	)
+}
+
+func (r *River) ExecuteWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag) (requestID int64, err error) {
+	return r.ExecuteCommandWithTeam(
+		teamID, accessHash, constructor, commandBytes,
+		domain.NewRequestDelegate(
+			func(b []byte) {
+				me := &rony.MessageEnvelope{}
+				_ = me.Unmarshal(b)
+				cb.OnComplete(me)
+			},
+			func(err error) {
+				cb.OnTimeout()
+			}, flags),
+	)
+}
+
 // ExecuteCommand is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server. SDK uses GetCurrentTeam() to detect the targeted team of the request
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate) (requestID int64, err error) {
@@ -143,7 +173,7 @@ func executeRemoteCommand(
 	d, ok := getDelegate(r, requestID)
 	if ok {
 		blocking = d.Flags()&RequestBlocking != 0
-		dontWaitForNetwork = d.Flags()&RequestDontWaitForNetwork != 0
+		dontWaitForNetwork = d.Flags()&RequestSkipWaitForNetwork != 0
 	}
 
 	if dontWaitForNetwork {

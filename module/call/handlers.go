@@ -189,7 +189,7 @@ func (c *call) startHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 		return
 	}
 
-	callID, err := c.start(req.Peer, req.InputUsers, req.Video ,req.CallID)
+	callID, err := c.start(req.Peer, req.InputUsers, req.Video, req.CallID)
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		da.OnComplete(out)

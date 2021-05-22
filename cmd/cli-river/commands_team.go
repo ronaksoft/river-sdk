@@ -100,7 +100,7 @@ var TeamGetDialogs = &ishell.Cmd{
 		_SDK.SetTeam(teamID, int64(accesshHash), false)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := NewCustomDelegate()
-		reqDelegate.FlagsFunc = func() int32 {
+		reqDelegate.FlagsFunc = func() riversdk.RequestDelegateFlag {
 			return riversdk.RequestServerForced
 		}
 
@@ -123,7 +123,7 @@ var TeamEdit = &ishell.Cmd{
 		_SDK.SetTeam(teamID, int64(accesshHash), false)
 		reqBytes, _ := req.Marshal()
 		reqDelegate := NewCustomDelegate()
-		reqDelegate.FlagsFunc = func() int32 {
+		reqDelegate.FlagsFunc = func() riversdk.RequestDelegateFlag {
 			return riversdk.RequestServerForced
 		}
 

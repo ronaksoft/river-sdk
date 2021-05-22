@@ -6,11 +6,20 @@ import (
 	"github.com/ronaksoft/rony/pools"
 )
 
+type RequestDelegateFlag int32
+
+// Request Flags
+const (
+	RequestServerForced RequestDelegateFlag = 1 << iota
+	RequestBlocking
+	RequestSkipWaitForNetwork
+)
+
 type RequestDelegate interface {
 	OnComplete(b []byte)
 	OnTimeout(err error)
 	OnProgress(percent int64)
-	Flags() int32
+	Flags() RequestDelegateFlag
 }
 
 type delegateAdapter struct {
@@ -95,7 +104,7 @@ type requestDelegate struct {
 	onComplete func(b []byte)
 	onTimeout  func(error)
 	onProgress func(int64)
-	flags      int32
+	flags      RequestDelegateFlag
 }
 
 func (r *requestDelegate) OnComplete(b []byte) {
@@ -110,7 +119,7 @@ func (r *requestDelegate) OnTimeout(err error) {
 	}
 }
 
-func (r *requestDelegate) Flags() int32 {
+func (r *requestDelegate) Flags() RequestDelegateFlag {
 	return r.flags
 }
 
@@ -120,7 +129,7 @@ func (r *requestDelegate) OnProgress(percent int64) {
 	}
 }
 
-func NewRequestDelegate(onComplete func(b []byte), onTimeout func(err error), flags int32) *requestDelegate {
+func NewRequestDelegate(onComplete func(b []byte), onTimeout func(err error), flags RequestDelegateFlag) *requestDelegate {
 	return &requestDelegate{
 		onComplete: onComplete,
 		onTimeout:  onTimeout,

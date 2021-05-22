@@ -17,12 +17,15 @@ type MainDelegate interface {
 	DataSynced(dialogs, contacts, gifs bool)
 }
 
-type RequestDelegate = domain.RequestDelegate
+type (
+	RequestDelegateFlag = domain.RequestDelegateFlag
+	RequestDelegate     = domain.RequestDelegate
+)
 
 // Request Flags
 const (
-	RequestServerForced int32 = 1 << iota
+	RequestServerForced RequestDelegateFlag = 1 << iota
 	RequestBlocking
-	RequestDontWaitForNetwork
+	RequestSkipWaitForNetwork
 	RequestTeamForce
 )

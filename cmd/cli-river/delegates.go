@@ -3,6 +3,7 @@ package main
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -219,7 +220,7 @@ func (c *CallDelegate) AddIceCandidate(connId int32, b []byte) bool {
 type RequestDelegate struct {
 	RequestID int64
 	Envelope  rony.MessageEnvelope
-	FlagsVal  int32
+	FlagsVal  riversdk.RequestDelegateFlag
 }
 
 func (d *RequestDelegate) OnComplete(b []byte) {
@@ -240,7 +241,7 @@ func (d *RequestDelegate) OnProgress(percent int64) {
 	_Shell.Println("Progress:", d.RequestID, percent)
 }
 
-func (d *RequestDelegate) Flags() int32 {
+func (d *RequestDelegate) Flags() riversdk.RequestDelegateFlag {
 	return d.FlagsVal
 }
 
@@ -249,7 +250,7 @@ type CustomRequestDelegate struct {
 	OnCompleteFunc func(b []byte)
 	OnTimeoutFunc  func(err error)
 	OnProgressFunc func(int64)
-	FlagsFunc      func() int32
+	FlagsFunc      func() riversdk.RequestDelegateFlag
 }
 
 func (c CustomRequestDelegate) OnComplete(b []byte) {
@@ -264,7 +265,7 @@ func (c *CustomRequestDelegate) OnProgress(percent int64) {
 	c.OnProgressFunc(percent)
 }
 
-func (c CustomRequestDelegate) Flags() int32 {
+func (c CustomRequestDelegate) Flags() riversdk.RequestDelegateFlag {
 	return c.FlagsFunc()
 }
 

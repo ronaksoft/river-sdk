@@ -1,5 +1,9 @@
 package riversdk
 
+import (
+	"git.ronaksoft.com/river/sdk/internal/domain"
+)
+
 // MainDelegate external (UI) handler will listen to this function to receive data from SDK
 type MainDelegate interface {
 	OnNetworkStatusChanged(status int)
@@ -36,16 +40,18 @@ type CallDelegate interface {
 	AddIceCandidate(connId int32, b []byte) bool
 }
 
+type RequestDelegateFlag = domain.RequestDelegateFlag
+
 // Request Flags
+// These are exact copies of domain.RequestDelegate flags
 const (
-	RequestServerForced int32 = 1 << iota
+	RequestServerForced RequestDelegateFlag = 1 << iota
 	RequestBlocking
-	RequestDontWaitForNetwork
-	RequestTeamForce
+	RequestSkipWaitForNetwork
 )
 
 type RequestDelegate interface {
 	OnComplete(b []byte)
 	OnTimeout(err error)
-	Flags() int32
+	Flags() RequestDelegateFlag
 }

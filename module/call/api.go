@@ -484,14 +484,37 @@ func (c *call) executeRemoteCommand(
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
+	rdt := domain.RequestBlocking
+	if instant {
+		rdt |= domain.RequestServerForced
+	}
+	_, err := c.SDK().ExecuteWithTeam(
+		c.teamInput.teamID, int64(c.teamInput.teamAccess), constructor, commandBytes,
+		domain.NewCallback(timeoutCB, successCB, nil),
+		rdt,
+	)
+	if err != nil {
+		logs.Warn("Call module got error on executing remote command")
+	}
+
+}
+
+func (c *call) executeRemoteCommandLegacy(
+	constructor int64, commandBytes []byte,
+	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	instant bool) {
+	logs.Debug("Execute command",
+		zap.String("C", registry.ConstructorName(constructor)),
+	)
+
 	requestID := uint64(domain.SequentialUniqueID())
 	teamID := c.teamInput.teamID
 	teamAccess := c.teamInput.teamAccess
-	//if c.tempTeamInput != nil {
+	// if c.tempTeamInput != nil {
 	//	teamID = c.tempTeamInput.teamID
 	//	teamAccess = c.tempTeamInput.teamAccess
 	//	c.tempTeamInput = nil
-	//}
+	// }
 
 	header := domain.TeamHeader(teamID, teamAccess)
 	// If the constructor is a realtime command, then just send it to the server

@@ -56,7 +56,7 @@ var ContactGetTeam = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 
 		reqDelegate := NewCustomDelegate()
-		reqDelegate.FlagsFunc = func() int32 {
+		reqDelegate.FlagsFunc = func() riversdk.RequestDelegateFlag {
 			return riversdk.RequestServerForced
 		}
 		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {
