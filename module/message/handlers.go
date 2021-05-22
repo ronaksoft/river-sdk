@@ -923,7 +923,8 @@ func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, da domain.
 func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.MessagesSaveDraft{}
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesSaveDraft()-> Unmarshal()", zap.Error(err))
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
 		return
 	}
 
@@ -950,7 +951,8 @@ func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, da domain.Cal
 func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.MessagesClearDraft{}
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("River::messagesClearDraft()-> Unmarshal()", zap.Error(err))
+		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.OnComplete(out)
 		return
 	}
 
@@ -1017,15 +1019,10 @@ func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, da doma
 	}
 
 	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
-	if dialog == nil {
-		logs.Debug("River::dialogTogglePin()-> GetDialog()",
-			zap.String("Error", "Dialog is null"),
-		)
-		return
+	if dialog != nil {
+		dialog.Pinned = req.Pin
+		_ = repo.Dialogs.Save(dialog)
 	}
-
-	dialog.Pinned = req.Pin
-	repo.Dialogs.Save(dialog)
 
 	// send the request to server
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
