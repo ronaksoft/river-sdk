@@ -74,7 +74,7 @@ type Controller struct {
 	endpointUpdated      bool
 	unauthorizedRequests map[int64]bool // requests that it should sent unencrypted
 	countryCode          string         // the country
-	sendFlusher          *tools.FlusherPool
+	sendRoutines         map[string]*tools.FlusherPool
 }
 
 // New constructs the network controller
@@ -98,7 +98,11 @@ func New(config Config) *Controller {
 
 	ctrl.stopChannel = make(chan bool, 1)
 	ctrl.connectChannel = make(chan bool)
-	ctrl.sendFlusher = tools.NewFlusherPool(1, 1000, ctrl.sendFlushFunc)
+	ctrl.sendRoutines = map[string]*tools.FlusherPool{
+		"Messages": tools.NewFlusherPool(1, 250, ctrl.sendFlushFunc),
+		"General":  tools.NewFlusherPool(3, 250, ctrl.sendFlushFunc),
+		"Batch":    tools.NewFlusherPool(1, 250, ctrl.sendFlushFunc),
+	}
 
 	ctrl.unauthorizedRequests = map[int64]bool{
 		msg.C_SystemGetServerTime: true,
@@ -485,7 +489,7 @@ func (ctrl *Controller) Connect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkConnect", func() (i interface{}, e error) {
 		logs.Info("NetCtrl is connecting")
 		defer logs.RecoverPanic(
-			"NetworkController::Connect",
+			"NetCtrl::Connect",
 			domain.M{
 				"AuthID": ctrl.authID,
 				"OS":     domain.ClientOS,
@@ -616,7 +620,7 @@ func (ctrl *Controller) incMessageSeq() int64 {
 // WebsocketSend if 'direct' sends immediately otherwise it put it in flusher
 func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, direct bool) error {
 	defer logs.RecoverPanic(
-		"NetworkController::WebsocketSend",
+		"NetCtrl::WebsocketSend",
 		domain.M{
 			"AuthID": ctrl.authID,
 			"OS":     domain.ClientOS,
@@ -632,12 +636,18 @@ func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, direct 
 	if direct || unauthorized {
 		return ctrl.writeToWebsocket(msgEnvelope)
 	}
-	ctrl.sendFlusher.Enter("", tools.NewEntry(msgEnvelope))
+	switch msgEnvelope.Constructor {
+	case msg.C_MessagesSend, msg.C_MessagesSendMedia, msg.C_MessagesForward:
+		ctrl.sendRoutines["Messages"].Enter("", tools.NewEntry(msgEnvelope))
+	default:
+		ctrl.sendRoutines["General"].Enter("", tools.NewEntry(msgEnvelope))
+	}
+
 	return nil
 }
 func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) error {
 	defer logs.RecoverPanic(
-		"NetworkController::writeToWebsocket",
+		"NetCtrl::writeToWebsocket",
 		domain.M{
 			"AuthID": ctrl.authID,
 			"OS":     domain.ClientOS,
