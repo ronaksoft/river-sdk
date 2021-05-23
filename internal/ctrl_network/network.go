@@ -42,12 +42,13 @@ type Config struct {
 // Controller websocket network controller
 type Controller struct {
 	// Authorization Keys
-	authID       int64
-	authKey      []byte
-	authRecalled int32 // atomic boolean for checking if AuthRecall is sent
-	messageSeq   int64
-	endPoints    []string
-	curEndpoint  string
+	authID        int64
+	authKey       []byte
+	authRecalled  int32 // atomic boolean for checking if AuthRecall is sent
+	messageSeq    int64
+	endPoints     []string
+	curEndpoint   string
+	curEndpointIP string
 
 	// Websocket Settings
 	wsWriteLock      sync.Mutex
@@ -117,18 +118,27 @@ func (ctrl *Controller) createWebsocketDialer(timeout time.Duration) {
 			if err != nil {
 				return nil, err
 			}
+			d := net.Dialer{Timeout: timeout}
+			if ctrl.curEndpointIP != "" {
+				conn, err = d.DialContext(ctx, "tcp4", net.JoinHostPort(ctrl.curEndpointIP, port))
+				if err == nil {
+					return
+				}
+			}
+
 			ips, err := net.LookupIP(host)
 			if err != nil {
 				return nil, err
 			}
 			logs.Info("NetCtrl look up for DNS", zap.String("Addr", addr), zap.Any("IPs", ips))
-			d := net.Dialer{Timeout: timeout}
+
 			for _, ip := range ips {
 				if ip.To4() != nil {
 					conn, err = d.DialContext(ctx, "tcp4", net.JoinHostPort(ip.String(), port))
 					if err != nil {
 						continue
 					}
+					ctrl.curEndpointIP = ip.String()
 					return
 				}
 			}
