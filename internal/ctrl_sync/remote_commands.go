@@ -190,7 +190,7 @@ func (ctrl *Controller) GetServerTime() (err error) {
 					zap.Duration("Difference", domain.TimeDelta),
 				)
 			case rony.C_Error:
-				logs.Warn("We received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
+				logs.Warn("SyncCtrl received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
 				err = domain.ParseServerError(m.Message)
 			}
 		},

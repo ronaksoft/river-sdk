@@ -121,10 +121,7 @@ func (ctrl *Controller) createWebsocketDialer(timeout time.Duration) {
 			if err != nil {
 				return nil, err
 			}
-			logs.Info("NetCtrl look up for DNS",
-				zap.String("Addr", addr),
-				zap.Any("IPs", ips),
-			)
+			logs.Info("NetCtrl look up for DNS", zap.String("Addr", addr), zap.Any("IPs", ips))
 			d := net.Dialer{Timeout: timeout}
 			for _, ip := range ips {
 				if ip.To4() != nil {
@@ -517,6 +514,7 @@ func (ctrl *Controller) Connect() {
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
 			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.curEndpoint)
 			if err != nil {
+				logs.Debug("NetCtrl got error on Dial", zap.Error(err), zap.String("Endpoint", ctrl.curEndpoint))
 				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
 				attempts++
 				if attempts > 2 {

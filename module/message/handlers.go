@@ -692,7 +692,7 @@ func genGetHistoryCB(
 
 			m.Message, _ = x.Marshal()
 		case rony.C_Error:
-			logs.Warn("We received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
+			logs.Warn("MessageModule received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
 		default:
 		}
 
@@ -776,7 +776,7 @@ func genGetMediaHistoryCB(
 
 			m.Message, _ = x.Marshal()
 		case rony.C_Error:
-			logs.Warn("We received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
+			logs.Warn("MessageModule received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
 		default:
 		}
 

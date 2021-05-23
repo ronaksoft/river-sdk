@@ -384,7 +384,7 @@ func (r *River) onNetworkConnect() (err error) {
 }
 
 func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
-	logs.Info("We received error (General)",
+	logs.Info("SDK received error (General)",
 		zap.Uint64("ReqID", requestID),
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
@@ -430,12 +430,12 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
 		mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.DepartureTime))
 		select {
 		case reqCB.ResponseChannel <- msgs[idx]:
-			logs.Debug("We received response",
+			logs.Debug("SDK received response",
 				zap.Uint64("ReqID", reqCB.RequestID),
 				zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 			)
 		default:
-			logs.Error("We received response but no callback, we drop response",
+			logs.Error("SDK received response but no callback, we drop response",
 				zap.Uint64("ReqID", reqCB.RequestID),
 				zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 			)
@@ -594,7 +594,7 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 			if err := x.Unmarshal(m.Message); err != nil {
 				logs.Error("We couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
 			}
-			logs.Error("We received error on MessagesSendMedia response",
+			logs.Error("SDK received error on MessagesSendMedia response",
 				zap.String("Code", x.Code),
 				zap.String("Item", x.Items),
 			)

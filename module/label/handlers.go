@@ -116,7 +116,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 				}
 			}
 		default:
-			logs.Warn("We received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
+			logs.Warn("LabelModule received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
 		}
 
 		da.OnComplete(m)
@@ -128,7 +128,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 	case req.MinID == 0 && req.MaxID != 0:
 		b, _ := repo.Labels.GetLowerFilled(domain.GetTeamID(in), req.LabelID, req.MaxID)
 		if !b {
-			logs.Info("River detected label hole (With MaxID Only)",
+			logs.Info("LabelModule detected label hole (With MaxID Only)",
 				zap.Int32("LabelID", req.LabelID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
