@@ -522,7 +522,7 @@ func (ctrl *Controller) Connect() {
 
 			ctrl.UpdateEndpoint("")
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
-			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), ctrl.curEndpoint)
+			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), fmt.Sprintf("ws://ctrl.curEndpoint"))
 			if err != nil {
 				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
 				attempts++
@@ -563,7 +563,7 @@ func (ctrl *Controller) UpdateEndpoint(country string) {
 		ctrl.countryCode = country
 	}
 
-	ctrl.curEndpoint = fmt.Sprintf("ws://%s", ctrl.endPoints[tools.RandomInt(len(ctrl.endPoints))])
+	ctrl.curEndpoint = ctrl.endPoints[tools.RandomInt(len(ctrl.endPoints))]
 
 	endpointParts := strings.Split(ctrl.curEndpoint, ".")
 	switch ctrl.countryCode {

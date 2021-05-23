@@ -87,13 +87,13 @@ func (ctrl *Controller) distributor() {
 		// Prepare
 		req := request{}
 		if err := json.Unmarshal(item.Value, &req); err != nil {
-			logs.Error("QueueController could not unmarshal popped request", zap.Error(err))
+			logs.Error("QueueCtrl could not unmarshal popped request", zap.Error(err))
 			continue
 		}
 
 		// If request is already canceled ignore it
 		if ctrl.IsRequestCancelled(int64(req.ID)) {
-			logs.Info("QueueController discarded a canceled request",
+			logs.Info("QueueCtrl discarded a canceled request",
 				zap.Uint64("ReqID", req.ID),
 				zap.String("C", registry.ConstructorName(req.MessageEnvelope.Constructor)),
 			)
