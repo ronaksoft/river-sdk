@@ -2,7 +2,6 @@
 ## explicit
 git.ronaksoft.com/river/msg/go/msg
 # github.com/DataDog/zstd v1.4.5
-## explicit
 github.com/DataDog/zstd
 # github.com/RoaringBitmap/roaring v0.5.1
 ## explicit
@@ -127,12 +126,11 @@ github.com/dgraph-io/ristretto
 github.com/dgraph-io/ristretto/z
 github.com/dgraph-io/ristretto/z/simd
 # github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13
-## explicit
 github.com/dgryski/go-farm
 # github.com/dustin/go-humanize v1.0.0
 ## explicit
 github.com/dustin/go-humanize
-# github.com/fatih/color v1.7.0
+# github.com/fatih/color v1.11.0
 ## explicit
 github.com/fatih/color
 # github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568
@@ -160,9 +158,6 @@ github.com/gobwas/pool/pbytes
 ## explicit
 github.com/gobwas/ws
 github.com/gobwas/ws/wsutil
-# github.com/gogo/protobuf v1.3.1
-## explicit
-github.com/gogo/protobuf/proto
 # github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.5.0

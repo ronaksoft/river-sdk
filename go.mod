@@ -12,7 +12,7 @@ require (
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fatih/color v1.7.0
+	github.com/fatih/color v1.11.0
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/getsentry/sentry-go v0.10.0
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
