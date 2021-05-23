@@ -51,7 +51,6 @@ func (ctrl *Controller) GetServerSalt() {
 				time.Sleep(time.Second)
 			}
 		},
-		true,
 		false,
 		domain.RequestSkipFlusher,
 	)
@@ -85,7 +84,6 @@ func (ctrl *Controller) GetSystemConfig() {
 				time.Sleep(time.Second)
 			}
 		},
-		true,
 		false,
 		domain.RequestSkipFlusher,
 	)
@@ -148,7 +146,6 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				err = domain.ErrInvalidConstructor
 			}
 		},
-		true,
 		false,
 		domain.RequestSkipFlusher,
 	)
@@ -194,7 +191,8 @@ func (ctrl *Controller) GetServerTime() (err error) {
 				err = domain.ParseServerError(m.Message)
 			}
 		},
-		true, false, domain.RequestSkipFlusher,
+		false,
+		domain.RequestSkipFlusher,
 	)
 	return
 }
@@ -411,7 +409,7 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup, retry int) {
 	requestID := domain.SequentialUniqueID()
 	req := &msg.AuthLogout{}
 	reqBytes, _ := req.Marshal()
-	ctrl.networkCtrl.WebsocketCommand(
+	go ctrl.networkCtrl.WebsocketCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_AuthLogout,
 			RequestID:   uint64(requestID),
@@ -433,7 +431,7 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup, retry int) {
 				waitGroup.Done()
 			}
 			// Controller applier will take care of this
-		}, false, false, domain.RequestSkipFlusher)
+		}, false, domain.RequestSkipFlusher)
 }
 
 func (ctrl *Controller) UpdateStatus(online bool) {
@@ -441,7 +439,7 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 		Online: online,
 	}
 	reqBytes, _ := req.Marshal()
-	ctrl.networkCtrl.WebsocketCommand(
+	go ctrl.networkCtrl.WebsocketCommand(
 		&rony.MessageEnvelope{
 			Constructor: msg.C_AccountUpdateStatus,
 			RequestID:   uint64(domain.SequentialUniqueID()),
@@ -462,7 +460,6 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 			}
 			// Controller applier will take care of this
 		},
-		false,
 		false,
 		0,
 	)

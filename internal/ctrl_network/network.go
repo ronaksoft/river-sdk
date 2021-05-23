@@ -712,7 +712,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 // WebsocketCommandWithTimeout run request immediately in blocking or non-blocking mode
 func (ctrl *Controller) WebsocketCommandWithTimeout(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	blockingMode, isUICallback bool, flag domain.RequestDelegateFlag, timeout time.Duration,
+	isUICallback bool, flag domain.RequestDelegateFlag, timeout time.Duration,
 ) {
 	defer logs.RecoverPanic(
 		"NetCtrl::WebsocketCommandWithTimeout",
@@ -733,6 +733,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 	reqCB := domain.AddRequestCallback(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, timeout, timeoutCB, isUICallback,
 	)
+
 	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
 		err := ctrl.WebsocketSend(req, flag)
 		if err != nil {
@@ -778,21 +779,15 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 		}
 		return
 	}
-
-	if blockingMode {
-		execBlock(messageEnvelope.RequestID, messageEnvelope)
-	} else {
-		go execBlock(messageEnvelope.RequestID, messageEnvelope)
-	}
-
+	execBlock(messageEnvelope.RequestID, messageEnvelope)
 	return
 }
 
 func (ctrl *Controller) WebsocketCommand(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	blockingMode, isUICallback bool, flag domain.RequestDelegateFlag,
+	isUICallback bool, flag domain.RequestDelegateFlag,
 ) {
-	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, blockingMode, isUICallback, flag, domain.WebsocketRequestTimeout)
+	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, isUICallback, flag, domain.WebsocketRequestTimeout)
 }
 
 // SendHttp encrypt and send request to server and receive and decrypt its response

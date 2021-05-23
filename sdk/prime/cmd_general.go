@@ -117,26 +117,14 @@ func (r *River) executeCommand(
 		),
 	)
 
-	// If this request must be sent to the server then executeRemoteCommand
-	if serverForce {
-		executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, da)
-		return
-	}
-
 	// If the constructor is a local command then
 	handler, ok := r.localCommands[constructor]
-	if ok {
-		if blockingMode {
-			executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, da)
-		} else {
-			go executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, da)
-		}
+	if ok && !serverForce {
+		go executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, da)
 		return
 	}
 
-	// If we reached here, then execute the remote commands
-	executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, da)
-
+	go executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, da)
 	return
 }
 func executeLocalCommand(
@@ -171,15 +159,11 @@ func executeRemoteCommand(
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
-	blocking := false
-	skipWaitForNetwork := false
-	d, ok := getDelegate(r, requestID)
-	if ok {
-		blocking = d.Flags()&domain.RequestBlocking != 0
-		skipWaitForNetwork = d.Flags()&domain.RequestSkipWaitForNetwork != 0
-	}
+	directToNet := r.realTimeCommands[constructor]
 
-	if skipWaitForNetwork {
+	d, ok := getDelegate(r, requestID)
+	if ok && d.Flags()&domain.RequestSkipWaitForNetwork != 0 {
+		directToNet = true
 		go func() {
 			select {
 			case <-time.After(domain.WebsocketRequestTimeout):
@@ -199,16 +183,18 @@ func executeRemoteCommand(
 				r.CancelRequest(int64(requestID))
 			}
 		}()
+	} else if d.Flags()&domain.RequestSkipFlusher != 0 {
+		directToNet = true
 	}
 
 	// If the constructor is a realtime command, then just send it to the server
-	if _, ok := r.realTimeCommands[constructor]; ok {
+	if directToNet {
 		r.networkCtrl.WebsocketCommand(&rony.MessageEnvelope{
 			Header:      domain.TeamHeader(teamID, teamAccess),
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
-		}, da.OnTimeout, da.OnComplete, blocking, true, d.Flags())
+		}, da.OnTimeout, da.OnComplete, true, d.Flags())
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&rony.MessageEnvelope{

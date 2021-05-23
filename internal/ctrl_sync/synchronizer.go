@@ -260,7 +260,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 				}
 
 			},
-			true,
 			false,
 			domain.RequestSkipFlusher,
 			domain.WebsocketRequestTimeoutLong,

@@ -427,7 +427,7 @@ func (c *call) executeRemoteCommand(
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
-	rdt := domain.RequestBlocking
+	rdt := domain.RequestBlocking | domain.RequestSkipWaitForNetwork
 	if instant {
 		rdt |= domain.RequestSkipFlusher
 	} else {

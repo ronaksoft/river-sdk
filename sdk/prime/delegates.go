@@ -48,6 +48,8 @@ const (
 	RequestServerForced RequestDelegateFlag = 1 << iota
 	RequestBlocking
 	RequestSkipWaitForNetwork
+	RequestSkipFlusher
+	RequestBatch
 )
 
 type RequestDelegate interface {
