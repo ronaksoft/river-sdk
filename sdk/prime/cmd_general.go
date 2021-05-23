@@ -183,8 +183,6 @@ func executeRemoteCommand(
 				r.CancelRequest(int64(requestID))
 			}
 		}()
-	} else if d.Flags()&domain.RequestSkipFlusher != 0 {
-		directToNet = true
 	}
 
 	// If the constructor is a realtime command, then just send it to the server
