@@ -131,7 +131,7 @@ func executeLocalCommand(
 	teamID int64, teamAccess uint64,
 	handler domain.LocalHandler,
 	requestID uint64, constructor int64, commandBytes []byte,
-	da domain.Callback,
+	cb domain.Callback,
 ) {
 	logs.Debug("We execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -147,23 +147,27 @@ func executeLocalCommand(
 		Header:    domain.TeamHeader(teamID, teamAccess),
 		RequestID: requestID,
 	}
-	handler(in, out, da)
+	handler(in, out, cb)
 }
 func executeRemoteCommand(
 	teamID int64, teamAccess uint64,
 	r *River,
 	requestID uint64, constructor int64, commandBytes []byte,
-	da domain.Callback,
+	cb domain.Callback,
 ) {
 	logs.Debug("We execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
-	directToNet := r.realTimeCommands[constructor]
+	var (
+		directToNet = r.realTimeCommands[constructor]
+		flags       int32
+	)
 
 	d, ok := getDelegate(r, requestID)
 	if ok && d.Flags()&domain.RequestSkipWaitForNetwork != 0 {
 		directToNet = true
+		flags = d.Flags()
 		go func() {
 			select {
 			case <-time.After(domain.WebsocketRequestTimeout):
@@ -192,7 +196,7 @@ func executeRemoteCommand(
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
-		}, da.OnTimeout, da.OnComplete, true, d.Flags())
+		}, cb.OnTimeout, cb.OnComplete, true, flags)
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&rony.MessageEnvelope{
@@ -201,7 +205,7 @@ func executeRemoteCommand(
 				RequestID:   requestID,
 				Message:     commandBytes,
 			},
-			da.OnTimeout, da.OnComplete, true,
+			cb.OnTimeout, cb.OnComplete, true,
 		)
 	}
 }
