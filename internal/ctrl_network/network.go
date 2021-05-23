@@ -522,7 +522,7 @@ func (ctrl *Controller) Connect() {
 
 			ctrl.UpdateEndpoint("")
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
-			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), fmt.Sprintf("ws://ctrl.curEndpoint"))
+			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), fmt.Sprintf("ws://%s", ctrl.curEndpoint))
 			if err != nil {
 				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
 				attempts++
