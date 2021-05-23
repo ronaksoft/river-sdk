@@ -14,7 +14,7 @@ const (
 	RequestBlocking
 	RequestSkipWaitForNetwork
 	RequestSkipFlusher
-	RequestSkipQueue
+	RequestRealtime
 	RequestBatch
 )
 

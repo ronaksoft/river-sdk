@@ -160,33 +160,44 @@ func executeRemoteCommand(
 	)
 
 	var (
-		directToNet = r.realTimeCommands[constructor]
-		flags       int32
+		directToNet    = r.realTimeCommands[constructor]
+		waitForNetwork = true
+		flags          int32
 	)
 
 	d, ok := getDelegate(r, requestID)
-	if ok && d.Flags()&domain.RequestSkipWaitForNetwork != 0 {
-		directToNet = true
+	if ok {
 		flags = d.Flags()
-		go func() {
-			select {
-			case <-time.After(domain.WebsocketRequestTimeout):
-				reqCB := domain.GetRequestCallback(requestID)
-				if reqCB == nil {
-					break
-				}
+		if d.Flags()&domain.RequestSkipWaitForNetwork != 0 {
+			waitForNetwork = false
+			directToNet = true
 
-				if reqCB.TimeoutCallback != nil {
-					if reqCB.IsUICallback {
-						uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
-					} else {
-						reqCB.TimeoutCallback()
+			go func() {
+				select {
+				case <-time.After(domain.WebsocketRequestTimeout):
+					reqCB := domain.GetRequestCallback(requestID)
+					if reqCB == nil {
+						break
 					}
-				}
 
-				r.CancelRequest(int64(requestID))
-			}
-		}()
+					if reqCB.TimeoutCallback != nil {
+						if reqCB.IsUICallback {
+							uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
+						} else {
+							reqCB.TimeoutCallback()
+						}
+					}
+					r.CancelRequest(int64(requestID))
+				}
+			}()
+		}
+		if d.Flags()&domain.RequestRealtime != 0 {
+			directToNet = true
+		}
+	}
+
+	if waitForNetwork {
+		r.networkCtrl.WaitForNetwork(true)
 	}
 
 	// If the constructor is a realtime command, then just send it to the server
@@ -196,7 +207,9 @@ func executeRemoteCommand(
 			Constructor: constructor,
 			RequestID:   requestID,
 			Message:     commandBytes,
-		}, cb.OnTimeout, cb.OnComplete, true, flags)
+		},
+			cb.OnTimeout, cb.OnComplete, true, flags,
+		)
 	} else {
 		r.queueCtrl.EnqueueCommand(
 			&rony.MessageEnvelope{

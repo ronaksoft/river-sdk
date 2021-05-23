@@ -27,5 +27,7 @@ const (
 	RequestServerForced RequestDelegateFlag = 1 << iota
 	RequestBlocking
 	RequestSkipWaitForNetwork
-	RequestTeamForce
+	RequestSkipFlusher
+	RequestRealtime
+	RequestBatch
 )

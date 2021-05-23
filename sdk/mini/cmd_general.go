@@ -92,7 +92,7 @@ func (r *River) executeCommand(
 		return 0, domain.ErrInvalidConstructor
 	}
 
-	serverForce := delegate.Flags()&RequestServerForced != 0
+	serverForce := delegate.Flags()&domain.RequestServerForced != 0
 	rda := domain.DelegateAdapterFromRequest(delegate)
 
 	// If this request must be sent to the server then executeRemoteCommand

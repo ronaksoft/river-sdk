@@ -49,6 +49,7 @@ const (
 	RequestBlocking
 	RequestSkipWaitForNetwork
 	RequestSkipFlusher
+	RequestRealtime
 	RequestBatch
 )
 
