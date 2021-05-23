@@ -55,7 +55,7 @@ func init() {
 		DocumentCacheDirectory: "./_files/cache",
 		LogDirectory:           "./_files/logs",
 		ConnInfo:               conInfo,
-		SeedHostPorts:          []string{"river.ronaksoftware.com"},
+		SeedHostPorts:          "river.ronaksoftware.com",
 	})
 	_River = r
 

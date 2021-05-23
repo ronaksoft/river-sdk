@@ -62,22 +62,22 @@ func main() {
 		filePath: connInfoPath,
 	}
 
-	var serverHostPorts []string
+	var serverHostPorts string
 	sdkMode := "prime"
 
 	switch len(os.Args) {
 	case 2:
 		switch strings.ToLower(os.Args[1]) {
 		case "production":
-			serverHostPorts = []string{"edge.river.im", "edge.rivermsg.com"}
+			serverHostPorts = "edge.river.im, edge.rivermsg.com"
 		case "staging":
-			serverHostPorts = []string{"river.ronaksoftware.com"}
+			serverHostPorts = "river.ronaksoftware.com"
 		case "local":
-			serverHostPorts = []string{"localhost"}
+			serverHostPorts = "localhost"
 		case "local2":
-			serverHostPorts = []string{"localhost:81"}
+			serverHostPorts = "localhost:81"
 		default:
-			serverHostPorts = os.Args[1:]
+			serverHostPorts = os.Args[1]
 		}
 	case 3:
 		switch strings.ToLower(os.Args[1]) {
@@ -87,15 +87,15 @@ func main() {
 		}
 		switch strings.ToLower(os.Args[2]) {
 		case "production":
-			serverHostPorts = []string{"edge.river.im", "edge.rivermsg.com"}
+			serverHostPorts = "edge.river.im,edge.rivermsg.com"
 		case "staging":
-			serverHostPorts = []string{"river.ronaksoftware.com"}
+			serverHostPorts = "river.ronaksoftware.com"
 		case "local":
-			serverHostPorts = []string{"localhost"}
+			serverHostPorts = "localhost"
 		case "local2":
-			serverHostPorts = []string{"localhost:81"}
+			serverHostPorts = "localhost:81"
 		default:
-			serverHostPorts = os.Args[1:]
+			serverHostPorts = os.Args[1]
 		}
 	}
 
