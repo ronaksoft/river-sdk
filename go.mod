@@ -2,7 +2,6 @@ module git.ronaksoft.com/river/sdk
 
 require (
 	git.ronaksoft.com/river/msg v0.0.0-20210517063928-eb38bf93ff9b
-	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
@@ -12,7 +11,6 @@ require (
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2
-	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.7.0
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
@@ -20,7 +18,6 @@ require (
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
 	github.com/gobwas/pool v0.2.1
 	github.com/gobwas/ws v1.0.4
-	github.com/gogo/protobuf v1.3.1
 	github.com/juju/ratelimit v1.0.1
 	github.com/miekg/dns v1.1.30 // indirect
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4

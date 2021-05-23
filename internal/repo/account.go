@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"github.com/dgraph-io/badger/v2"
-	"github.com/gogo/protobuf/proto"
 	"github.com/ronaksoft/rony/tools"
 )
 
@@ -20,7 +19,7 @@ func (r *repoAccount) SetPrivacy(key msg.PrivacyKey, rules []*msg.PrivacyRule) e
 	accountPrivacyRules := &msg.AccountPrivacyRules{}
 	accountPrivacyRules.Rules = rules
 
-	bytes, _ := proto.Marshal(accountPrivacyRules)
+	bytes, _ := accountPrivacyRules.Marshal()
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		return txn.SetEntry(badger.NewEntry(
 			tools.StrToByte(fmt.Sprintf("%s.%s", prefixAccount, key)),

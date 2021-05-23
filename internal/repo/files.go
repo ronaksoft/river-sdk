@@ -7,7 +7,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/dgraph-io/badger/v2/pb"
-	"github.com/gogo/protobuf/proto"
 	"github.com/ronaksoft/rony/tools"
 	"mime"
 	"os"
@@ -55,7 +54,7 @@ func getFile(txn *badger.Txn, clusterID int32, fileID int64, accessHash uint64) 
 }
 
 func saveFile(txn *badger.Txn, file *msg.ClientFile) error {
-	fileBytes, _ := proto.Marshal(file)
+	fileBytes, _ := file.Marshal()
 	return txn.SetEntry(badger.NewEntry(
 		getFileKey(file.ClusterID, file.FileID, file.AccessHash),
 		fileBytes,

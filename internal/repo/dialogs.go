@@ -8,7 +8,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
-	"github.com/gogo/protobuf/proto"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
@@ -77,7 +76,7 @@ func getDialogPeerFromIndexKey(key string) (int64, *msg.Peer) {
 }
 
 func saveDialog(txn *badger.Txn, dialog *msg.Dialog) error {
-	dialogBytes, _ := proto.Marshal(dialog)
+	dialogBytes, _ := dialog.Marshal()
 	err := txn.SetEntry(badger.NewEntry(
 		getDialogKey(dialog.TeamID, dialog.PeerID, dialog.PeerType),
 		dialogBytes,
