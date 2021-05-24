@@ -38,6 +38,7 @@ type Controller struct {
 	networkCtrl *networkCtrl.Controller
 	queueCtrl   *queueCtrl.Controller
 	fileCtrl    *fileCtrl.Controller
+	logger      *logs.Logger
 
 	syncStatus         domain.SyncStatus
 	lastUpdateReceived int64
@@ -58,6 +59,7 @@ func NewSyncController(config Config) *Controller {
 	ctrl.queueCtrl = config.QueueCtrl
 	ctrl.networkCtrl = config.NetworkCtrl
 	ctrl.fileCtrl = config.FileCtrl
+	ctrl.logger = logs.With("SyncCtrl")
 
 	if config.SyncStatusChangeCB == nil {
 		config.SyncStatusChangeCB = func(newStatus domain.SyncStatus) {}
@@ -125,7 +127,7 @@ func (ctrl *Controller) Sync() {
 	_, _, _ = domain.SingleFlight.Do("Sync", func() (i interface{}, e error) {
 		// There is no need to sync when no user has been authorized
 		if ctrl.GetUserID() == 0 {
-			logs.Debug("SyncCtrl does not sync when no user is set")
+			ctrl.logger.Debug("SyncCtrl does not sync when no user is set")
 			return
 		}
 
@@ -136,7 +138,7 @@ func (ctrl *Controller) Sync() {
 		for {
 			serverUpdateID, err = ctrl.AuthRecall("Sync")
 			if err != nil {
-				logs.Warn("SyncCtrl got err on AuthRecall", zap.Error(err))
+				ctrl.logger.Warn("SyncCtrl got err on AuthRecall", zap.Error(err))
 				time.Sleep(time.Duration(domain.RandomInt(1000)) * time.Millisecond)
 				if maxTry--; maxTry < 0 {
 					return
@@ -157,7 +159,7 @@ func (ctrl *Controller) Sync() {
 
 		ctrlUpdateID := ctrl.GetUpdateID()
 		if ctrlUpdateID == 0 || (serverUpdateID-ctrlUpdateID) > domain.SnapshotSyncThreshold {
-			logs.Info("SyncCtrl goes for a Snapshot sync")
+			ctrl.logger.Info("SyncCtrl goes for a Snapshot sync")
 
 			// Get Contacts from the server
 			waitGroup := &sync.WaitGroup{}
@@ -173,11 +175,11 @@ func (ctrl *Controller) Sync() {
 			waitGroup.Wait()
 
 			if err := ctrl.SetUpdateID(serverUpdateID); err != nil {
-				logs.Error("SyncCtrl couldn't save the current GetUpdateID", zap.Error(err))
+				ctrl.logger.Error("SyncCtrl couldn't save the current GetUpdateID", zap.Error(err))
 				return
 			}
 		} else if serverUpdateID >= ctrl.GetUpdateID()+1 {
-			logs.Info("SyncCtrl goes for a Sequential sync")
+			ctrl.logger.Info("SyncCtrl goes for a Sequential sync")
 			getUpdateDifference(ctrl, serverUpdateID)
 		}
 		return nil, nil
@@ -187,12 +189,12 @@ func updateSyncStatus(ctrl *Controller, newStatus domain.SyncStatus) {
 	if ctrl.syncStatus == newStatus {
 		return
 	}
-	logs.Info("SyncCtrl status changed", zap.String("Status", newStatus.ToString()))
+	ctrl.logger.Info("SyncCtrl status changed", zap.String("Status", newStatus.ToString()))
 	ctrl.syncStatus = newStatus
 	ctrl.syncStatusChangeCallback(newStatus)
 }
 func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
-	logs.Info("SyncCtrl calls UpdateGetDifference",
+	ctrl.logger.Info("SyncCtrl calls UpdateGetDifference",
 		zap.Int64("ServerUpdateID", serverUpdateID),
 		zap.Int64("ClientUpdateID", ctrl.GetUpdateID()),
 	)
@@ -225,7 +227,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			},
 			func() {
 				waitGroup.Done()
-				logs.Warn("SyncCtrl got timeout on UpdateGetDifference")
+				ctrl.logger.Warn("SyncCtrl got timeout on UpdateGetDifference")
 			},
 			func(m *rony.MessageEnvelope) {
 				defer waitGroup.Done()
@@ -234,7 +236,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					x := new(msg.UpdateDifference)
 					err := x.Unmarshal(m.Message)
 					if err != nil {
-						logs.Error("SyncCtrl couldn't unmarshal response (UpdateDifference)", zap.Error(err))
+						ctrl.logger.Error("SyncCtrl couldn't unmarshal response (UpdateDifference)", zap.Error(err))
 						time.Sleep(time.Second)
 						return
 					}
@@ -253,7 +255,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 					}
 
 				case rony.C_Error:
-					logs.Debug("SyncCtrl got error response",
+					ctrl.logger.Debug("SyncCtrl got error response",
 						zap.String("Error", domain.ParseServerError(m.Message).Error()),
 					)
 
@@ -307,7 +309,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 		timeLapse [2]int64
 	)
 
-	logs.Info("SyncCtrl received UpdateDifference",
+	ctrl.logger.Info("SyncCtrl received UpdateDifference",
 		zap.Int64("MaxUpdateID", x.MaxUpdateID),
 		zap.Int64("MinUpdateID", x.MinUpdateID),
 		zap.Int("Length", len(x.Updates)),
@@ -315,7 +317,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	)
 	defer func() {
 		endTime := tools.NanoTime()
-		logs.Info("SyncCtrl applied UpdateDifference",
+		ctrl.logger.Info("SyncCtrl applied UpdateDifference",
 			zap.Int("Length", len(x.Updates)),
 			zap.Duration("Messages", time.Duration(timeLapse[1]-timeLapse[0])),
 			zap.Duration("Others", time.Duration(endTime-timeLapse[1])),
@@ -347,7 +349,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 			if applier, ok := ctrl.updateAppliers[ue.Constructor]; ok {
 				externalHandlerUpdates, err := applier(ue)
 				if err != nil {
-					logs.Warn("SyncCtrl got error on UpdateDifference",
+					ctrl.logger.Warn("SyncCtrl got error on UpdateDifference",
 						zap.Error(err),
 						zap.Int64("UpdateID", ue.UpdateID),
 						zap.String("C", registry.ConstructorName(ue.Constructor)),
@@ -381,7 +383,7 @@ func onGetDifferenceSucceed(ctrl *Controller, x *msg.UpdateDifference) {
 	for idx, updates := range queues {
 		timeLapse[idx] = tools.NanoTime()
 		for _, ue := range updates {
-			logs.Info("UpdateDifference applies",
+			ctrl.logger.Info("UpdateDifference applies",
 				zap.Int64("UpdateID", ue.UpdateID),
 				zap.String("C", registry.ConstructorName(ue.Constructor)),
 			)
@@ -430,12 +432,12 @@ func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64, forceUpdate bo
 
 	// if this is the first time we switch to this team, then lets sync with server
 	err := repo.System.SaveInt(teamKey, uint64(tools.TimeUnix()))
-	logs.WarnOnErr("Team Sync", err)
+	ctrl.logger.WarnOnErr("Team Sync", err)
 }
 
 func (ctrl *Controller) SetUserID(userID int64) {
 	ctrl.userID = userID
-	logs.Debug("SyncCtrl user is set",
+	ctrl.logger.Debug("SyncCtrl user is set",
 		zap.Int64("userID", userID),
 	)
 }
@@ -457,13 +459,13 @@ func (ctrl *Controller) SetUpdateID(id int64) error {
 
 // Start controller
 func (ctrl *Controller) Start() {
-	logs.Info("SyncCtrl started")
+	ctrl.logger.Info("SyncCtrl started")
 
 	// Load the latest GetUpdateID stored in DB
 	if v, err := repo.System.LoadInt(domain.SkUpdateID); err != nil {
 		err := repo.System.SaveInt(domain.SkUpdateID, 0)
 		if err != nil {
-			logs.Error("SyncCtrl couldn't save current GetUpdateID", zap.Error(err))
+			ctrl.logger.Error("SyncCtrl couldn't save current GetUpdateID", zap.Error(err))
 		}
 		ctrl.updateID = 0
 	} else {
@@ -478,9 +480,9 @@ func (ctrl *Controller) Start() {
 
 // Stop controller
 func (ctrl *Controller) Stop() {
-	logs.Info("SyncCtrl calls stop")
+	ctrl.logger.Info("SyncCtrl calls stop")
 	ctrl.ResetIDs()
-	logs.Info("SyncCtrl Stopped")
+	ctrl.logger.Info("SyncCtrl Stopped")
 }
 
 // MessageApplier call appliers-> repository and sync data
@@ -523,7 +525,7 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 	waitGroup.Wait()
 	pools.ReleaseWaitGroup(waitGroup)
 
-	logs.Debug("SyncCtrl receives UpdateContainer",
+	ctrl.logger.Debug("SyncCtrl receives UpdateContainer",
 		zap.Int64("ctrl.GetUpdateID", ctrl.GetUpdateID()),
 		zap.Int64("MaxID", updateContainer.MaxUpdateID),
 		zap.Int64("MinID", updateContainer.MinUpdateID),
@@ -537,7 +539,7 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 		}
 		applier, ok := ctrl.updateAppliers[update.Constructor]
 		if ok {
-			logs.Debug("SyncCtrl applies Update",
+			ctrl.logger.Debug("SyncCtrl applies Update",
 				zap.Int64("ctrl.GetUpdateID", ctrl.GetUpdateID()),
 				zap.Int64("MaxID", updateContainer.MaxUpdateID),
 				zap.Int64("MinID", updateContainer.MinUpdateID),
@@ -546,10 +548,10 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 
 			externalHandlerUpdates, err := applier(update)
 			if err != nil {
-				logs.Error("SyncCtrl got error on update applier", zap.Error(err))
+				ctrl.logger.Error("SyncCtrl got error on update applier", zap.Error(err))
 				return
 			}
-			logs.Info("SyncCtrl applied update", zap.String("C", registry.ConstructorName(update.Constructor)))
+			ctrl.logger.Info("SyncCtrl applied update", zap.String("C", registry.ConstructorName(update.Constructor)))
 			switch update.Constructor {
 			case msg.C_UpdateMessageID:
 			default:
@@ -615,7 +617,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 			},
 			func() {
 				wg.Done()
-				logs.Error("SyncCtrl got timeout on ContactsImport")
+				ctrl.logger.Error("SyncCtrl got timeout on ContactsImport")
 			},
 			func(m *rony.MessageEnvelope) {
 				defer wg.Done()
@@ -624,7 +626,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 					x := &msg.ContactsImported{}
 					err := x.Unmarshal(m.Message)
 					if err != nil {
-						logs.Error("SyncCtrl got error on ContactsImport when unmarshal", zap.Error(err))
+						ctrl.logger.Error("SyncCtrl got error on ContactsImport when unmarshal", zap.Error(err))
 						return
 					}
 					_ = repo.Users.DeletePhoneContact(phoneContacts...)
@@ -639,7 +641,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 					case x.Code == msg.ErrCodeRateLimit:
 						maxTry = 0
 					default:
-						logs.Warn("SyncCtrl got error response from server, will retry",
+						ctrl.logger.Warn("SyncCtrl got error response from server, will retry",
 							zap.String("Code", x.Code), zap.String("Item", x.Items),
 						)
 						time.Sleep(time.Second)
@@ -648,7 +650,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 						keepGoing = false
 					}
 				default:
-					logs.Error("SyncCtrl expected ContactsImported but we got something else!!!",
+					ctrl.logger.Error("SyncCtrl expected ContactsImported but we got something else!!!",
 						zap.String("C", registry.ConstructorName(m.Constructor)),
 					)
 					time.Sleep(time.Second)

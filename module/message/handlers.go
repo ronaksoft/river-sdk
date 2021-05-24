@@ -450,7 +450,7 @@ func (r *message) getMonitorStats() []byte {
 	return b
 }
 func (r *message) liveLogger(url string) {
-	r.Log().SetRemoteLog(url)
+	logs.SetRemoteLog(url)
 	r.sendToSavedMessage("Live Logger is On")
 }
 func (r *message) heapProfile() (filePath string) {

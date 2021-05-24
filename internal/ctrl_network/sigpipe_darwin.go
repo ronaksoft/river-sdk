@@ -3,7 +3,6 @@
 package networkCtrl
 
 import (
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"go.uber.org/zap"
 	"net"
 	"syscall"
@@ -28,16 +27,16 @@ func (ctrl *Controller) ignoreSIGPIPE(c net.Conn) {
 	}
 	r, e := s.SyscallConn()
 	if e != nil {
-		logs.Error("Failed to get SyscallConn", zap.Error(e))
+		ctrl.logger.Error("Failed to get SyscallConn", zap.Error(e))
 		return
 	}
 	e = r.Control(func(fd uintptr) {
 		intfd := int(fd)
 		if e := syscall.SetsockoptInt(intfd, syscall.SOL_SOCKET, syscall.SO_NOSIGPIPE, 1); e != nil {
-			logs.Error("Failed to set SO_NOSIGPIPE", zap.Error(e))
+			ctrl.logger.Error("Failed to set SO_NOSIGPIPE", zap.Error(e))
 		}
 	})
 	if e != nil {
-		logs.Error("Failed to set SO_NOSIGPIPE", zap.Error(e))
+		ctrl.logger.Error("Failed to set SO_NOSIGPIPE", zap.Error(e))
 	}
 }

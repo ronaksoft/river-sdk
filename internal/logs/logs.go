@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -23,35 +24,34 @@ var (
 
 func init() {
 	_LogLevel = zap.NewAtomicLevelAt(zapcore.WarnLevel)
+	_Log = &Logger{
+		z: zap.New(
+			zapcore.NewCore(
+				zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+					CallerKey:      "caller",
+					LevelKey:       "level",
+					MessageKey:     "msg",
+					NameKey:        "name",
+					StacktraceKey:  "stack",
+					LineEnding:     zapcore.DefaultLineEnding,
+					EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+					EncodeTime:     TimeEncoder,
+					EncodeDuration: zapcore.StringDurationEncoder,
+					EncodeCaller:   zapcore.ShortCallerEncoder,
+				}),
+				zapcore.Lock(os.Stdout),
+				_LogLevel,
+			),
+		),
+	}
 }
 
-func New(logDir string) (*Logger, error) {
+func SetFilePath(logDir string) error {
 	// support IOS file path
 	if strings.HasPrefix(logDir, "file://") {
 		logDir = logDir[7:]
 	}
 	_LogDir = logDir
-
-	l := &Logger{}
-	l.z = zap.New(
-		zapcore.NewCore(
-			zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
-				CallerKey:      "caller",
-				LevelKey:       "level",
-				MessageKey:     "msg",
-				NameKey:        "name",
-				StacktraceKey:  "stack",
-				LineEnding:     zapcore.DefaultLineEnding,
-				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-				EncodeTime:     TimeEncoder,
-				EncodeDuration: zapcore.StringDurationEncoder,
-				EncodeCaller:   zapcore.ShortCallerEncoder,
-			}),
-			zapcore.Lock(os.Stdout),
-			_LogLevel,
-		),
-	)
-
 	if logDir != "" {
 		fmt.Println(logDir)
 		defer func() {
@@ -62,9 +62,9 @@ func New(logDir string) (*Logger, error) {
 		logFileName := fmt.Sprintf("LOG-%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
 		logFile, err := os.OpenFile(path.Join(logDir, logFileName), os.O_APPEND|os.O_CREATE, 0600)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		l.z = l.z.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+		_Log.z = _Log.z.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
 			return zapcore.NewTee(
 				core,
 				zapcore.NewCore(
@@ -86,9 +86,67 @@ func New(logDir string) (*Logger, error) {
 				),
 			)
 		}))
+
 	}
-	_Log = l
-	return l, nil
+	return nil
+}
+
+func SetRemoteLog(url string) {
+	remoteWriter := RemoteWrite{
+		HttpClient: http.Client{
+			Timeout: time.Millisecond * 250,
+		},
+		Url: url,
+	}
+	_Log.z = _Log.z.WithOptions(
+		zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+			return zapcore.NewTee(
+				core,
+				zapcore.NewCore(
+					zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+						TimeKey:        "ts",
+						LevelKey:       "",
+						NameKey:        "logger",
+						CallerKey:      "caller",
+						MessageKey:     "msg",
+						StacktraceKey:  "stacktrace",
+						LineEnding:     zapcore.DefaultLineEnding,
+						EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+						EncodeTime:     zapcore.ISO8601TimeEncoder,
+						EncodeDuration: zapcore.StringDurationEncoder,
+						EncodeCaller:   zapcore.ShortCallerEncoder,
+					}),
+					remoteWriter,
+					_LogLevel,
+				),
+			)
+		}),
+		zap.AddCaller(),
+		zap.AddCallerSkip(1),
+	)
+}
+
+func SetSentry(userID, authID int64, dsn string) {
+	if dsn == "" {
+		return
+	}
+	sentry, err := NewSentryCore(
+		zapcore.ErrorLevel, dsn, userID,
+		map[string]string{
+			"AuthID": fmt.Sprintf("%d", authID),
+		},
+	)
+	if err != nil {
+		return
+	}
+	_Log.z = _Log.z.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+		return zapcore.NewTee(core, sentry)
+	}))
+
+}
+
+func With(name string) *Logger {
+	return _Log.With(name)
 }
 
 func Directory() string {

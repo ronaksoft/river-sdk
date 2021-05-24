@@ -92,7 +92,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	r.sentryDSN = conf.SentryDSN
 	r.ConnInfo = conf.ConnInfo
-	r.logger, _ = logs.New("")
 
 	if conf.MaxInFlightDownloads <= 0 {
 		conf.MaxInFlightDownloads = 10
@@ -112,6 +111,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.mainDelegate = conf.MainDelegate
 
 	// set log level
+	r.logger = logs.With("River")
 	r.logger.SetLogLevel(conf.LogLevel)
 
 	// Initialize Network Controller

@@ -3,6 +3,7 @@ package mini
 import (
 	"context"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
@@ -31,8 +32,8 @@ func (r *River) AppKill() {
 func (r *River) AppStart() error {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
+	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 	r.logger.Info("MiniRiver Starting")
-	r.logger.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
 	minirepo.MustInit(r.dbPath)
 

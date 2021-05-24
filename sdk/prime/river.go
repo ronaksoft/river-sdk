@@ -184,13 +184,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.callDelegate = conf.CallDelegate
 
 	// set log level
-	logs.SetLogLevel(conf.LogLevel)
-
-	var err error
-	r.logger, err = logs.New(conf.LogDirectory)
-	if err != nil {
-		logs.PanicF("got error on initializing the logger: %v", err)
-	}
+	r.logger = logs.With("MiniRiver")
+	r.logger.SetLogLevel(conf.LogLevel)
 
 	// Initialize realtime requests
 	r.modules = map[string]module.Module{}

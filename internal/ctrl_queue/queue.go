@@ -38,6 +38,7 @@ type Controller struct {
 	waitingList *goque.Queue
 	networkCtrl *networkCtrl.Controller
 	fileCtrl    *fileCtrl.Controller
+	logger      *logs.Logger
 
 	// Internal Flags
 	distributorLock    sync.Mutex
@@ -52,6 +53,7 @@ func New(fileCtrl *fileCtrl.Controller, network *networkCtrl.Controller, dataDir
 	ctrl := new(Controller)
 	ctrl.dataDir = filepath.Join(dataDir, "queue")
 	ctrl.rateLimiter = ratelimit.NewBucket(time.Second, 20)
+	ctrl.logger = logs.With("QueueCtrl")
 	if dataDir == "" {
 		panic(domain.ErrQueuePathIsNotSet)
 	}
@@ -87,13 +89,13 @@ func (ctrl *Controller) distributor() {
 		// Prepare
 		req := request{}
 		if err := json.Unmarshal(item.Value, &req); err != nil {
-			logs.Error("QueueCtrl could not unmarshal popped request", zap.Error(err))
+			ctrl.logger.Error("QueueCtrl could not unmarshal popped request", zap.Error(err))
 			continue
 		}
 
 		// If request is already canceled ignore it
 		if ctrl.IsRequestCancelled(int64(req.ID)) {
-			logs.Info("QueueCtrl discarded a canceled request",
+			ctrl.logger.Info("QueueCtrl discarded a canceled request",
 				zap.Uint64("ReqID", req.ID),
 				zap.String("C", registry.ConstructorName(req.MessageEnvelope.Constructor)),
 			)
@@ -109,11 +111,11 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 	req.InsertTime = time.Now()
 	jsonRequest, err := json.Marshal(req)
 	if err != nil {
-		logs.Warn("QueueController couldn't marshal the request", zap.Error(err))
+		ctrl.logger.Warn("QueueController couldn't marshal the request", zap.Error(err))
 		return
 	}
 	if _, err := ctrl.waitingList.Enqueue(jsonRequest); err != nil {
-		logs.Warn("QueueController couldn't enqueue the request", zap.Error(err))
+		ctrl.logger.Warn("QueueController couldn't enqueue the request", zap.Error(err))
 		return
 	}
 	ctrl.distributorLock.Lock()
@@ -128,7 +130,7 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 // Sends the message to the networkController and waits for the response. If time is up then it call the
 // TimeoutCallback otherwise if response arrived in time, SuccessCallback will be called.
 func (ctrl *Controller) executor(req request) {
-	defer logs.RecoverPanic(
+	defer ctrl.logger.RecoverPanic(
 		"SyncCtrl::executor",
 		domain.M{
 			"OS":  domain.ClientOS,
@@ -148,7 +150,7 @@ func (ctrl *Controller) executor(req request) {
 
 	// Try to send it over wire, if error happened put it back into the queue
 	if err := ctrl.networkCtrl.WebsocketSend(req.MessageEnvelope, 0); err != nil {
-		logs.Info("QueueCtrl re-push the request into the queue", zap.Error(err))
+		ctrl.logger.Info("QueueCtrl re-push the request into the queue", zap.Error(err))
 		ctrl.addToWaitingList(&req)
 		return
 	}
@@ -218,7 +220,7 @@ func (ctrl *Controller) executor(req request) {
 				reqCB.SuccessCallback(res)
 			}
 		} else {
-			logs.Debug("QueueCtrl received response but no callback exists!!!",
+			ctrl.logger.Debug("QueueCtrl received response but no callback exists!!!",
 				zap.String("C", registry.ConstructorName(res.Constructor)),
 				zap.Uint64("ReqID", res.RequestID),
 			)
@@ -233,7 +235,7 @@ func (ctrl *Controller) EnqueueCommand(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	isUICallback bool,
 ) {
-	defer logs.RecoverPanic(
+	defer ctrl.logger.RecoverPanic(
 		"SyncCtrl::EnqueueCommand",
 		domain.M{
 			"OS":  domain.ClientOS,
@@ -243,7 +245,7 @@ func (ctrl *Controller) EnqueueCommand(
 		nil,
 	)
 
-	logs.Debug("QueueCtrl enqueues command",
+	ctrl.logger.Debug("QueueCtrl enqueues command",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
 	)
@@ -263,13 +265,13 @@ func (ctrl *Controller) EnqueueCommand(
 
 // Start queue
 func (ctrl *Controller) Start(resetQueue bool) {
-	logs.Info("QueueCtrl started")
+	ctrl.logger.Info("QueueCtrl started")
 	if resetQueue {
 		_ = os.RemoveAll(ctrl.dataDir)
 	}
 	err := ctrl.OpenQueue()
 	if err != nil {
-		logs.Fatal("We couldn't initialize the queue", zap.Error(err))
+		ctrl.logger.Fatal("We couldn't initialize the queue", zap.Error(err))
 	}
 
 	// Try to resend unsent messages
@@ -280,7 +282,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 		}
 		switch pmsg.MediaType {
 		case msg.InputMediaType_InputMediaTypeEmpty:
-			logs.Info("QueueCtrl loads pending messages",
+			ctrl.logger.Info("QueueCtrl loads pending messages",
 				zap.Int64("ID", pmsg.ID),
 				zap.Int64("FileID", pmsg.FileID),
 			)
@@ -330,7 +332,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 
 // Stop queue
 func (ctrl *Controller) Stop() {
-	logs.Info("QueueCtrl stopped")
+	ctrl.logger.Info("QueueCtrl stopped")
 	ctrl.DropQueue()
 
 }
@@ -359,7 +361,7 @@ func (ctrl *Controller) DropQueue() {
 		return ctrl.waitingList.Drop()
 	})
 	if err != nil {
-		logs.Warn("QueueCtrl got error on dropping queue")
+		ctrl.logger.Warn("QueueCtrl got error on dropping queue")
 	}
 }
 
@@ -369,7 +371,7 @@ func (ctrl *Controller) OpenQueue() (err error) {
 		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
 			err = os.RemoveAll(ctrl.dataDir)
 			if err != nil {
-				logs.Warn("QueueCtrl we got error on removing queue directory", zap.Error(err))
+				ctrl.logger.Warn("QueueCtrl we got error on removing queue directory", zap.Error(err))
 			}
 			return err
 		} else {

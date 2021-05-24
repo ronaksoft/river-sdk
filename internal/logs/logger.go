@@ -1,11 +1,9 @@
 package logs
 
 import (
-	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"net/http"
-	"time"
+	"runtime/debug"
 )
 
 /*
@@ -23,60 +21,6 @@ type Logger struct {
 
 func (l *Logger) SetLogLevel(lvl int) {
 	_LogLevel.SetLevel(zapcore.Level(lvl))
-}
-
-func (l *Logger) SetRemoteLog(url string) {
-	remoteWriter := RemoteWrite{
-		HttpClient: http.Client{
-			Timeout: time.Millisecond * 250,
-		},
-		Url: url,
-	}
-	l.z = l.z.WithOptions(
-		zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-			return zapcore.NewTee(
-				core,
-				zapcore.NewCore(
-					zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
-						TimeKey:        "ts",
-						LevelKey:       "",
-						NameKey:        "logger",
-						CallerKey:      "caller",
-						MessageKey:     "msg",
-						StacktraceKey:  "stacktrace",
-						LineEnding:     zapcore.DefaultLineEnding,
-						EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-						EncodeTime:     zapcore.ISO8601TimeEncoder,
-						EncodeDuration: zapcore.StringDurationEncoder,
-						EncodeCaller:   zapcore.ShortCallerEncoder,
-					}),
-					remoteWriter,
-					_LogLevel,
-				),
-			)
-		}),
-		zap.AddCaller(),
-		zap.AddCallerSkip(1),
-	)
-}
-
-func (l *Logger) SetSentry(userID, authID int64, dsn string) {
-	if dsn == "" {
-		return
-	}
-	sentry, err := NewSentryCore(
-		zapcore.ErrorLevel, dsn, userID,
-		map[string]string{
-			"AuthID": fmt.Sprintf("%d", authID),
-		},
-	)
-	if err != nil {
-		return
-	}
-	l.z = l.z.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-		return zapcore.NewTee(core, sentry)
-	}))
-
 }
 
 func (l *Logger) With(name string) *Logger {
@@ -118,4 +62,18 @@ func (l *Logger) Error(msg string, fields ...zap.Field) {
 func (l *Logger) Fatal(msg string, fields ...zap.Field) {
 	l.z.Fatal(msg, fields...)
 
+}
+
+func (l *Logger) RecoverPanic(funcName string, extraInfo interface{}, compensationFunc func()) {
+	if r := recover(); r != nil {
+		l.Error("Panic Recovered",
+			zap.String("Func", funcName),
+			zap.Any("Info", extraInfo),
+			zap.Any("Recover", r),
+			zap.ByteString("StackTrace", debug.Stack()),
+		)
+		if compensationFunc != nil {
+			go compensationFunc()
+		}
+	}
 }

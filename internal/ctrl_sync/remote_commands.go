@@ -3,7 +3,6 @@ package syncCtrl
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
@@ -24,7 +23,7 @@ import (
 */
 
 func (ctrl *Controller) GetServerSalt() {
-	logs.Info("SyncCtrl call GetServerSalt")
+	ctrl.logger.Info("SyncCtrl call GetServerSalt")
 	serverSaltReq := &msg.SystemGetSalts{}
 	serverSaltReqBytes, _ := serverSaltReq.Marshal()
 
@@ -40,11 +39,11 @@ func (ctrl *Controller) GetServerSalt() {
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_SystemSalts:
-				logs.Debug("SyncCtrl received SystemSalts")
+				ctrl.logger.Debug("SyncCtrl received SystemSalts")
 			case rony.C_Error:
 				e := new(rony.Error)
 				_ = m.Unmarshal(m.Message)
-				logs.Error("SyncCtrl received error response for SystemGetSalts (Error)",
+				ctrl.logger.Error("SyncCtrl received error response for SystemGetSalts (Error)",
 					zap.String("Code", e.Code),
 					zap.String("Item", e.Items),
 				)
@@ -57,7 +56,7 @@ func (ctrl *Controller) GetServerSalt() {
 }
 
 func (ctrl *Controller) GetSystemConfig() {
-	logs.Info("SyncCtrl call SystemGetConfig")
+	ctrl.logger.Info("SyncCtrl call SystemGetConfig")
 	req := &msg.SystemGetConfig{}
 	reqBytes, _ := req.Marshal()
 
@@ -73,11 +72,11 @@ func (ctrl *Controller) GetSystemConfig() {
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
 			case msg.C_SystemConfig:
-				logs.Debug("SyncCtrl received SystemConfig")
+				ctrl.logger.Debug("SyncCtrl received SystemConfig")
 			case rony.C_Error:
 				e := new(rony.Error)
 				_ = m.Unmarshal(m.Message)
-				logs.Error("SyncCtrl received error response for SystemGetSalts (Error)",
+				ctrl.logger.Error("SyncCtrl received error response for SystemGetSalts (Error)",
 					zap.String("Code", e.Code),
 					zap.String("Item", e.Items),
 				)
@@ -91,7 +90,7 @@ func (ctrl *Controller) GetSystemConfig() {
 
 func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 
-	logs.Info("SyncCtrl call AuthRecall", zap.String("Caller", caller))
+	ctrl.logger.Info("SyncCtrl call AuthRecall", zap.String("Caller", caller))
 	req := msg.AuthRecall{
 		ClientID:   0,
 		Version:    0,
@@ -112,7 +111,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 			Message:     reqBytes,
 		},
 		func() {
-			logs.Warn("AuthRecall Timeout",
+			ctrl.logger.Warn("AuthRecall Timeout",
 				zap.Uint64("ReqID", reqID),
 				zap.Int64("AuthID", ctrl.connInfo.PickupAuthID()),
 				zap.Int64("UserID", ctrl.connInfo.PickupUserID()),
@@ -128,7 +127,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				if err != nil {
 					return
 				}
-				logs.Debug("SyncCtrl received AuthRecalled")
+				ctrl.logger.Debug("SyncCtrl received AuthRecalled")
 				updateID = x.UpdateID
 
 				// Update the time difference between client & server
@@ -140,7 +139,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 			case rony.C_Error:
 				err = domain.ParseServerError(m.Message)
 			default:
-				logs.Error("SyncCtrl did not received expected response for AuthRecall",
+				ctrl.logger.Error("SyncCtrl did not received expected response for AuthRecall",
 					zap.String("C", registry.ConstructorName(m.Constructor)),
 				)
 				err = domain.ErrInvalidConstructor
@@ -156,7 +155,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 }
 
 func (ctrl *Controller) GetServerTime() (err error) {
-	logs.Info("SyncCtrl call GetServerTime")
+	ctrl.logger.Info("SyncCtrl call GetServerTime")
 	timeReq := &msg.SystemGetServerTime{}
 	timeReqBytes, _ := timeReq.Marshal()
 	ctrl.networkCtrl.WebsocketCommand(
@@ -174,20 +173,20 @@ func (ctrl *Controller) GetServerTime() (err error) {
 				x := new(msg.SystemServerTime)
 				err = x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
+					ctrl.logger.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 					return
 				}
 				clientTime := time.Now().Unix()
 				serverTime := x.Timestamp
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
 
-				logs.Debug("SyncCtrl received SystemServerTime",
+				ctrl.logger.Debug("SyncCtrl received SystemServerTime",
 					zap.Int64("ServerTime", serverTime),
 					zap.Int64("ClientTime", clientTime),
 					zap.Duration("Difference", domain.TimeDelta),
 				)
 			case rony.C_Error:
-				logs.Warn("SyncCtrl received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
+				ctrl.logger.Warn("SyncCtrl received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
 				err = domain.ParseServerError(m.Message)
 			}
 		},
@@ -198,7 +197,7 @@ func (ctrl *Controller) GetServerTime() (err error) {
 }
 
 func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, teamAccess uint64, offset int32, limit int32) {
-	logs.Info("SyncCtrl calls GetAllDialogs",
+	ctrl.logger.Info("SyncCtrl calls GetAllDialogs",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
 	)
@@ -216,14 +215,14 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, t
 		},
 		func() {
 			// If timeout, then retry the request
-			logs.Warn("Timeout! on GetAllDialogs, retrying ...")
+			ctrl.logger.Warn("Timeout! on GetAllDialogs, retrying ...")
 			_, _ = ctrl.AuthRecall("GetAllDialogs")
 			ctrl.GetAllDialogs(waitGroup, teamID, teamAccess, offset, limit)
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
 			case rony.C_Error:
-				logs.Error("SyncCtrl got error response on MessagesGetDialogs", zap.Error(domain.ParseServerError(m.Message)))
+				ctrl.logger.Error("SyncCtrl got error response on MessagesGetDialogs", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
 				if x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID {
@@ -238,7 +237,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, t
 				x := msg.MessagesDialogs{}
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("SyncCtrl cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
+					ctrl.logger.Error("SyncCtrl cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
 					return
 				}
 
@@ -257,7 +256,7 @@ func (ctrl *Controller) GetAllDialogs(waitGroup *sync.WaitGroup, teamID int64, t
 func (ctrl *Controller) GetAllTopPeers(
 	waitGroup *sync.WaitGroup, teamID int64, teamAccess uint64, cat msg.TopPeerCategory, offset int32, limit int32,
 ) {
-	logs.Info("SyncCtrl calls GetAllTopPeers",
+	ctrl.logger.Info("SyncCtrl calls GetAllTopPeers",
 		zap.Int32("Offset", offset),
 		zap.Int32("Limit", limit),
 	)
@@ -276,14 +275,14 @@ func (ctrl *Controller) GetAllTopPeers(
 		},
 		func() {
 			// If timeout, then retry the request
-			logs.Warn("Timeout! on GetAllTopPeers, retrying ...", zap.String("Cat", cat.String()))
+			ctrl.logger.Warn("Timeout! on GetAllTopPeers, retrying ...", zap.String("Cat", cat.String()))
 			_, _ = ctrl.AuthRecall("GetAllTopPeers")
 			ctrl.GetAllTopPeers(waitGroup, teamID, teamAccess, cat, offset, limit)
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
 			case rony.C_Error:
-				logs.Error("SyncCtrl got error response on ContactsGetTopPeers", zap.Error(domain.ParseServerError(m.Message)))
+				ctrl.logger.Error("SyncCtrl got error response on ContactsGetTopPeers", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
 				switch {
@@ -302,7 +301,7 @@ func (ctrl *Controller) GetAllTopPeers(
 				x := msg.ContactsTopPeers{}
 				err := x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("SyncCtrl cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
+					ctrl.logger.Error("SyncCtrl cannot unmarshal server response on MessagesGetDialogs", zap.Error(err))
 					return
 				}
 
@@ -319,7 +318,7 @@ func (ctrl *Controller) GetAllTopPeers(
 }
 
 func (ctrl *Controller) GetLabels(waitGroup *sync.WaitGroup, teamID int64, teamAccess uint64) {
-	logs.Info("SyncCtrl calls GetLabels")
+	ctrl.logger.Info("SyncCtrl calls GetLabels")
 	req := &msg.LabelsGet{}
 	reqBytes, _ := req.Marshal()
 	ctrl.queueCtrl.EnqueueCommand(
@@ -331,14 +330,14 @@ func (ctrl *Controller) GetLabels(waitGroup *sync.WaitGroup, teamID int64, teamA
 		},
 		func() {
 			// If timeout, then retry the request
-			logs.Warn("Timeout! on LabelsGet, retrying ...")
+			ctrl.logger.Warn("Timeout! on LabelsGet, retrying ...")
 			_, _ = ctrl.AuthRecall("LabelsGet")
 			ctrl.GetLabels(waitGroup, teamID, teamAccess)
 		},
 		func(m *rony.MessageEnvelope) {
 			switch m.Constructor {
 			case rony.C_Error:
-				logs.Error("SyncCtrl got error response on LabelsGet", zap.Error(domain.ParseServerError(m.Message)))
+				ctrl.logger.Error("SyncCtrl got error response on LabelsGet", zap.Error(domain.ParseServerError(m.Message)))
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
 				switch {
@@ -362,7 +361,7 @@ func (ctrl *Controller) GetLabels(waitGroup *sync.WaitGroup, teamID int64, teamA
 }
 
 func (ctrl *Controller) GetContacts(waitGroup *sync.WaitGroup, teamID int64, teamAccess uint64) {
-	logs.Debug("SyncCtrl calls GetContacts")
+	ctrl.logger.Debug("SyncCtrl calls GetContacts")
 
 	contactsGetHash, _ := repo.System.LoadInt(domain.GetContactsGetHashKey(teamID))
 	req := &msg.ContactsGet{
@@ -416,7 +415,7 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup, retry int) {
 			Message:     reqBytes,
 		},
 		func() {
-			logs.Info("Logout Request was timeout, will retry")
+			ctrl.logger.Info("Logout Request was timeout, will retry")
 			ctrl.networkCtrl.Reconnect()
 			ctrl.Logout(waitGroup, retry-1)
 		},
@@ -425,7 +424,7 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup, retry int) {
 			case rony.C_Error:
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
-				logs.Warn("SyncCtrl got error on AuthLogout", zap.String("Code", x.Code), zap.String("Item", x.Items))
+				ctrl.logger.Warn("SyncCtrl got error on AuthLogout", zap.String("Code", x.Code), zap.String("Item", x.Items))
 				ctrl.Logout(waitGroup, retry-1)
 			default:
 				waitGroup.Done()
@@ -466,7 +465,7 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 }
 
 func (ctrl *Controller) UploadUsage() error {
-	logs.Debug("SyncCtrl calls SystemUploadUsage")
+	ctrl.logger.Debug("SyncCtrl calls SystemUploadUsage")
 	req := &msg.SystemUploadUsage{}
 	req.Usage = append(req.Usage)
 	reqBytes, _ := req.Marshal()

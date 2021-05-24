@@ -704,8 +704,8 @@ func (r *River) AppStart() error {
 	statusOnline = true
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
+	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 	r.logger.Info("River Starting")
-	r.logger.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
 	// Initialize MessageHole
 	messageHole.Init()
