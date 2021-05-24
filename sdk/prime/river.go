@@ -50,7 +50,7 @@ func init() {
 }
 
 func SetLogLevel(l int) {
-	logs.SetLogLevel(l)
+	logger.SetLogLevel(l)
 }
 
 type RiverConfig struct {
@@ -744,7 +744,7 @@ type RiverConnection struct {
 
 // Save RiverConfig interface func
 func (v *RiverConnection) Save() {
-	logs.Debug("ConnInfo saved.")
+	logger.Debug("ConnInfo saved.")
 	b, _ := json.Marshal(v)
 	v.Delegate.SaveConnInfo(b)
 }

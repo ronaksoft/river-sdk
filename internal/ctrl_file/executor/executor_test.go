@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony/tools"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
@@ -32,7 +33,7 @@ func (d *dummyAction) ID() int32 {
 }
 
 func (d *dummyAction) Do(ctx context.Context) {
-	logs.Info("Do",
+	testenv.Log().Info("Do",
 		zap.String("ReqID", d.req.GetID()),
 		zap.Int32("ActionID", d.id),
 	)
@@ -73,7 +74,7 @@ func (d *dummyRequest) NextAction() Action {
 func (d *dummyRequest) ActionDone(id int32) {
 	d.Done = append(d.Done, id)
 	if len(d.chunks) == 0 {
-		logs.Info("Request Done", zap.String("ID", d.ID))
+		testenv.Log().Info("Request Done", zap.String("ID", d.ID))
 	}
 }
 
@@ -86,7 +87,7 @@ func (d *dummyRequest) Serialize() []byte {
 }
 
 func (d *dummyRequest) Next() Request {
-	logs.Debug("Next", zap.Bool("Exists", d.NextReq != nil))
+	testenv.Log().Debug("Next", zap.Bool("Exists", d.NextReq != nil))
 	if d.NextReq != nil {
 		*d = *d.NextReq
 		return d

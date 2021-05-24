@@ -9,6 +9,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
 	. "github.com/smartystreets/goconvey/convey"
@@ -58,22 +59,22 @@ func init() {
 		MaxInflightUploads:   3,
 		DbPath:               "./_hdd",
 		ProgressChangedCB: func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
-			logs.Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
+			testenv.Log().Info("Progress Changed", zap.String("ReqID", reqID), zap.Int64("Percent", percent))
 		},
 		CancelCB: func(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
-			logs.Error("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
+			testenv.Log().Error("File Canceled", zap.String("ReqID", reqID), zap.Bool("HasError", hasError))
 			waitMapLock.Lock()
 			delete(waitMap, fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash))
 			waitMapLock.Unlock()
 		},
 		CompletedCB: func(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
-			logs.Info("OnComplete", zap.Int64("FileID", fileID))
+			testenv.Log().Info("OnComplete", zap.Int64("FileID", fileID))
 			waitMapLock.Lock()
 			delete(waitMap, fmt.Sprintf("%d.%d.%d", clusterID, fileID, accessHash))
 			waitMapLock.Unlock()
 		},
 		PostUploadProcessCB: func(req *msg.ClientFileRequest) bool {
-			logs.Info("PostProcess",
+			testenv.Log().Info("PostProcess",
 				zap.Any("TotalParts", req.TotalParts),
 				zap.Int32("ChunkSize", req.ChunkSize),
 				zap.Any("FilePath", req.FilePath),
@@ -127,7 +128,7 @@ func init() {
 	var err error
 	s.Listener, err = tcpConfig.NewListener("tcp4", ":8080")
 	if err != nil {
-		logs.Fatal(err.Error())
+		testenv.Log().Fatal(err.Error())
 	}
 	s.Start()
 	time.Sleep(time.Second * 2)
@@ -160,7 +161,7 @@ func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 	case msg.C_FileGet:
 		req := &msg.FileGet{}
 		_ = req.Unmarshal(in.Message)
-		// logs.Info("FileGet", zap.Int32("Offset", httpReq.Offset), zap.Int32("Limit", httpReq.Limit))
+		// testenv.Log().Info("FileGet", zap.Int32("Offset", httpReq.Offset), zap.Int32("Limit", httpReq.Limit))
 		file := &msg.File{}
 		file.Bytes = make([]byte, req.Limit)
 		for i := int32(0); i < req.Limit-2; i++ {
@@ -177,7 +178,7 @@ func (t server) ServeHTTP(httpRes http.ResponseWriter, httpReq *http.Request) {
 	case msg.C_FileSavePart:
 		req := &msg.FileSavePart{}
 		_ = req.Unmarshal(in.Message)
-		// logs.Info("SavePart:", zap.Int64("FileID", req.FileID), zap.Int32("PartID", req.PartID), zap.Int32("TotalParts", req.TotalParts))
+		// testenv.Log().Info("SavePart:", zap.Int64("FileID", req.FileID), zap.Int32("PartID", req.PartID), zap.Int32("TotalParts", req.TotalParts))
 		t.mtx.Lock()
 		if _, ok := t.uploadTracker[req.FileID]; !ok {
 			t.uploadTracker[req.FileID] = make(map[int32]struct{})
@@ -319,7 +320,7 @@ func TestManyUpload(t *testing.T) {
 			_File.UploadMessageDocument(msgID, "./testdata/big", "./testdata/small", fileID, thumbID, nil, peerID, false)
 		}
 		for {
-			logs.Info("WaitMap", zap.Int("Size", len(waitMap)))
+			testenv.Log().Info("WaitMap", zap.Int("Size", len(waitMap)))
 			if len(waitMap) == 0 {
 				break
 			}
@@ -339,7 +340,7 @@ func TestManyUpload(t *testing.T) {
 			_File.UploadMessageDocument(msgID, "./testdata/big", "", fileID, 0, nil, peerID, true)
 		}
 		for {
-			logs.Info("WaitMap", zap.Int("Size", len(waitMap)))
+			testenv.Log().Info("WaitMap", zap.Int("Size", len(waitMap)))
 			if len(waitMap) == 0 {
 				break
 			}

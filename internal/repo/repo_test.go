@@ -6,6 +6,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony/tools"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
@@ -206,7 +207,7 @@ func TestConcurrent(t *testing.T) {
 			})
 			waitGroup.Done()
 			if err != nil {
-				logs.Fatal("Error On Save Pending", zap.Error(err))
+				testenv.Log().Fatal("Error On Save Pending", zap.Error(err))
 			}
 		}(i)
 		waitGroup.Add(1)

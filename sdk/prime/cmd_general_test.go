@@ -1,12 +1,12 @@
 package riversdk
 
 import (
-	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"go.uber.org/zap/zapcore"
 )
 
 func init() {
-	logs.Info("Creating New River SDK Instance")
+	testenv.Log().Info("Creating New River SDK Instance")
 	r := new(River)
 	conInfo := new(RiverConnection)
 	r.SetConfig(&RiverConfig{
