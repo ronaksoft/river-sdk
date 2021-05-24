@@ -90,11 +90,6 @@ func (c *call) areAllAudio() (ok bool, err error) {
 
 // Client should listen to icecandidate and send it to SDK
 func (c *call) iceCandidate(connId int32, candidate *msg.CallRTCIceCandidate) (err error) {
-	if c.activeCallID == 0 {
-		err = ErrNoActiveCall
-		return
-	}
-
 	err = c.sendIceCandidate(c.activeCallID, connId, candidate)
 	return
 }
@@ -924,6 +919,11 @@ func (c *call) sendIceCandidate(callID int64, connId int32, candidate *msg.CallR
 
 	if !conn.Accepted {
 		conn.IceQueue = append(conn.IceQueue, candidate)
+		return
+	}
+
+	if c.activeCallID == 0 {
+		err = ErrNoActiveCall
 		return
 	}
 
