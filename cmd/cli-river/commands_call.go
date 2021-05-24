@@ -23,10 +23,7 @@ var CallStart = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		req := msg.ClientCallStart{}
 		req.CallID = 0
-		req.Peer = &msg.InputPeer{}
-		req.Peer.Type = fnGetPeerType(c)
-		req.Peer.ID = fnGetPeerID(c)
-		req.Peer.AccessHash = fnGetAccessHash(c)
+		req.Peer = fnGetPeer(c)
 		req.Video = false
 		inputUser := &msg.InputUser{}
 		inputUser.UserID = req.Peer.ID

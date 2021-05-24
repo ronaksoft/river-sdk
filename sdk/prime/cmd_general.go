@@ -25,6 +25,9 @@ import (
 )
 
 func (r *River) Execute(ctx *domain.ExecuteContext) (requestID int64, err error) {
+	if ctx.Timeout == 0 {
+		ctx.Timeout = domain.WebsocketRequestTimeout
+	}
 	return r.executeCommand(
 		ctx.TeamID, ctx.TeamAccess, ctx.Constructor, ctx.CommandBytes,
 		domain.NewRequestDelegate(
@@ -39,6 +42,7 @@ func (r *River) Execute(ctx *domain.ExecuteContext) (requestID int64, err error)
 			ctx.Flags,
 		),
 		false,
+		ctx.Timeout,
 	)
 }
 
@@ -52,6 +56,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		deepCopy(commandBytes),
 		delegate,
 		true,
+		domain.WebsocketRequestTimeout,
 	)
 }
 
@@ -64,11 +69,12 @@ func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, co
 		deepCopy(commandBytes),
 		delegate,
 		true,
+		domain.WebsocketRequestTimeout,
 	)
 }
 
 func (r *River) executeCommand(
-	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate RequestDelegate, uiCallback bool,
+	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate RequestDelegate, uiCallback bool, timeout time.Duration,
 ) (requestID int64, err error) {
 	if registry.ConstructorName(constructor) == "" {
 		err = domain.ErrInvalidConstructor
@@ -132,7 +138,7 @@ func (r *River) executeCommand(
 		return
 	}
 
-	go r.executeRemoteCommand(teamID, teamAccess, uint64(requestID), constructor, commandBytes, da, domain.WebsocketRequestTimeout)
+	go r.executeRemoteCommand(teamID, teamAccess, uint64(requestID), constructor, commandBytes, da, timeout)
 	return
 }
 func (r *River) executeLocalCommand(
