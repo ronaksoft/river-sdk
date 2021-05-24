@@ -554,10 +554,17 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 
 			externalHandlerUpdates, err := applier(update)
 			if err != nil {
-				logger.Error("got error on update applier", zap.Error(err))
+				logger.Error("got error on update applier",
+					zap.Error(err),
+					zap.String("C", registry.ConstructorName(update.Constructor)),
+					zap.Int64("UpdateID", update.UpdateID),
+				)
 				return
 			}
-			logger.Info("applied update", zap.String("C", registry.ConstructorName(update.Constructor)))
+			logger.Info("applied update",
+				zap.String("C", registry.ConstructorName(update.Constructor)),
+				zap.Int64("UpdateID", update.UpdateID),
+			)
 			switch update.Constructor {
 			case msg.C_UpdateMessageID:
 			default:
