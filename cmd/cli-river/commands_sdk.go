@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"gopkg.in/abiosoft/ishell.v2"
@@ -157,6 +158,13 @@ var SdkDeleteAllPendingMessages = &ishell.Cmd{
 	Name: "DeleteAllPendingMessages",
 	Func: func(c *ishell.Context) {
 		_SDK.DeleteAllPendingMessages()
+	},
+}
+
+var SdkRemoteLog = &ishell.Cmd{
+	Name: "",
+	Func: func(c *ishell.Context) {
+		logs.SetRemoteLog("https://live")
 	},
 }
 

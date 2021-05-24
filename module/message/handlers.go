@@ -269,10 +269,16 @@ func (r *message) handleDebugActions(txt string) {
 	case "//sdk_monitor_reset":
 		mon.ResetUsage()
 	case "//sdk_live_logger":
-		if len(args) < 1 {
-			r.sendToSavedMessage("//sdk_live_logger <url>")
-			return
+		username := r.SDK().GetConnInfo().PickupUsername()
+		if username == "" {
+			if len(args) < 1 {
+				r.sendToSavedMessage("//sdk_live_logger <url>")
+				return
+			} else {
+				r.liveLogger(fmt.Sprintf("https://livelog.ronaksoftware.com/%s", username))
+			}
 		}
+
 		r.liveLogger(args[0])
 	case "//sdk_heap_profile":
 		filePath := r.heapProfile()
