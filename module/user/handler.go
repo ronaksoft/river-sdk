@@ -55,13 +55,13 @@ func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da domain.Callback) {
 				})
 			}
 			in.Fill(in.RequestID, in.Constructor, req, in.Header...)
-			r.SDK().QueueCtrl().EnqueueCommand(in, nil, nil, false)
+			r.SDK().QueueCtrl().EnqueueCommand(in, nil, nil, da.UI())
 		}
 		return
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *user) usersGet(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -95,11 +95,11 @@ func (r *user) usersGet(in, out *rony.MessageEnvelope, da domain.Callback) {
 				})
 			}
 			in.Fill(in.RequestID, in.Constructor, req, in.Header...)
-			r.SDK().QueueCtrl().EnqueueCommand(in, nil, nil, false)
+			r.SDK().QueueCtrl().EnqueueCommand(in, nil, nil, da.UI())
 		}
 		return
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }

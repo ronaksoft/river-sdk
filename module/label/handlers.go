@@ -45,7 +45,7 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -62,7 +62,7 @@ func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da domain.Callback) 
 	r.Log().ErrorOnErr("LabelsDelete", err)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -183,7 +183,7 @@ func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da domain.Callb
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 
 }
 
@@ -205,7 +205,7 @@ func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da domain.
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 
 }
 

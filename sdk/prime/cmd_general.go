@@ -38,6 +38,7 @@ func (r *River) Execute(ctx *domain.ExecuteContext) (requestID int64, err error)
 			},
 			ctx.Flags,
 		),
+		false,
 	)
 }
 
@@ -50,6 +51,7 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		constructor,
 		deepCopy(commandBytes),
 		delegate,
+		true,
 	)
 }
 
@@ -61,11 +63,12 @@ func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, co
 		constructor,
 		deepCopy(commandBytes),
 		delegate,
+		true,
 	)
 }
 
 func (r *River) executeCommand(
-	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate RequestDelegate,
+	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate RequestDelegate, uiCallback bool,
 ) (requestID int64, err error) {
 	if registry.ConstructorName(constructor) == "" {
 		err = domain.ErrInvalidConstructor
@@ -113,6 +116,7 @@ func (r *River) executeCommand(
 			},
 			delegate.Flags(),
 		),
+		uiCallback,
 	)
 
 	// If the constructor is a local command then
@@ -207,7 +211,7 @@ func (r *River) executeRemoteCommand(
 				RequestID:   requestID,
 				Message:     commandBytes,
 			},
-			cb.OnTimeout, cb.OnComplete, true, flags, timeout,
+			cb.OnTimeout, cb.OnComplete, cb.UI(), flags, timeout,
 		)
 	} else {
 		r.queueCtrl.EnqueueCommandWithTimeout(
@@ -217,7 +221,7 @@ func (r *River) executeRemoteCommand(
 				RequestID:   requestID,
 				Message:     commandBytes,
 			},
-			cb.OnTimeout, cb.OnComplete, true, timeout,
+			cb.OnTimeout, cb.OnComplete, cb.UI(), timeout,
 		)
 	}
 }
@@ -314,6 +318,7 @@ func (r *River) getServerKeys() (sk *msg.SystemKeys, err error) {
 			}
 		},
 		nil,
+		false,
 	)
 	r.executeRemoteCommand(
 		0, 0, uint64(domain.SequentialUniqueID()), msg.C_SystemGetServerKeys, reqBytes, cb, domain.WebsocketRequestTimeout,
@@ -360,7 +365,9 @@ func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP,
 			default:
 				err = domain.ErrInvalidConstructor
 			}
-		}, nil,
+		},
+		nil,
+		false,
 	)
 	r.executeRemoteCommand(
 		0, 0, uint64(domain.SequentialUniqueID()), msg.C_InitConnect, req1Bytes, cb, domain.WebsocketRequestTimeout,
@@ -475,6 +482,7 @@ func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, s
 			}
 		},
 		nil,
+		false,
 	)
 	r.executeRemoteCommand(
 		0, 0, uint64(domain.SequentialUniqueID()), msg.C_InitCompleteAuth, req2Bytes, cb, domain.WebsocketRequestTimeout,

@@ -174,7 +174,7 @@ func (r *message) messagesGetDialog(in, out *rony.MessageEnvelope, da domain.Cal
 	// if the localDB had no data send the request to server
 	if err != nil {
 		r.Log().Warn("We got error on repo GetDialog", zap.Error(err), zap.Int64("PeerID", req.Peer.ID))
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 		return
 	}
 
@@ -567,7 +567,7 @@ func (r *message) messagesReadHistory(in, out *rony.MessageEnvelope, da domain.C
 	_ = repo.Dialogs.UpdateReadInboxMaxID(r.SDK().GetConnInfo().PickupUserID(), domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -824,7 +824,7 @@ func (r *message) messagesDelete(in, out *rony.MessageEnvelope, da domain.Callba
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 
 }
 
@@ -875,7 +875,7 @@ func (r *message) messagesGet(in, out *rony.MessageEnvelope, da domain.Callback)
 	}
 
 	// WebsocketSend the request to the server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -911,7 +911,7 @@ func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, da domain.
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -925,7 +925,7 @@ func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, da domain.
 	repo.Messages.SetContentRead(req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -953,7 +953,7 @@ func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, da domain.Cal
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -971,7 +971,7 @@ func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, da domain.Ca
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -985,7 +985,7 @@ func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, da domain.Cal
 	err := repo.Dialogs.UpdatePinMessageID(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MessageID)
 	r.Log().ErrorOnErr("MessagesTogglePin", err)
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -999,7 +999,7 @@ func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, da domain.
 	err := repo.Reactions.IncrementReactionUseCount(req.Reaction, 1)
 	r.Log().ErrorOnErr("messagesSendReaction", err)
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -1015,7 +1015,7 @@ func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, da domai
 		r.Log().ErrorOnErr("messagesDeleteReaction", err)
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -1033,7 +1033,7 @@ func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, da doma
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 
 }
 

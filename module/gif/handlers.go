@@ -60,7 +60,7 @@ func (r *gif) gifSave(in, out *rony.MessageEnvelope, da domain.Callback) {
 	}
 	_ = repo.Gifs.UpdateLastAccess(cf.ClusterID, cf.FileID, domain.Now().Unix())
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -76,7 +76,7 @@ func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
 		r.Log().Warn("We got error on deleting GIF document", zap.Error(err))
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, da domain.Callback) {

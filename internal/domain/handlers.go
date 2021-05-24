@@ -26,12 +26,14 @@ type RequestDelegate interface {
 }
 
 type delegateAdapter struct {
-	d RequestDelegate
+	d  RequestDelegate
+	ui bool
 }
 
-func DelegateAdapterFromRequest(d RequestDelegate) *delegateAdapter {
+func DelegateAdapterFromRequest(d RequestDelegate, ui bool) *delegateAdapter {
 	return &delegateAdapter{
-		d: d,
+		d:  d,
+		ui: ui,
 	}
 }
 
@@ -58,16 +60,22 @@ func (rda *delegateAdapter) OnProgress(percent int64) {
 	rda.d.OnProgress(percent)
 }
 
+func (rda *delegateAdapter) UI() bool {
+	return rda.ui
+}
+
 type Callback interface {
 	OnComplete(m *rony.MessageEnvelope)
 	OnTimeout()
 	OnProgress(percent int64)
+	UI() bool
 }
 
 type callback struct {
 	onComplete func(m *rony.MessageEnvelope)
 	onTimeout  func()
 	onProgress func(percent int64)
+	ui         bool
 }
 
 func (c *callback) OnComplete(m *rony.MessageEnvelope) {
@@ -91,11 +99,16 @@ func (c *callback) OnProgress(percent int64) {
 	c.onProgress(percent)
 }
 
-func NewCallback(onTimeout func(), onComplete func(envelope *rony.MessageEnvelope), onProgress func(int64)) *callback {
+func (c *callback) UI() bool {
+	return c.ui
+}
+
+func NewCallback(onTimeout func(), onComplete func(envelope *rony.MessageEnvelope), onProgress func(int64), ui bool) *callback {
 	return &callback{
 		onComplete: onComplete,
 		onTimeout:  onTimeout,
 		onProgress: onProgress,
+		ui:         ui,
 	}
 }
 

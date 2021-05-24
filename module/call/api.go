@@ -461,7 +461,7 @@ func (c *call) executeRemoteCommand(
 		wg.Done()
 	}
 
-	cb := domain.NewCallback(innerTimeoutCB, innerSuccessCB, nil)
+	cb := domain.NewCallback(innerTimeoutCB, innerSuccessCB, nil, false)
 
 	executeFn = func() {
 		retry++

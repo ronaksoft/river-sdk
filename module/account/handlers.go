@@ -30,7 +30,7 @@ func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, da domain
 	r.SDK().GetConnInfo().Save()
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -52,7 +52,7 @@ func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da domain
 		return
 	}
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -75,7 +75,7 @@ func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da doma
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -95,7 +95,7 @@ func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da dom
 	_ = repo.Dialogs.Save(dialog)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 
 }
 
@@ -104,7 +104,7 @@ func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da domain.Ca
 	_ = x.Unmarshal(in.Message)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 
 	user, err := repo.Users.Get(r.SDK().GetConnInfo().PickupUserID())
 	if err != nil {
@@ -144,7 +144,7 @@ func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, da domain.
 	)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
 func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, da domain.Callback) {
@@ -166,5 +166,5 @@ func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, da domain.Call
 		return
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
+	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
