@@ -20,6 +20,7 @@ var (
 	_LogDir   string
 	_LogLevel AtomicLevel
 	_Log      *Logger
+	_FileLog  *Logger
 )
 
 func init() {
@@ -64,9 +65,8 @@ func SetFilePath(logDir string) error {
 		if err != nil {
 			return err
 		}
-		_Log.z = _Log.z.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-			return zapcore.NewTee(
-				core,
+		_FileLog = &Logger{
+			z: zap.New(
 				zapcore.NewCore(
 					zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
 						TimeKey:        "ts",
@@ -84,9 +84,8 @@ func SetFilePath(logDir string) error {
 					zapcore.Lock(logFile),
 					_LogLevel,
 				),
-			)
-		}))
-
+			),
+		}
 	}
 	return nil
 }
