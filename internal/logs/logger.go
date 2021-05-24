@@ -34,12 +34,12 @@ func (l *Logger) With(name string) *Logger {
 }
 
 func (l *Logger) write(lvl zapcore.Level, msg string, fields ...zap.Field) {
+	if l.prefix != "" {
+		msg = fmt.Sprintf("[%s]: %s", l.prefix, msg)
+	}
 	if l.parent != nil {
 		l.parent.write(lvl, msg, fields...)
 		return
-	}
-	if l.prefix != "" {
-		msg = fmt.Sprintf("[%s]: %s", l.prefix, msg)
 	}
 	if ce := l.z.Check(lvl, msg); ce != nil {
 		ce.Write(fields...)
