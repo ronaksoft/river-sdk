@@ -917,7 +917,9 @@ func (c *call) callUser(peer *msg.InputPeer, initiator bool, phoneParticipants [
 	randomID := domain.RandomInt64(0)
 	res, err = c.apiRequest(peer, randomID, initiator, phoneParticipants, callID, false)
 	if err == nil && callID == 0 {
+		c.mu.Lock()
 		c.activeCallID = res.ID
+		c.mu.Unlock()
 	}
 	return
 }

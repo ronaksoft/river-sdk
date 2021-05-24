@@ -453,7 +453,7 @@ func (c *call) executeRemoteCommand(
 	}
 
 	innerSuccessCB = func(m *rony.MessageEnvelope) {
-		successCB(m)
+		successCB(m.Clone())
 		c.removeCallRequestID(callID, reqID)
 	}
 
