@@ -441,7 +441,6 @@ func (c *call) executeRemoteCommand(
 	var innerTimeoutCB domain.TimeoutCallback
 	var innerSuccessCB domain.MessageHandler
 	var executeFn func()
-	var reqID int64
 
 	innerTimeoutCB = func() {
 		if retry < 3 {
@@ -457,7 +456,7 @@ func (c *call) executeRemoteCommand(
 
 	innerSuccessCB = func(m *rony.MessageEnvelope) {
 		successCB(m.Clone())
-		c.removeCallRequestID(callID, reqID)
+		c.removeCallRequestID(callID, int64(m.RequestID))
 		wg.Done()
 	}
 
@@ -465,8 +464,7 @@ func (c *call) executeRemoteCommand(
 
 	executeFn = func() {
 		retry++
-		var err error
-		reqID, err = c.SDK().Execute(
+		reqID, err := c.SDK().Execute(
 			&domain.ExecuteContext{
 				TeamID:       c.teamInput.teamID,
 				TeamAccess:   c.teamInput.teamAccess,
