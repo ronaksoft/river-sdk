@@ -237,19 +237,23 @@ func printMessagesMany(envelope *rony.MessageEnvelope) {
 }
 func printUsersMany(envelope *rony.MessageEnvelope) {
 	x := new(msg.UsersMany)
-	x.Unmarshal(envelope.Message)
+	_ = x.Unmarshal(envelope.Message)
 	bufUsers := new(bytes.Buffer)
 	tableUsers := tablewriter.NewWriter(bufUsers)
 	tableUsers.SetHeader([]string{
 		"userID", "FirstName", "LastName", "Username", "Photo", "LastSeen",
 	})
 	for _, x := range x.Users {
+		var photoID int64 = 0
+		if x.Photo != nil {
+			photoID = x.Photo.PhotoID
+		}
 		tableUsers.Append([]string{
 			fmt.Sprintf("%d", x.ID),
 			x.FirstName,
 			x.LastName,
 			x.Username,
-			fmt.Sprintf("%d", x.Photo.PhotoID),
+			fmt.Sprintf("%d", photoID),
 			time.Unix(x.LastSeen, 0).Format(time.RFC822),
 		})
 	}
