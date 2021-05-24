@@ -3,6 +3,7 @@ package call
 import (
 	"errors"
 	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
 )
 
@@ -27,6 +28,11 @@ type Callback struct {
 }
 
 func (c *call) CallbackInitConnection(connId int32, initData *msg.PhoneInit) int64 {
+	if c.callback.InitConnection == nil {
+		logs.Error("callbacks are not initialized")
+		return -1
+	}
+
 	phoneInitByte, err := initData.Marshal()
 	if err != nil {
 		return -1
@@ -47,6 +53,11 @@ func (c *call) CallbackInitConnection(connId int32, initData *msg.PhoneInit) int
 }
 
 func (c *call) CallbackGetOfferSDP(connId int32) (offerSdp *msg.PhoneActionSDPOffer, err error) {
+	if c.callback.GetOfferSDP == nil {
+		err = ErrCallbacksAreNotInitialized
+		return
+	}
+
 	res := c.callback.GetOfferSDP(connId)
 	me := &rony.MessageEnvelope{}
 	err = me.Unmarshal(res)
@@ -75,6 +86,11 @@ func (c *call) CallbackGetOfferSDP(connId int32) (offerSdp *msg.PhoneActionSDPOf
 }
 
 func (c *call) CallbackSetOfferGetAnswerSDP(connId int32, offerSdp *msg.PhoneActionSDPOffer) (answerSdp *msg.PhoneActionSDPAnswer, err error) {
+	if c.callback.SetOfferGetAnswerSDP == nil {
+		err = ErrCallbacksAreNotInitialized
+		return
+	}
+
 	offerSdpByte, err := offerSdp.Marshal()
 	if err != nil {
 		return
@@ -119,6 +135,11 @@ func (c *call) CallbackSetOfferGetAnswerSDP(connId int32, offerSdp *msg.PhoneAct
 }
 
 func (c *call) CallbackSetAnswerSDP(connId int32, answerSdp *msg.PhoneActionSDPAnswer) bool {
+	if c.callback.SetAnswerSDP == nil {
+		logs.Error("callbacks are not initialized")
+		return false
+	}
+
 	answerSdpByte, err := answerSdp.Marshal()
 	if err != nil {
 		return false
@@ -139,6 +160,11 @@ func (c *call) CallbackSetAnswerSDP(connId int32, answerSdp *msg.PhoneActionSDPA
 }
 
 func (c *call) CallbackAddIceCandidate(connId int32, candidate *msg.CallRTCIceCandidate) bool {
+	if c.callback.AddIceCandidate == nil {
+		logs.Error("callbacks are not initialized")
+		return false
+	}
+
 	candidateByte, err := candidate.Marshal()
 	if err != nil {
 		return false
