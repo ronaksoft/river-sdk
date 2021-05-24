@@ -269,6 +269,44 @@ func (ctrl *Controller) EnqueueCommand(
 	})
 }
 
+// EnqueueCommand put request in queue and distributor will execute it later
+func (ctrl *Controller) EnqueueCommandWithTimout(
+	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
+	isUICallback bool, timeout time.Duration,
+) {
+	defer logger.RecoverPanic(
+		"SyncCtrl::EnqueueCommand",
+		domain.M{
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
+			"C":   messageEnvelope.Constructor,
+		},
+		nil,
+	)
+
+	logger.Debug("enqueues command",
+		zap.Uint64("ReqID", messageEnvelope.RequestID),
+		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
+	)
+
+	// Add the callback functions
+	_ = domain.AddRequestCallback(
+		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTimeout, timeoutCB, isUICallback,
+	)
+
+	t := domain.WebsocketRequestTimeout
+	if timeout > 0 {
+		t = timeout
+	}
+
+	// Add the request to the queue
+	ctrl.addToWaitingList(&request{
+		ID:              messageEnvelope.RequestID,
+		Timeout:         t,
+		MessageEnvelope: messageEnvelope,
+	})
+}
+
 // Start queue
 func (ctrl *Controller) Start(resetQueue bool) {
 	logger.Info("started")

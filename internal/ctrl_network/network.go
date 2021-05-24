@@ -803,8 +803,13 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 func (ctrl *Controller) WebsocketCommand(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	isUICallback bool, flag domain.RequestDelegateFlag,
+	timeout time.Duration,
 ) {
-	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, isUICallback, flag, domain.WebsocketRequestTimeout)
+	t := domain.WebsocketRequestTimeout
+	if timeout > 0 {
+		t = timeout
+	}
+	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, isUICallback, flag, t)
 }
 
 // SendHttp encrypt and send request to server and receive and decrypt its response

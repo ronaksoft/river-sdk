@@ -95,6 +95,7 @@ const (
 	WebsocketDialTimeoutLong    = 10 * time.Second
 	HttpRequestTimeout          = 30 * time.Second
 	SnapshotSyncThreshold       = 10000
+	DefaultTimeout              = time.Duration(-1)
 )
 
 // System Keys
