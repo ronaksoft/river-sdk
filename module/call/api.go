@@ -468,7 +468,7 @@ func (c *call) executeRemoteCommand(
 		var err error
 		reqID, err = c.SDK().ExecuteWithTeam(
 			c.teamInput.teamID, int64(c.teamInput.teamAccess), constructor, commandBytes,
-			cb, rdt, 10000,
+			cb, rdt, time.Duration(10)*time.Second,
 		)
 		if err == nil {
 			c.appendCallRequestID(callID, reqID)
