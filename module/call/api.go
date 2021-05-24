@@ -7,6 +7,7 @@ import (
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
+	"sync"
 	"time"
 )
 
@@ -435,6 +436,8 @@ func (c *call) executeRemoteCommand(
 		rdt |= domain.RequestBatch
 	}
 
+	wg := sync.WaitGroup{}
+
 	retry := 0
 	var innerTimeoutCB domain.TimeoutCallback
 	var innerSuccessCB domain.MessageHandler
@@ -449,12 +452,14 @@ func (c *call) executeRemoteCommand(
 			}()
 		} else {
 			timeoutCB()
+			wg.Done()
 		}
 	}
 
 	innerSuccessCB = func(m *rony.MessageEnvelope) {
 		successCB(m.Clone())
 		c.removeCallRequestID(callID, reqID)
+		wg.Done()
 	}
 
 	cb := domain.NewCallback(innerTimeoutCB, innerSuccessCB, nil)
@@ -471,5 +476,7 @@ func (c *call) executeRemoteCommand(
 		}
 	}
 
+	wg.Add(1)
 	executeFn()
+	wg.Wait()
 }
