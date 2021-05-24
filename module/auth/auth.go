@@ -41,10 +41,10 @@ func (r *auth) Name() string {
 func (r *auth) authAuthorization(e *rony.MessageEnvelope) {
 	x := new(msg.AuthAuthorization)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("AuthModule couldn't unmarshal AuthAuthorization", zap.Error(err))
+		r.Log().Error("AuthModule couldn't unmarshal AuthAuthorization", zap.Error(err))
 		return
 	}
-	logs.Debug("AuthModule applies AuthAuthorization",
+	r.Log().Debug("AuthModule applies AuthAuthorization",
 		zap.String("FirstName", x.User.FirstName),
 		zap.String("LastName", x.User.LastName),
 		zap.Int64("UserID", x.User.ID),
@@ -73,11 +73,11 @@ func (r *auth) authAuthorization(e *rony.MessageEnvelope) {
 func (r *auth) authSentCode(e *rony.MessageEnvelope) {
 	x := new(msg.AuthSentCode)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("AuthModule couldn't unmarshal AuthSentCode", zap.Error(err))
+		r.Log().Error("AuthModule couldn't unmarshal AuthSentCode", zap.Error(err))
 		return
 	}
 
-	logs.Debug("AuthModule applies AuthSentCode")
+	r.Log().Debug("AuthModule applies AuthSentCode")
 
 	r.SDK().GetConnInfo().ChangePhone(x.Phone)
 }

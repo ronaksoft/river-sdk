@@ -29,13 +29,13 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
 		return
 	}
 
-	logs.Info("LabelGet", zap.Int64("TeamID", domain.GetTeamID(in)))
+	r.Log().Info("LabelGet", zap.Int64("TeamID", domain.GetTeamID(in)))
 	labels := repo.Labels.GetAll(domain.GetTeamID(in))
 	sort.Slice(labels, func(i, j int) bool {
 		return labels[i].Count > labels[j].Count
 	})
 	if len(labels) != 0 {
-		logs.Debug("We found labels locally", zap.Int("L", len(labels)))
+		r.Log().Debug("We found labels locally", zap.Int("L", len(labels)))
 		res := &msg.LabelsMany{}
 		res.Labels = labels
 
@@ -57,10 +57,10 @@ func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da domain.Callback) 
 		return
 	}
 
-	logs.Info("LabelsDelete", zap.Int64("TeamID", domain.GetTeamID(in)))
+	r.Log().Info("LabelsDelete", zap.Int64("TeamID", domain.GetTeamID(in)))
 	err := repo.Labels.Delete(req.LabelIDs...)
 
-	logs.ErrorOnErr("LabelsDelete", err)
+	r.Log().ErrorOnErr("LabelsDelete", err)
 
 	// send the request to server
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
@@ -76,7 +76,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 
 	// Offline mode
 	if !r.SDK().NetCtrl().Connected() {
-		logs.Debug("We are offline then load from local db",
+		r.Log().Debug("We are offline then load from local db",
 			zap.Int32("LabelID", req.LabelID),
 			zap.Int64("MinID", req.MinID),
 			zap.Int64("MaxID", req.MaxID),
@@ -91,7 +91,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 		case msg.C_LabelItems:
 			x := &msg.LabelItems{}
 			err := x.Unmarshal(m.Message)
-			logs.WarnOnErr("Error On Unmarshal LabelItems", err)
+			r.Log().WarnOnErr("Error On Unmarshal LabelItems", err)
 
 			// 1st sort the received messages by id
 			sort.Slice(x.Messages, func(i, j int) bool {
@@ -100,7 +100,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 
 			// Fill Messages Hole
 			if msgCount := len(x.Messages); msgCount > 0 {
-				logs.Debug("Update Label Range",
+				r.Log().Debug("Update Label Range",
 					zap.Int32("LabelID", x.LabelID),
 					zap.Int64("MinID", x.Messages[msgCount-1].ID),
 					zap.Int64("MaxID", x.Messages[0].ID),
@@ -116,7 +116,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 				}
 			}
 		default:
-			logs.Warn("LabelModule received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
+			r.Log().Warn("LabelModule received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
 		}
 
 		da.OnComplete(m)
@@ -128,7 +128,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 	case req.MinID == 0 && req.MaxID != 0:
 		b, _ := repo.Labels.GetLowerFilled(domain.GetTeamID(in), req.LabelID, req.MaxID)
 		if !b {
-			logs.Info("LabelModule detected label hole (With MaxID Only)",
+			r.Log().Info("LabelModule detected label hole (With MaxID Only)",
 				zap.Int32("LabelID", req.LabelID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
@@ -141,7 +141,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 	case req.MinID != 0 && req.MaxID == 0:
 		b, _ := repo.Labels.GetUpperFilled(domain.GetTeamID(in), req.LabelID, req.MinID)
 		if !b {
-			logs.Info("River detected label hole (With MinID Only)",
+			r.Log().Info("River detected label hole (With MinID Only)",
 				zap.Int32("LabelID", req.LabelID),
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("MaxID", req.MaxID),
@@ -165,7 +165,7 @@ func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da domain.Callb
 		return
 	}
 
-	logs.Debug("LabelsAddToMessage local handler called",
+	r.Log().Debug("LabelsAddToMessage local handler called",
 		zap.Int64s("MsgIDs", req.MessageIDs),
 		zap.Int32s("LabelIDs", req.LabelIDs),
 	)
@@ -196,7 +196,7 @@ func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da domain.
 		return
 	}
 
-	logs.Debug("LabelsRemoveFromMessage local handler called",
+	r.Log().Debug("LabelsRemoveFromMessage local handler called",
 		zap.Int64s("MsgIDs", req.MessageIDs),
 		zap.Int32s("LabelIDs", req.LabelIDs),
 	)

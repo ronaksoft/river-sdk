@@ -54,7 +54,10 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 		res.UpdateID = r.SDK().SyncCtrl().GetUpdateID()
 		out.Constructor = msg.C_MessagesDialogs
 		buff, err := res.Marshal()
-		logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
+		if err != nil {
+			r.Log().Error("River got error on marshal MessagesDialogs", zap.Error(err))
+		}
+
 		out.Message = buff
 		uiexec.ExecSuccessCB(da.OnComplete, out)
 		return
@@ -116,7 +119,7 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 	}
 	res.Groups, _ = repo.Groups.GetMany(mGroups.ToArray())
 	if len(res.Groups) != len(mGroups) {
-		logs.Warn("River found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
+		r.Log().Warn("River found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
 		for groupID := range mGroups {
 			found := false
 			for _, g := range res.Groups {
@@ -126,13 +129,13 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 				}
 			}
 			if !found {
-				logs.Warn("missed group", zap.Int64("GroupID", groupID))
+				r.Log().Warn("missed group", zap.Int64("GroupID", groupID))
 			}
 		}
 	}
 	res.Users, _ = repo.Users.GetMany(mUsers.ToArray())
 	if len(res.Users) != len(mUsers) {
-		logs.Warn("River found unmatched dialog users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
+		r.Log().Warn("River found unmatched dialog users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
 		for userID := range mUsers {
 			found := false
 			for _, g := range res.Users {
@@ -142,14 +145,17 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 				}
 			}
 			if !found {
-				logs.Warn("missed user", zap.Int64("UserID", userID))
+				r.Log().Warn("missed user", zap.Int64("UserID", userID))
 			}
 		}
 	}
 
 	out.Constructor = msg.C_MessagesDialogs
 	buff, err := res.Marshal()
-	logs.ErrorOnErr("River got error on marshal MessagesDialogs", err)
+	if err != nil {
+		r.Log().Error("River got error on marshal MessagesDialogs", zap.Error(err))
+	}
+
 	out.Message = buff
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
@@ -167,7 +173,7 @@ func (r *message) messagesGetDialog(in, out *rony.MessageEnvelope, da domain.Cal
 
 	// if the localDB had no data send the request to server
 	if err != nil {
-		logs.Warn("We got error on repo GetDialog", zap.Error(err), zap.Int64("PeerID", req.Peer.ID))
+		r.Log().Warn("We got error on repo GetDialog", zap.Error(err), zap.Int64("PeerID", req.Peer.ID))
 		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 		return
 	}
@@ -287,7 +293,7 @@ func (r *message) handleDebugActions(txt string) {
 		r.sendUpdateLogs()
 	case "//sdk_export_messages":
 		if len(args) < 2 {
-			logs.Warn("invalid args: //sdk_export_messages [peerType] [peerID]")
+			r.Log().Warn("invalid args: //sdk_export_messages [peerType] [peerID]")
 			return
 		}
 		peerType := tools.StrToInt32(args[0])
@@ -354,7 +360,9 @@ func (r *message) sendMediaToSaveMessage(filePath string, filename string) {
 func (r *message) exportMessages(peerType int32, peerID int64) (filePath string) {
 	filePath = path.Join(repo.DirCache, fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
 	file, err := os.Create(filePath)
-	logs.ErrorOnErr("Error On Create file", err)
+	if err != nil {
+		r.Log().Error("Error On Create file", zap.Error(err))
+	}
 
 	t := tablewriter.NewWriter(file)
 	t.SetHeader([]string{"ID", "Date", "Sender", "Body", "Media"})
@@ -442,20 +450,20 @@ func (r *message) getMonitorStats() []byte {
 	return b
 }
 func (r *message) liveLogger(url string) {
-	logs.SetRemoteLog(url)
+	r.Log().SetRemoteLog(url)
 	r.sendToSavedMessage("Live Logger is On")
 }
 func (r *message) heapProfile() (filePath string) {
 	buf := new(bytes.Buffer)
 	err := pprof.WriteHeapProfile(buf)
 	if err != nil {
-		logs.Error("We got error on getting heap profile", zap.Error(err))
+		r.Log().Error("We got error on getting heap profile", zap.Error(err))
 		return ""
 	}
 	now := time.Now()
 	filePath = path.Join(repo.DirCache, fmt.Sprintf("MemHeap-%04d-%02d-%02d.out", now.Year(), now.Month(), now.Day()))
 	if err := ioutil.WriteFile(filePath, buf.Bytes(), os.ModePerm); err != nil {
-		logs.Warn("We got error on creating memory heap file", zap.Error(err))
+		r.Log().Warn("We got error on creating memory heap file", zap.Error(err))
 		return ""
 	}
 	return
@@ -601,7 +609,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da domain.Ca
 	case req.MinID == 0 && req.MaxID != 0:
 		b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID)
 		if !b {
-			logs.Info("River detected hole (With MaxID Only)",
+			r.Log().Info("River detected hole (With MaxID Only)",
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
@@ -615,7 +623,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da domain.Ca
 	case req.MinID != 0 && req.MaxID == 0:
 		b, bar := messageHole.GetUpperFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID)
 		if !b {
-			logs.Info("River detected hole (With MinID Only)",
+			r.Log().Info("River detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
@@ -629,7 +637,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da domain.Ca
 	default:
 		b := messageHole.IsHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID, req.MaxID)
 		if b {
-			logs.Info("River detected hole (With Min & Max)",
+			r.Log().Info("River detected hole (With Min & Max)",
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("PeerID", req.Peer.ID),
@@ -656,7 +664,7 @@ func fillMessagesMany(
 	out.Message, _ = res.Marshal()
 	uiexec.ExecSuccessCB(successCB, out)
 }
-func genGetHistoryCB(
+func (r *message) genGetHistoryCB(
 	cb domain.MessageHandler, teamID, peerID int64, peerType int32, minID, maxID int64, topMessageID int64,
 ) domain.MessageHandler {
 	return func(m *rony.MessageEnvelope) {
@@ -665,7 +673,7 @@ func genGetHistoryCB(
 		case msg.C_MessagesMany:
 			x := &msg.MessagesMany{}
 			err := x.Unmarshal(m.Message)
-			logs.WarnOnErr("Error On Unmarshal MessagesMany", err)
+			r.Log().WarnOnErr("Error On Unmarshal MessagesMany", err)
 
 			// 1st sort the received messages by id
 			sort.Slice(x.Messages, func(i, j int) bool {
@@ -692,7 +700,7 @@ func genGetHistoryCB(
 
 			m.Message, _ = x.Marshal()
 		case rony.C_Error:
-			logs.Warn("MessageModule received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
+			r.Log().Warn("MessageModule received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
 		default:
 		}
 
@@ -731,11 +739,11 @@ func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, da doma
 	}
 
 	// Prepare the the result before sending back to the client
-	preSuccessCB := genGetMediaHistoryCB(da.OnComplete, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Cat)
+	preSuccessCB := r.genGetMediaHistoryCB(da.OnComplete, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Cat)
 
 	b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.Cat, req.MaxID)
 	if !b {
-		logs.Info("River detected hole (With MaxID Only)",
+		r.Log().Info("River detected hole (With MaxID Only)",
 			zap.Int64("MaxID", req.MaxID),
 			zap.Int64("PeerID", req.Peer.ID),
 			zap.String("PeerType", req.Peer.Type.String()),
@@ -750,7 +758,7 @@ func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, da doma
 	messages, users, groups := repo.Messages.GetMediaMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, bar.Max, req.Limit, req.Cat)
 	fillMessagesMany(out, messages, users, groups, in.RequestID, preSuccessCB)
 }
-func genGetMediaHistoryCB(
+func (r *message) genGetMediaHistoryCB(
 	cb domain.MessageHandler, teamID, peerID int64, peerType int32, maxID int64, cat msg.MediaCategory,
 ) domain.MessageHandler {
 	return func(m *rony.MessageEnvelope) {
@@ -758,7 +766,7 @@ func genGetMediaHistoryCB(
 		case msg.C_MessagesMany:
 			x := &msg.MessagesMany{}
 			err := x.Unmarshal(m.Message)
-			logs.WarnOnErr("Error On Unmarshal MessagesMany", err)
+			r.Log().WarnOnErr("Error On Unmarshal MessagesMany", err)
 
 			// 1st sort the received messages by id
 			sort.Slice(x.Messages, func(i, j int) bool {
@@ -776,7 +784,7 @@ func genGetMediaHistoryCB(
 
 			m.Message, _ = x.Marshal()
 		case rony.C_Error:
-			logs.Warn("MessageModule received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
+			r.Log().Warn("MessageModule received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
 		default:
 		}
 
@@ -889,14 +897,14 @@ func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, da domain.
 	}
 
 	err := repo.Messages.ClearHistory(r.SDK().GetConnInfo().PickupUserID(), domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
-	logs.WarnOnErr("We got error on clear history", err,
+	r.Log().WarnOnErr("We got error on clear history", err,
 		zap.Int64("PeerID", req.Peer.ID),
 		zap.Int64("TeamID", domain.GetTeamID(in)),
 	)
 
 	if req.Delete {
 		err = repo.Dialogs.Delete(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
-		logs.WarnOnErr("We got error on deleting dialogs", err,
+		r.Log().WarnOnErr("We got error on deleting dialogs", err,
 			zap.Int64("PeerID", req.Peer.ID),
 			zap.Int64("TeamID", domain.GetTeamID(in)),
 		)
@@ -975,7 +983,7 @@ func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, da domain.Cal
 	}
 
 	err := repo.Dialogs.UpdatePinMessageID(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MessageID)
-	logs.ErrorOnErr("MessagesTogglePin", err)
+	r.Log().ErrorOnErr("MessagesTogglePin", err)
 
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
@@ -989,7 +997,7 @@ func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, da domain.
 	}
 
 	err := repo.Reactions.IncrementReactionUseCount(req.Reaction, 1)
-	logs.ErrorOnErr("messagesSendReaction", err)
+	r.Log().ErrorOnErr("messagesSendReaction", err)
 
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
 }
@@ -1002,9 +1010,9 @@ func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, da domai
 		return
 	}
 
-	for _, r := range req.Reactions {
-		err := repo.Reactions.IncrementReactionUseCount(r, -1)
-		logs.ErrorOnErr("messagesDeleteReaction", err)
+	for _, react := range req.Reactions {
+		err := repo.Reactions.IncrementReactionUseCount(react, -1)
+		r.Log().ErrorOnErr("messagesDeleteReaction", err)
 	}
 
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, true)
@@ -1122,7 +1130,7 @@ func (r *message) clientSendMessageMedia(in, out *rony.MessageEnvelope, da domai
 
 func (r *message) clientGetFrequentReactions(in, out *rony.MessageEnvelope, da domain.Callback) {
 	reactions := domain.SysConfig.Reactions
-	logs.Info("Reactions", zap.Int("ReactionsCount", len(reactions)))
+	r.Log().Info("Reactions", zap.Int("ReactionsCount", len(reactions)))
 
 	useCountsMap := make(map[string]uint32, len(reactions))
 

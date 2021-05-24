@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -44,12 +43,12 @@ func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da domain
 
 	val, err := json.Marshal(req)
 	if err != nil {
-		logs.Error("AccountModule::accountRegisterDevice()-> Json Marshal()", zap.Error(err))
+		r.Log().Error("AccountModule::accountRegisterDevice()-> Json Marshal()", zap.Error(err))
 		return
 	}
 	err = repo.System.SaveString(domain.SkDeviceToken, string(val))
 	if err != nil {
-		logs.Error("AccountModule::accountRegisterDevice()-> SaveString()", zap.Error(err))
+		r.Log().Error("AccountModule::accountRegisterDevice()-> SaveString()", zap.Error(err))
 		return
 	}
 	// send the request to server
@@ -66,12 +65,12 @@ func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da doma
 
 	val, err := json.Marshal(&msg.AccountRegisterDevice{})
 	if err != nil {
-		logs.Error("AccountModule::accountUnregisterDevice()-> Json Marshal()", zap.Error(err))
+		r.Log().Error("AccountModule::accountUnregisterDevice()-> Json Marshal()", zap.Error(err))
 		return
 	}
 	err = repo.System.SaveString(domain.SkDeviceToken, string(val))
 	if err != nil {
-		logs.Error("AccountModule::accountUnregisterDevice()-> SaveString()", zap.Error(err))
+		r.Log().Error("AccountModule::accountUnregisterDevice()-> SaveString()", zap.Error(err))
 		return
 	}
 

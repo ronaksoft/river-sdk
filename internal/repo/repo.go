@@ -51,6 +51,7 @@ type Context struct {
 }
 
 type repository struct {
+	logger     *logs.Logger
 	badger     *badger.DB
 	selfUserID int64
 	bunt       *buntdb.DB
@@ -114,7 +115,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 			WithNumMemtables(2).
 			WithNumLevelZeroTables(2).
 			WithNumLevelZeroTablesStall(4).
-			WithMaxTableSize(1 << 22).     // 4MB
+			WithMaxTableSize(1 << 22). // 4MB
 			WithValueLogFileSize(1 << 22). // 4MB
 			WithBypassLockGuard(true)
 	} else {
@@ -134,7 +135,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	buntPath := filepath.Join(dbPath, "bunty")
 	_ = os.MkdirAll(buntPath, os.ModePerm)
 	if buntIndex, err := buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/"))); err != nil {
-		logs.Fatal("Context::repoSetDB()->bunt Open()", zap.Error(err))
+		return err
 	} else {
 		r.bunt = buntIndex
 	}
@@ -162,18 +163,15 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 					// create a mapping
 					r.msgSearch, err = bleve.New(searchDbPath, indexMapForMessages())
 					if err != nil {
-						logs.Warn("Error On Open Search(Message)[New]", zap.Error(err))
 						_ = os.RemoveAll(searchDbPath)
 						return err
 					}
 				default:
-					logs.Warn("Error On Open Search(Message)[Default]", zap.Error(err))
 					_ = os.RemoveAll(searchDbPath)
 					return err
 				}
 			} else {
 				r.msgSearch = msgSearch
-				logs.Info("Repo initialized Message Index successfully.")
 			}
 			return nil
 		})
@@ -188,18 +186,15 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 					// create a mapping
 					r.peerSearch, err = bleve.New(peerDbPath, indexMapForPeers())
 					if err != nil {
-						logs.Warn("Error On Open Search(Peers)", zap.Error(err))
 						_ = os.RemoveAll(peerDbPath)
 						return err
 					}
 				default:
-					logs.Warn("Error On Open Search(Peers)", zap.Error(err))
 					_ = os.RemoveAll(peerDbPath)
 					return err
 				}
 			} else {
 				r.peerSearch = peerSearch
-				logs.Info("Repo initialized Peer index successfully.")
 			}
 			return nil
 		})
@@ -304,9 +299,7 @@ func badgerUpdate(fn func(txn *badger.Txn) error) (err error) {
 		case nil:
 			return nil
 		case badger.ErrConflict:
-			logs.Debug("Badger update conflict")
 		default:
-			logs.Debug("Badger update error", zap.Error(err))
 			return
 		}
 		time.Sleep(time.Duration(domain.RandomInt(10000)) * time.Microsecond)

@@ -6,6 +6,7 @@ import (
 	queueCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_queue"
 	syncCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_sync"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
 )
 
@@ -40,7 +41,7 @@ type SDK interface {
 
 type Module interface {
 	Name() string
-	Init(sdk SDK)
+	Init(sdk SDK, logger *logs.Logger)
 	LocalHandlers() map[int64]domain.LocalHandler
 	UpdateAppliers() map[int64]domain.UpdateApplier
 	MessageAppliers() map[int64]domain.MessageApplier
@@ -58,10 +59,12 @@ type Base struct {
 	handlers        map[int64]domain.LocalHandler
 	updateAppliers  map[int64]domain.UpdateApplier
 	messageAppliers map[int64]domain.MessageApplier
+	logger          *logs.Logger
 }
 
-func (b *Base) Init(sdk SDK) {
+func (b *Base) Init(sdk SDK, logger *logs.Logger) {
 	b.sdk = sdk
+	b.logger = logger
 }
 
 func (b *Base) Execute(in *rony.MessageEnvelope, da domain.Callback) {
@@ -102,4 +105,8 @@ func (b *Base) LocalHandlers() map[int64]domain.LocalHandler {
 
 func (b *Base) SDK() SDK {
 	return b.sdk
+}
+
+func (b *Base) Log() *logs.Logger {
+	return b.logger
 }

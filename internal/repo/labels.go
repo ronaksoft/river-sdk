@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/dgraph-io/badger/v2/pb"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
-	"go.uber.org/zap"
 	"sort"
 	"strings"
 )
@@ -173,7 +171,6 @@ func removeLabelFromMessage(txn *badger.Txn, labelID int32, msgID int64) error {
 func decreaseLabelItemCount(txn *badger.Txn, teamID int64, labelID int32) error {
 	cnt := getLabelCount(txn, teamID, labelID)
 	if cnt == 0 {
-		logs.Warn("RepoLabel tried to decrement counter but it is zero")
 		return nil
 	}
 	cnt--
@@ -190,7 +187,6 @@ func (r *repoLabels) Set(labels ...*msg.Label) error {
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoLabel got error on Set", err)
 	return err
 }
 
@@ -208,7 +204,6 @@ func (r *repoLabels) Save(teamID int64, labels ...*msg.Label) error {
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoLabel got error on Save", err)
 	return err
 }
 
@@ -239,7 +234,6 @@ func (r *repoLabels) Delete(labelIDs ...int32) error {
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoLabel got error on Delete", err)
 	return err
 
 }
@@ -258,7 +252,7 @@ func (r *repoLabels) GetMany(teamID int64, labelIDs ...int32) []*msg.Label {
 	return labels
 }
 
-func (r *repoLabels) GetAll(teamID int64) []*msg.Label {
+func (r *repoLabels) GetAll(teamID int64) ([]*msg.Label, error) {
 	labels := make([]*msg.Label, 0, 20)
 	err := badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -281,8 +275,10 @@ func (r *repoLabels) GetAll(teamID int64) []*msg.Label {
 
 		return nil
 	})
-	logs.ErrorOnErr("RepoLabels got error on GetAll", err)
-	return labels
+	if err != nil {
+		return nil, err
+	}
+	return labels, nil
 }
 
 func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minID, maxID int64) ([]*msg.UserMessage, []*msg.User, []*msg.Group) {
@@ -299,7 +295,7 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 		if maxID > 0 {
 			opts.Reverse = true
 		}
-		err := badgerView(func(txn *badger.Txn) error {
+		_ = badgerView(func(txn *badger.Txn) error {
 			it := txn.NewIterator(opts)
 			defer it.Close()
 			if maxID > 0 {
@@ -311,15 +307,12 @@ func (r *repoLabels) ListMessages(labelID int32, teamID int64, limit int32, minI
 				if limit--; limit < 0 {
 					break
 				}
-				err := it.Item().Value(func(val []byte) error {
+				_ = it.Item().Value(func(val []byte) error {
 					return extractMessage(txn, val, teamID, &userMessages, userIDs, groupIDs)
 				})
-				logs.WarnOnErr("RepoLabels got error on ListMessage for getting message", err)
 			}
 			return nil
 		})
-		logs.WarnOnErr("RepoLabels got error on ListMessages", err)
-		logs.Debug("RepoLabels got list", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID))
 	case minID > 0:
 		_ = badgerView(func(txn *badger.Txn) error {
 			it := txn.NewIterator(opts)

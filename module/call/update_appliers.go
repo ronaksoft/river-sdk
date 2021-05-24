@@ -23,7 +23,7 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope
 		return
 	}
 
-	logs.Debug("updatePhoneCall", zap.Int32("action", int32(x.Action)))
+	r.Log().Debug("updatePhoneCall", zap.Int32("action", int32(x.Action)))
 
 	now := domain.Now().Unix()
 	if !(x.Timestamp == 0 || now-x.Timestamp < 60) {
@@ -32,7 +32,7 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope
 
 	data, err := parseCallAction(x.Action, x.ActionData)
 	if err != nil {
-		logs.Debug("parseCallAction", zap.Error(err))
+		r.Log().Debug("parseCallAction", zap.Error(err))
 		return
 	}
 
@@ -42,7 +42,7 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope
 	}
 
 	if data == nil {
-		logs.Debug("Update data is nil")
+		r.Log().Debug("Update data is nil")
 		return
 	}
 

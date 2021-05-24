@@ -23,7 +23,7 @@ import (
 func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.UsersGetFull{}
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("UserModule::usersGetFull()-> Unmarshal()", zap.Error(err))
+		r.Log().Error("UserModule::usersGetFull()-> Unmarshal()", zap.Error(err))
 		return
 	}
 	userIDs := domain.MInt64B{}

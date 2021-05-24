@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/ronaksoft/rony/pools"
@@ -171,7 +170,6 @@ func (r *repoDialogs) SaveNew(dialog *msg.Dialog, lastUpdate int64) error {
 
 func (r *repoDialogs) Save(dialog *msg.Dialog) error {
 	if dialog == nil {
-		logs.Error("RepoDialog calls save for nil dialog")
 		return nil
 	}
 	return badgerUpdate(func(txn *badger.Txn) error {
@@ -275,7 +273,7 @@ func (r *repoDialogs) Delete(teamID, peerID int64, peerType int32) error {
 	})
 }
 
-func (r *repoDialogs) List(teamID int64, offset, limit int32) []*msg.Dialog {
+func (r *repoDialogs) List(teamID int64, offset, limit int32) ([]*msg.Dialog, error) {
 	dialogs := make([]*msg.Dialog, 0, limit)
 	err := badgerView(func(txn *badger.Txn) error {
 		return r.bunt.View(func(tx *buntdb.Tx) error {
@@ -298,9 +296,10 @@ func (r *repoDialogs) List(teamID int64, offset, limit int32) []*msg.Dialog {
 			})
 		})
 	})
-
-	logs.ErrorOnErr("RepoDialogs got error on getting list", err)
-	return dialogs
+	if err != nil {
+		return nil, err
+	}
+	return dialogs, nil
 }
 
 func (r *repoDialogs) CountDialogs(teamID int64) int32 {
@@ -317,7 +316,7 @@ func (r *repoDialogs) CountDialogs(teamID int64) int32 {
 
 func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 	dialogs := make([]*msg.Dialog, 0, 7)
-	err := badgerView(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = tools.StrToByte(prefixDialogs)
 		opts.Reverse = true
@@ -338,7 +337,7 @@ func (r *repoDialogs) GetPinnedDialogs() []*msg.Dialog {
 		it.Close()
 		return nil
 	})
-	logs.ErrorOnErr("RepoDialogs got error on getting pinned dialogs", err)
+
 	return dialogs
 }
 

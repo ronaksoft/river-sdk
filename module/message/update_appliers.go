@@ -30,11 +30,11 @@ func (r *message) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 	x := &msg.UpdateNewMessage{}
 	err := x.Unmarshal(u.Update)
 	if err != nil {
-		logs.Error("MessageModule couldn't unmarshal UpdateNewMessage", zap.Error(err))
+		r.Log().Error("MessageModule couldn't unmarshal UpdateNewMessage", zap.Error(err))
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateNewMessage",
+	r.Log().Debug("MessageModule applies UpdateNewMessage",
 		zap.Int64("MessageID", x.Message.ID),
 		zap.Int64("UpdateID", x.UpdateID),
 	)
@@ -74,14 +74,14 @@ func (r *message) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 	go func() {
 		// save user if does not exist
 		err = repo.Users.Save(x.Sender)
-		logs.WarnOnErr("MessageModule got error on saving user while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
+		r.Log().WarnOnErr("MessageModule got error on saving user while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
 		waitGroup.Done()
 	}()
 
 	waitGroup.Add(1)
 	go func() {
 		err = repo.Messages.SaveNew(x.Message, r.SDK().SyncCtrl().GetUserID())
-		logs.WarnOnErr("MessageModule got error on saving new message while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
+		r.Log().WarnOnErr("MessageModule got error on saving new message while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
 		messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, x.Message.ID)
 		waitGroup.Done()
 	}()
@@ -164,7 +164,7 @@ func (r *message) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnve
 		act := new(msg.MessageActionGroupDeleteUser)
 		err := act.Unmarshal(x.Message.MessageActionData)
 		if err != nil {
-			logs.Error("MessageModule couldn't unmarshal MessageActionGroupDeleteUser", zap.Error(err))
+			r.Log().Error("MessageModule couldn't unmarshal MessageActionGroupDeleteUser", zap.Error(err))
 		}
 
 		// Check if user left (deleted him/her self from group) remove its GroupSearch, Dialog and its MessagesPending
@@ -185,7 +185,7 @@ func (r *message) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnve
 		// remove from top peers
 		err = repo.TopPeers.Delete(msg.TopPeerCategory_Groups, x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 		if err != nil {
-			logs.Error("MessageModule couldn't delete group from top peers", zap.Error(err))
+			r.Log().Error("MessageModule couldn't delete group from top peers", zap.Error(err))
 		}
 
 		// Delete PendingMessage
@@ -193,7 +193,7 @@ func (r *message) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnve
 		if deletedMsgs != nil {
 			buff, err := deletedMsgs.Marshal()
 			if err != nil {
-				logs.Error("MessageModule couldn't marshal ClientUpdateMessagesDeleted", zap.Error(err))
+				r.Log().Error("MessageModule couldn't marshal ClientUpdateMessagesDeleted", zap.Error(err))
 				break
 			}
 
@@ -245,19 +245,19 @@ func (r *message) handlePendingMessage(x *msg.UpdateNewMessage) {
 			unmarshalErr := clientSendMedia.Unmarshal(pmsg.Media)
 			if unmarshalErr == nil { // TODO!!! fix this with some flag in pending message
 				clientFile, err := repo.Files.GetMediaDocument(x.Message)
-				logs.WarnOnErr("Error On GetMediaDocument", err)
+				r.Log().WarnOnErr("Error On GetMediaDocument", err)
 
 				err = os.Rename(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
 				if err != nil {
-					logs.Error("Error On HandlePendingMessage (Move) we try Copy", zap.Error(err))
+					r.Log().Error("Error On HandlePendingMessage (Move) we try Copy", zap.Error(err))
 					err = domain.CopyFile(clientSendMedia.FilePath, repo.Files.GetFilePath(clientFile))
 					if err != nil {
-						logs.Error("Error On HandlePendingMessage (Copy) we give up!", zap.Error(err))
+						r.Log().Error("Error On HandlePendingMessage (Copy) we give up!", zap.Error(err))
 					}
 					return
 				}
 			} else {
-				logs.Error("Error On HandlePendingMessage", zap.Error(unmarshalErr))
+				r.Log().Error("Error On HandlePendingMessage", zap.Error(unmarshalErr))
 			}
 		}
 	}
@@ -286,7 +286,7 @@ func (r *message) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateReadHistoryInbox",
+	r.Log().Debug("MessageModule applies UpdateReadHistoryInbox",
 		zap.Int64("MaxID", x.MaxID),
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PeerID", x.Peer.ID),
@@ -304,7 +304,7 @@ func (r *message) updateReadHistoryOutbox(u *msg.UpdateEnvelope) ([]*msg.UpdateE
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateReadHistoryOutbox",
+	r.Log().Debug("MessageModule applies UpdateReadHistoryOutbox",
 		zap.Int64("MaxID", x.MaxID),
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PeerID", x.Peer.ID),
@@ -322,7 +322,7 @@ func (r *message) updateMessageEdited(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvel
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateMessageEdited",
+	r.Log().Debug("MessageModule applies UpdateMessageEdited",
 		zap.Int64("MessageID", x.Message.ID),
 		zap.Int64("UpdateID", x.UpdateID),
 	)
@@ -341,7 +341,7 @@ func (r *message) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope,
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applied UpdateMessageID",
+	r.Log().Debug("MessageModule applied UpdateMessageID",
 		zap.Int64("RandomID", x.RandomID),
 		zap.Int64("MessageID", x.MessageID),
 	)
@@ -360,14 +360,14 @@ func (r *message) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope,
 
 	userMessage, _ := repo.Messages.Get(sent.MessageID)
 	if userMessage != nil {
-		logs.Info("MessageModule received UpdateMessageID after UpdateNewMessage",
+		r.Log().Info("MessageModule received UpdateMessageID after UpdateNewMessage",
 			zap.Int64("RandomID", x.RandomID),
 			zap.Int64("MID", x.MessageID),
 			zap.String("Body", userMessage.Body),
 		)
 
 		if pm == nil {
-			logs.Warn("But we couldn't find Pending Message",
+			r.Log().Warn("But we couldn't find Pending Message",
 				zap.Int64("RandomID", sent.RandomID),
 				zap.Int64("RealID", sent.MessageID),
 			)
@@ -380,7 +380,7 @@ func (r *message) updateMessageID(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope,
 	if pm == nil {
 		return nil, nil
 	}
-	logs.Info("MessageModule received UpdateMessageID before UpdateNewMessage",
+	r.Log().Info("MessageModule received UpdateMessageID before UpdateNewMessage",
 		zap.Int64("RandomID", x.RandomID),
 		zap.Int64("MID", x.MessageID),
 		zap.Int64("PendingID", pm.ID),
@@ -416,7 +416,7 @@ func (r *message) updateDraftMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelo
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateDraftMessage",
+	r.Log().Debug("MessageModule applies UpdateDraftMessage",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -437,7 +437,7 @@ func (r *message) updateDraftMessageCleared(u *msg.UpdateEnvelope) ([]*msg.Updat
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateDraftMessageCleared",
+	r.Log().Debug("MessageModule applies UpdateDraftMessageCleared",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -458,7 +458,7 @@ func (r *message) updateReaction(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, 
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateReaction",
+	r.Log().Debug("MessageModule applies UpdateReaction",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -477,7 +477,7 @@ func (r *message) updateMessagePinned(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvel
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateMessagePinned",
+	r.Log().Debug("MessageModule applies UpdateMessagePinned",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -496,7 +496,7 @@ func (r *message) updateReadMessagesContents(u *msg.UpdateEnvelope) ([]*msg.Upda
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateReadMessagesContents",
+	r.Log().Debug("MessageModule applies UpdateReadMessagesContents",
 		zap.Int64s("MessageIDs", x.MessageIDs),
 		zap.Int64("UpdateID", x.UpdateID),
 	)
@@ -514,7 +514,7 @@ func (r *message) updateMessagesDeleted(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateMessagesDeleted",
+	r.Log().Debug("MessageModule applies UpdateMessagesDeleted",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -544,7 +544,7 @@ func (r *message) updateNotifySettings(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateNotifySettings",
+	r.Log().Debug("MessageModule applies UpdateNotifySettings",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -561,7 +561,7 @@ func (r *message) updateDialogPinned(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelo
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdateDialogPinned",
+	r.Log().Debug("MessageModule applies UpdateDialogPinned",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -577,7 +577,7 @@ func (r *message) updatePhoneCallStarted(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdatePhoneCallStarted",
+	r.Log().Debug("MessageModule applies UpdatePhoneCallStarted",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -593,7 +593,7 @@ func (r *message) updatePhoneCallEnded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	logs.Debug("MessageModule applies UpdatePhoneCallEnded",
+	r.Log().Debug("MessageModule applies UpdatePhoneCallEnded",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 

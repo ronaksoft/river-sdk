@@ -24,7 +24,7 @@ func (r *team) updateTeamMemberAdded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelo
 		return nil, err
 	}
 
-	logs.Debug("TeamModule applies UpdateTeamMemberAdded",
+	r.Log().Debug("TeamModule applies UpdateTeamMemberAdded",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -44,7 +44,7 @@ func (r *team) updateTeamMemberRemoved(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		return nil, err
 	}
 
-	logs.Debug("TeamModule applies UpdateTeamMemberRemoved",
+	r.Log().Debug("TeamModule applies UpdateTeamMemberRemoved",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -64,7 +64,7 @@ func (r *team) updateTeamMemberStatus(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvel
 		return nil, err
 	}
 
-	logs.Debug("TeamModule applies UpdateTeamMemberStatus",
+	r.Log().Debug("TeamModule applies UpdateTeamMemberStatus",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -78,7 +78,7 @@ func (r *team) updateTeamCreated(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, 
 		return nil, err
 	}
 
-	logs.Debug("TeamModule applies UpdateTeamCreated",
+	r.Log().Debug("TeamModule applies UpdateTeamCreated",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -97,7 +97,7 @@ func (r *team) updateTeam(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) 
 		return nil, err
 	}
 
-	logs.Debug("TeamModule applies UpdateTeam",
+	r.Log().Debug("TeamModule applies UpdateTeam",
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.String("Name", x.Name),
 	)

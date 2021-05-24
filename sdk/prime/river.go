@@ -715,7 +715,7 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 
 func (r *River) registerModule(modules ...module.Module) {
 	for _, m := range modules {
-		m.Init(r)
+		m.Init(r, logs.With(zap.String("Module", m.Name())))
 		r.modules[m.Name()] = m
 		for c, h := range m.LocalHandlers() {
 			r.localCommands[c] = h
