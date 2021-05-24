@@ -52,40 +52,41 @@ func SetFilePath(logDir string) error {
 	if strings.HasPrefix(logDir, "file://") {
 		logDir = logDir[7:]
 	}
+
+	if logDir == "" {
+		return nil
+	}
 	_LogDir = logDir
-	if logDir != "" {
-		fmt.Println(logDir)
-		defer func() {
-			// Let's clean all the old log files
-			go CleanUP()
-		}()
-		t := time.Now()
-		logFileName := fmt.Sprintf("LOG-%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
-		logFile, err := os.OpenFile(path.Join(logDir, logFileName), os.O_APPEND|os.O_CREATE, 0600)
-		if err != nil {
-			return err
-		}
-		_FileLog = &Logger{
-			z: zap.New(
-				zapcore.NewCore(
-					zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
-						TimeKey:        "ts",
-						LevelKey:       "level",
-						NameKey:        "logger",
-						CallerKey:      "caller",
-						MessageKey:     "msg",
-						StacktraceKey:  "stacktrace",
-						LineEnding:     zapcore.DefaultLineEnding,
-						EncodeLevel:    zapcore.CapitalLevelEncoder,
-						EncodeTime:     TimeEncoder,
-						EncodeDuration: zapcore.StringDurationEncoder,
-						EncodeCaller:   zapcore.ShortCallerEncoder,
-					}),
-					zapcore.Lock(logFile),
-					_LogLevel,
-				),
+	defer func() {
+		// Let's clean all the old log files
+		go CleanUP()
+	}()
+	t := time.Now()
+	logFileName := fmt.Sprintf("LOG-%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
+	logFile, err := os.OpenFile(path.Join(logDir, logFileName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	_FileLog = &Logger{
+		z: zap.New(
+			zapcore.NewCore(
+				zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+					TimeKey:        "ts",
+					LevelKey:       "level",
+					NameKey:        "logger",
+					CallerKey:      "caller",
+					MessageKey:     "msg",
+					StacktraceKey:  "stacktrace",
+					LineEnding:     zapcore.DefaultLineEnding,
+					EncodeLevel:    zapcore.CapitalLevelEncoder,
+					EncodeTime:     TimeEncoder,
+					EncodeDuration: zapcore.StringDurationEncoder,
+					EncodeCaller:   zapcore.ShortCallerEncoder,
+				}),
+				zapcore.Lock(logFile),
+				_LogLevel,
 			),
-		}
+		),
 	}
 	return nil
 }
