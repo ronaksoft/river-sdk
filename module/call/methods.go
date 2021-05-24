@@ -808,7 +808,7 @@ func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator 
 							pc.Try++
 							pc.mu.Unlock()
 							_, innerErr := c.callUserSingle(peer, participant, c.activeCallID)
-							if innerErr == nil {
+							if innerErr != nil {
 								c.Log().Warn("callUserSingle", zap.Error(innerErr))
 							}
 							if pc.Try >= RetryLimit {
