@@ -26,10 +26,6 @@ func init() {
 }
 
 func New(logDir string) (*Logger, error) {
-	defer func() {
-		// Let's clean all the old log files
-		go CleanUP()
-	}()
 	// support IOS file path
 	if strings.HasPrefix(logDir, "file://") {
 		logDir = logDir[7:]
@@ -57,9 +53,13 @@ func New(logDir string) (*Logger, error) {
 	)
 
 	if logDir != "" {
+		fmt.Println(logDir)
+		defer func() {
+			// Let's clean all the old log files
+			go CleanUP()
+		}()
 		t := time.Now()
 		logFileName := fmt.Sprintf("LOG-%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
-		_ = os.MkdirAll(logDir, 0600)
 		logFile, err := os.OpenFile(path.Join(logDir, logFileName), os.O_APPEND|os.O_CREATE, 0600)
 		if err != nil {
 			return nil, err
