@@ -36,7 +36,7 @@ type SDK interface {
 	GetConnInfo() domain.RiverConfigurator
 	Module(name string) Module
 	Execute(constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag) (requestID int64, err error)
-	ExecuteWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag) (requestID int64, err error)
+	ExecuteWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag, msTimeout int64) (requestID int64, err error)
 }
 
 type Module interface {

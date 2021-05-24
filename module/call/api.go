@@ -6,6 +6,7 @@ import (
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
+	"time"
 )
 
 /*
@@ -432,9 +433,31 @@ func (c *call) executeRemoteCommand(
 	} else {
 		rdt |= domain.RequestBatch
 	}
-	_, _ = c.SDK().ExecuteWithTeam(
-		c.teamInput.teamID, int64(c.teamInput.teamAccess), constructor, commandBytes,
-		domain.NewCallback(timeoutCB, successCB, nil),
-		rdt,
-	)
+
+	retry := 0
+	var innerTimeoutCB domain.TimeoutCallback
+	cb := domain.NewCallback(innerTimeoutCB, successCB, nil)
+
+	executeFn := func() {
+		retry++
+		_, _ = c.SDK().ExecuteWithTeam(
+			c.teamInput.teamID, int64(c.teamInput.teamAccess), constructor, commandBytes,
+			cb,
+			rdt,
+			10000,
+		)
+	}
+
+	innerTimeoutCB = func() {
+		if retry < 3 {
+			go func() {
+				time.Sleep(time.Duration(1) * time.Second)
+				executeFn()
+			}()
+		} else {
+			timeoutCB()
+		}
+	}
+
+	executeFn()
 }

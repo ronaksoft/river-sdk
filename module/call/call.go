@@ -71,6 +71,14 @@ func New(config *Config) *call {
 		callback:   config.Callback,
 	}
 
+	/*
+	C_ClientCallSendIceCandidate
+	C_ClientCallStart
+	C_ClientCallSendMediaSettings
+	C_ClientCallDestroy
+	C_ClientCallReject
+	C_ClientCallAccept
+	*/
 	c.RegisterHandlers(
 		map[int64]domain.LocalHandler{
 			msg.C_ClientCallToggleVideo:             c.toggleVideoHandler,

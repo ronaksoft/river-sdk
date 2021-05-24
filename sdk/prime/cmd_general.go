@@ -39,7 +39,7 @@ func (r *River) Execute(constructor int64, commandBytes []byte, cb domain.Callba
 	)
 }
 
-func (r *River) ExecuteWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag) (requestID int64, err error) {
+func (r *River) ExecuteWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag, msTimeout int64) (requestID int64, err error) {
 	return r.ExecuteCommandWithTeam(
 		teamID, accessHash, constructor, commandBytes,
 		domain.NewRequestDelegate(
@@ -51,22 +51,23 @@ func (r *River) ExecuteWithTeam(teamID, accessHash, constructor int64, commandBy
 			func(err error) {
 				cb.OnTimeout()
 			}, flags),
+		msTimeout,
 	)
 }
 
 // ExecuteCommand is a wrapper function to pass the request to the queueController, to be passed to networkController for final
 // delivery to the server. SDK uses GetCurrentTeam() to detect the targeted team of the request
 func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate RequestDelegate) (requestID int64, err error) {
-	return r.executeCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), constructor, commandBytes, delegate)
+	return r.executeCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), constructor, commandBytes, delegate, -1)
 }
 
 // ExecuteCommandWithTeam is similar to ExecuteTeam but explicitly defines the target team
-func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, delegate RequestDelegate) (requestID int64, err error) {
-	return r.executeCommand(teamID, uint64(accessHash), constructor, commandBytes, delegate)
+func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, delegate RequestDelegate, msTimeout int64) (requestID int64, err error) {
+	return r.executeCommand(teamID, uint64(accessHash), constructor, commandBytes, delegate, msTimeout)
 }
 
 func (r *River) executeCommand(
-	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate RequestDelegate,
+	teamID int64, teamAccess uint64, constructor int64, commandBytes []byte, delegate RequestDelegate, msTimeout int64,
 ) (requestID int64, err error) {
 	if registry.ConstructorName(constructor) == "" {
 		err = domain.ErrInvalidConstructor
@@ -124,7 +125,7 @@ func (r *River) executeCommand(
 		return
 	}
 
-	go executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, da)
+	go executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, da, msTimeout)
 	return
 }
 func executeLocalCommand(
@@ -154,6 +155,7 @@ func executeRemoteCommand(
 	r *River,
 	requestID uint64, constructor int64, commandBytes []byte,
 	cb domain.Callback,
+	msTimeout int64,
 ) {
 	logs.Debug("We execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -172,9 +174,13 @@ func executeRemoteCommand(
 			waitForNetwork = false
 			directToNet = true
 
+			executeTimeout := domain.WebsocketRequestTimeout
+			if msTimeout > 0 {
+				executeTimeout = time.Duration(msTimeout) * time.Millisecond
+			}
 			go func() {
 				select {
-				case <-time.After(domain.WebsocketRequestTimeout):
+				case <-time.After(executeTimeout):
 					reqCB := domain.GetRequestCallback(requestID)
 					if reqCB == nil {
 						break
@@ -317,7 +323,7 @@ func getServerKeys(r *River) (sk *msg.SystemKeys, err error) {
 		nil,
 	)
 	executeRemoteCommand(
-		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_SystemGetServerKeys, reqBytes, cb,
+		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_SystemGetServerKeys, reqBytes, cb, -1,
 	)
 	waitGroup.Wait()
 	return
@@ -364,7 +370,7 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 		}, nil,
 	)
 	executeRemoteCommand(
-		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_InitConnect, req1Bytes, cb,
+		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_InitConnect, req1Bytes, cb, -1,
 	)
 	waitGroup.Wait()
 	return
@@ -478,7 +484,7 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 		nil,
 	)
 	executeRemoteCommand(
-		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_InitCompleteAuth, req2Bytes, cb,
+		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_InitCompleteAuth, req2Bytes, cb, -1,
 	)
 	waitGroup.Wait()
 	return
