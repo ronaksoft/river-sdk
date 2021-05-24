@@ -241,7 +241,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		ProgressChangedCB:    r.fileDelegate.OnProgressChanged,
 		CancelCB:             r.fileDelegate.OnCancel,
 		PostUploadProcessCB:  r.postUploadProcess,
-		Logger:               r.logger.With("FileCtrl"),
 	})
 
 	// Initialize queueController

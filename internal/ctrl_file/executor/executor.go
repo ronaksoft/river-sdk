@@ -29,6 +29,7 @@ type Executor struct {
 	name    string
 	stack   *goque.Stack
 	factory RequestFactoryFunc
+	logger  *logs.Logger
 
 	// internals
 	waitGroupsLock sync.Mutex
@@ -51,6 +52,7 @@ func NewExecutor(dbPath string, name string, factory RequestFactoryFunc, opts ..
 		factory:    factory,
 		rt:         make(chan struct{}, defaultConcurrentRequests),
 		waitGroups: make(map[string]*sync.WaitGroup),
+		logger:     logs.With("FileExecutor"),
 	}
 	e.ctx, e.cf = context.WithCancel(context.Background())
 
@@ -75,7 +77,7 @@ func (e *Executor) execute() {
 		// Pop the next request from the stack
 		stackItem, err := e.stack.Pop()
 		if err != nil {
-			logs.Fatal("FileCtrl Executor got Serious Error", zap.Error(err))
+			e.logger.Fatal("got Serious Error", zap.Error(err))
 			return
 		}
 
@@ -99,7 +101,7 @@ func (e *Executor) execute() {
 			for req != nil {
 				err := req.Prepare()
 				if err != nil {
-					logs.Warn("Executor got error on Prepare",
+					e.logger.Warn("got error on Prepare",
 						zap.String("ReqID", req.GetID()),
 						zap.Error(err),
 					)

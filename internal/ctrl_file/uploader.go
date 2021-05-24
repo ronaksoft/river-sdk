@@ -6,7 +6,6 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/ctrl_file/executor"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
@@ -87,7 +86,7 @@ func (u *UploadRequest) genFileSavePart(fileID int64, partID int32, totalParts i
 	}
 	envelop.Message, _ = req.Marshal()
 
-	logs.Debug("FileCtrl generates FileSavePart",
+	u.ctrl.logger.Debug("FileCtrl generates FileSavePart",
 		zap.Int64("MsgID", u.cfr.MessageID),
 		zap.Int64("FileID", req.FileID),
 		zap.Int32("PartID", req.PartID),
@@ -173,7 +172,7 @@ func (u *UploadRequest) GetID() string {
 }
 
 func (u *UploadRequest) Prepare() error {
-	logs.Info("FileCtrl prepares UploadRequest",
+	u.ctrl.logger.Info("FileCtrl prepares UploadRequest",
 		zap.String("ReqID", u.GetID()),
 		zap.Duration("D", domain.Now().Sub(u.startTime)),
 	)
@@ -205,7 +204,7 @@ func (u *UploadRequest) Prepare() error {
 		oldReqID := u.GetID()
 		err = u.checkSha256()
 		if err == nil {
-			logs.Info("FileCtrl detects the file already exists in the server",
+			u.ctrl.logger.Info("FileCtrl detects the file already exists in the server",
 				zap.Int64("FileID", u.cfr.FileID),
 				zap.Int32("ClusterID", u.cfr.ClusterID),
 			)
@@ -260,7 +259,7 @@ func (u *UploadRequest) Prepare() error {
 	}
 
 	st3 := domain.Now()
-	logs.Debug("FileCtrl prepared UploadRequest",
+	u.ctrl.logger.Debug("FileCtrl prepared UploadRequest",
 		zap.String("ReqID", u.GetID()),
 		zap.Duration("D", domain.Now().Sub(u.startTime)),
 		zap.Duration("CheckShaD", st2.Sub(st1)),
@@ -273,14 +272,14 @@ func (u *UploadRequest) Prepare() error {
 func (u *UploadRequest) NextAction() executor.Action {
 	// If request is canceled then return nil
 	if _, err := repo.Files.GetFileRequest(u.GetID()); err != nil {
-		logs.Warn("FileCtrl did not find UploadRequest, we cancel it", zap.Error(err))
+		u.ctrl.logger.Warn("FileCtrl did not find UploadRequest, we cancel it", zap.Error(err))
 		return nil
 	}
 
 	// Wait for next part, or return nil if we finished
 	select {
 	case partID := <-u.parts:
-		logs.Debug("FileCtrl got next upload part",
+		u.ctrl.logger.Debug("FileCtrl got next upload part",
 			zap.String("ReqID", u.GetID()),
 			zap.Int32("PartID", partID),
 			zap.Duration("D", domain.Now().Sub(u.startTime)),
@@ -295,7 +294,7 @@ func (u *UploadRequest) NextAction() executor.Action {
 }
 
 func (u *UploadRequest) ActionDone(id int32) {
-	logs.Info("FileCtrl finished upload part",
+	u.ctrl.logger.Info("FileCtrl finished upload part",
 		zap.String("ID", u.GetID()),
 		zap.Int32("PartID", id),
 		zap.Duration("D", domain.Now().Sub(u.startTime)),
@@ -304,7 +303,7 @@ func (u *UploadRequest) ActionDone(id int32) {
 	// If we have failed too many times, and we can decrease the chunk size the we do it again.
 	if atomic.LoadInt32(&u.failedActions) > RetryMaxAttempts {
 		atomic.StoreInt32(&u.failedActions, 0)
-		logs.Debug("Max Attempts",
+		u.ctrl.logger.Debug("Max Attempts",
 			zap.Int32("ChunkSize", u.cfr.ChunkSize),
 		)
 	}
@@ -390,14 +389,14 @@ func (a *UploadAction) Do(ctx context.Context) {
 	// We try to read the chunk, if it failed we try one more time
 	n, err := a.req.file.ReadAt(bytes, int64(offset))
 	if err != nil && err != io.EOF {
-		logs.Warn("FileCtrl got error in ReadFile (Upload)", zap.Error(err))
+		a.req.ctrl.logger.Warn("FileCtrl got error in ReadFile (Upload)", zap.Error(err))
 		a.req.parts <- a.id
 		return
 	}
 
 	// If we read 0 bytes then something is wrong
 	if n == 0 {
-		logs.Fatal("FileCtrl read zero bytes from file",
+		a.req.ctrl.logger.Fatal("FileCtrl read zero bytes from file",
 			zap.String("FilePath", a.req.cfr.FilePath),
 			zap.Int32("TotalParts", a.req.cfr.TotalParts),
 			zap.Int32("ChunkSize", a.req.cfr.ChunkSize),
@@ -411,7 +410,7 @@ func (a *UploadAction) Do(ctx context.Context) {
 		ctx, a.req.genFileSavePart(a.req.cfr.FileID, a.id+1, a.req.cfr.TotalParts, bytes[:n]),
 	)
 	if err != nil {
-		logs.Warn("FileCtrl got error On SendHttp (Upload)", zap.Error(err))
+		a.req.ctrl.logger.Warn("FileCtrl got error On SendHttp (Upload)", zap.Error(err))
 		atomic.AddInt32(&a.req.failedActions, 1)
 		a.req.parts <- a.id
 		return
@@ -419,7 +418,7 @@ func (a *UploadAction) Do(ctx context.Context) {
 	switch res.Constructor {
 	case msg.C_Bool:
 		a.req.addToUploaded(a.id)
-		logs.Debug("FileCtrl upload action done",
+		a.req.ctrl.logger.Debug("FileCtrl upload action done",
 			zap.String("ID", a.req.GetID()),
 			zap.Int32("PartID", a.ID()),
 			zap.Duration("D", domain.Now().Sub(startTime)),
@@ -427,7 +426,7 @@ func (a *UploadAction) Do(ctx context.Context) {
 	case rony.C_Error:
 		x := &rony.Error{}
 		_ = x.Unmarshal(res.Message)
-		logs.Warn("FileCtrl received Error response (Upload)",
+		a.req.ctrl.logger.Warn("FileCtrl received Error response (Upload)",
 			zap.Int32("PartID", a.id+1),
 			zap.String("Code", x.Code),
 			zap.String("Item", x.Items),
@@ -435,7 +434,7 @@ func (a *UploadAction) Do(ctx context.Context) {
 		atomic.AddInt32(&a.req.failedActions, 1)
 		a.req.parts <- a.id
 	default:
-		logs.Fatal("FileCtrl received unexpected response (Upload)", zap.String("C", registry.ConstructorName(res.Constructor)))
+		a.req.ctrl.logger.Fatal("FileCtrl received unexpected response (Upload)", zap.String("C", registry.ConstructorName(res.Constructor)))
 		return
 	}
 }
