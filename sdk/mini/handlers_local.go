@@ -71,7 +71,7 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Call
 
 	res.Groups, _ = minirepo.Groups.ReadMany(domain.GetTeamID(in), mGroups.ToArray()...)
 	if len(res.Groups) != len(mGroups) {
-		r.logger.Warn("River found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
+		logger.Warn("River found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
 		for groupID := range mGroups {
 			found := false
 			for _, g := range res.Groups {
@@ -81,13 +81,13 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Call
 				}
 			}
 			if !found {
-				r.logger.Warn("missed group", zap.Int64("GroupID", groupID))
+				logger.Warn("missed group", zap.Int64("GroupID", groupID))
 			}
 		}
 	}
 	res.Users, _ = minirepo.Users.ReadMany(mUsers.ToArray()...)
 	if len(res.Users) != len(mUsers) {
-		r.logger.Warn("River found unmatched dialog users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
+		logger.Warn("River found unmatched dialog users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
 		for userID := range mUsers {
 			found := false
 			for _, g := range res.Users {
@@ -97,7 +97,7 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Call
 				}
 			}
 			if !found {
-				r.logger.Warn("missed user", zap.Int64("UserID", userID))
+				logger.Warn("missed user", zap.Int64("UserID", userID))
 			}
 		}
 	}

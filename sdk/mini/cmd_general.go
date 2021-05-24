@@ -33,7 +33,7 @@ func (r *River) AppStart() error {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
-	r.logger.Info("MiniRiver Starting")
+	logger.Info("MiniRiver Starting")
 
 	minirepo.MustInit(r.dbPath)
 
@@ -45,11 +45,11 @@ func (r *River) AppStart() error {
 
 	domain.StartTime = time.Now()
 	domain.WindowLog = func(txt string) {}
-	r.logger.Info("MiniRiver Started")
+	logger.Info("MiniRiver Started")
 
 	err := r.syncServerTime()
 	if err != nil {
-		r.logger.Warn("MiniRiver got error on get server time", zap.Error(err))
+		logger.Warn("MiniRiver got error on get server time", zap.Error(err))
 	}
 
 	if r.getLastUpdateID() == 0 {
@@ -119,7 +119,7 @@ func (r *River) executeLocalCommand(
 	requestID uint64, constructor int64, commandBytes []byte,
 	da domain.Callback,
 ) {
-	r.logger.Debug("We execute local command",
+	logger.Debug("We execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
@@ -140,7 +140,7 @@ func (r *River) executeRemoteCommand(
 	requestID uint64, constructor int64, commandBytes []byte,
 	da domain.Callback,
 ) {
-	r.logger.Debug("We execute remote command",
+	logger.Debug("We execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 	requestID = uint64(domain.SequentialUniqueID())

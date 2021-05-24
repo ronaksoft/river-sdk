@@ -94,7 +94,7 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 	file, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 
 	if err != nil {
-		r.logger.Warn("Error On GetDocumentHash (Files.Get)",
+		logger.Warn("Error On GetDocumentHash (Files.Get)",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),
@@ -104,7 +104,7 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 	}
 
 	if file.MessageID == 0 {
-		r.logger.Warn("Not a message document",
+		logger.Warn("Not a message document",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),

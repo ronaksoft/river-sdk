@@ -19,6 +19,14 @@ import (
    Copyright Ronak Software Group 2018
 */
 
+var (
+	logger *logs.Logger
+)
+
+func init() {
+	logger = logs.With("Monitoring")
+}
+
 const (
 	serverLongThreshold = 2 * time.Second
 )
@@ -75,7 +83,7 @@ func GetDataTransferRate() int32 {
 
 func ServerResponseTime(reqConstructor, resConstructor int64, t time.Duration) {
 	if t > serverLongThreshold {
-		logs.Warn("Too Long ServerResponse",
+		logger.Warn("Too Long ServerResponse",
 			zap.Duration("T", t),
 			zap.String("ResConstructor", registry.ConstructorName(resConstructor)),
 			zap.String("ReqConstructor", registry.ConstructorName(reqConstructor)),
@@ -164,7 +172,7 @@ func SaveUsage() {
 	if err == nil {
 		err = repo.System.SaveBytes("ClientUsage", b)
 		if err != nil {
-			logs.Warn("We got error on saving ClientUsage into the db", zap.Error(err))
+			logger.Warn("We got error on saving ClientUsage into the db", zap.Error(err))
 		}
 	}
 }

@@ -26,6 +26,7 @@ var (
 	ctx       *Context
 	r         *repository
 	singleton sync.Mutex
+	logger    *logs.Logger
 
 	Account         *repoAccount
 	Dialogs         *repoDialogs
@@ -51,7 +52,6 @@ type Context struct {
 }
 
 type repository struct {
-	logger     *logs.Logger
 	badger     *badger.DB
 	selfUserID int64
 	bunt       *buntdb.DB
@@ -75,6 +75,7 @@ func Init(dbPath string, lowMemory bool) error {
 			return err
 		}
 
+		logger = logs.With("REPO")
 		ctx = &Context{
 			DBPath: dbPath,
 		}
@@ -284,7 +285,7 @@ func DropAll() {
 func GC() {
 	_ = r.bunt.Shrink()
 	for r.badger.RunValueLogGC(0.7) == nil {
-		logs.Info("Badger ValueLog GC executed")
+		logger.Info("Badger ValueLog GC executed")
 	}
 }
 
@@ -348,7 +349,7 @@ var msgIndexer = tools.NewFlusherPool(10, 1000, func(targetID string, entries []
 	}
 	err := r.msgSearch.Batch(b)
 	if err != nil {
-		logs.Warn("MessageIndexer got error", zap.Error(err))
+		logger.Warn("MessageIndexer got error", zap.Error(err))
 	}
 })
 
@@ -390,6 +391,6 @@ var peerIndexer = tools.NewFlusherPool(10, 1000, func(targetID string, entries [
 	}
 	err := r.peerSearch.Batch(b)
 	if err != nil {
-		logs.Warn("PeerIndexer got error", zap.Error(err))
+		logger.Warn("PeerIndexer got error", zap.Error(err))
 	}
 })

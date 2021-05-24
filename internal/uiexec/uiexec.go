@@ -20,6 +20,7 @@ var (
 	updateCB     domain.UpdateReceivedCallback
 	dataSyncedCB domain.DataSyncedCallback
 	funcChan     = make(chan execItem, 100)
+	logger       *logs.Logger
 )
 
 type execItem struct {
@@ -30,6 +31,7 @@ type execItem struct {
 }
 
 func init() {
+	logger = logs.With("UIExec")
 	updateCB = func(constructor int64, msg []byte) {}
 	dataSyncedCB = func(dialogs, contacts, gifs bool) {}
 	go func() {
@@ -44,7 +46,7 @@ func init() {
 			select {
 			case <-doneChan:
 			case <-ctx.Done():
-				logs.Error("We timeout waiting for UI-Exec to return",
+				logger.Error("We timeout waiting for UI-Exec to return",
 					zap.String("C", registry.ConstructorName(it.constructor)),
 					zap.String("Kind", it.kind),
 				)
@@ -52,7 +54,7 @@ func init() {
 			cf() // Cancel func
 			endTime := time.Now()
 			if d := endTime.Sub(it.insertTime); d > maxDelay {
-				logs.Error("Too Long UIExec",
+				logger.Error("Too Long UIExec",
 					zap.String("C", registry.ConstructorName(it.constructor)),
 					zap.String("Kind", it.kind),
 					zap.Duration("ExecT", endTime.Sub(startTime)),
@@ -78,7 +80,7 @@ func ExecSuccessCB(handler domain.MessageHandler, out *rony.MessageEnvelope) {
 
 func ExecTimeoutCB(h domain.TimeoutCallback) {
 	if h != nil {
-		logs.Info("ExecTimeout")
+		logger.Info("ExecTimeout")
 		exec("timeoutCB", 0, func() {
 			h()
 		})
@@ -111,7 +113,7 @@ func exec(kind string, constructor int64, fn func()) {
 		constructor: constructor,
 	}:
 	default:
-		logs.Error("Error On Pushing To UIExec")
+		logger.Error("Error On Pushing To UIExec")
 	}
 
 }

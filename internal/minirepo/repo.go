@@ -25,11 +25,16 @@ var (
 	Users   *repoUsers
 	Groups  *repoGroups
 	General *repoGenerals
+	logger  *logs.Logger
 )
 
 type repository struct {
 	db    *bolt.DB
 	index *buntdb.DB
+}
+
+func init() {
+	logger = logs.With("MiniREPO")
 }
 
 func MustInit(dbPath string) {
@@ -60,7 +65,7 @@ func Init(dbPath string) (err error) {
 		for _, b := range buckets {
 			_, err = tx.CreateBucketIfNotExists(b)
 			if err != nil {
-				logs.Error("MiniRepo got error on creating bucket", zap.Error(err))
+				logger.Error("MiniRepo got error on creating bucket", zap.Error(err))
 			}
 		}
 		return nil

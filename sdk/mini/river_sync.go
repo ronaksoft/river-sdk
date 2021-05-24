@@ -34,20 +34,20 @@ func (r *River) syncServerTime() (err error) {
 				x := &msg.SystemServerTime{}
 				err = x.Unmarshal(m.Message)
 				if err != nil {
-					r.logger.Error("couldn't unmarshal SystemGetServerTime response", zap.Error(err))
+					logger.Error("couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 					return
 				}
 				clientTime := time.Now().Unix()
 				serverTime := x.Timestamp
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
 
-				r.logger.Debug("MiniRiver received SystemServerTime",
+				logger.Debug("MiniRiver received SystemServerTime",
 					zap.Int64("ServerTime", serverTime),
 					zap.Int64("ClientTime", clientTime),
 					zap.Duration("Difference", domain.TimeDelta),
 				)
 			case rony.C_Error:
-				r.logger.Warn("MiniRiver received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
+				logger.Warn("MiniRiver received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
 				err = domain.ParseServerError(m.Message)
 			}
 		},
@@ -72,7 +72,7 @@ func (r *River) syncUpdateState() (updated bool, err error) {
 				x := &msg.UpdateState{}
 				err = x.Unmarshal(m.Message)
 				if err != nil {
-					r.logger.Error("MiniRiver couldn't unmarshal SystemGetServerTime response", zap.Error(err))
+					logger.Error("MiniRiver couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 					return
 				}
 				if x.UpdateID > currentUpdateID {
@@ -80,11 +80,11 @@ func (r *River) syncUpdateState() (updated bool, err error) {
 				}
 				err = r.setLastUpdateID(x.UpdateID)
 				if err != nil {
-					r.logger.Error("MiniRiver couldn't save LastUpdateID to the database", zap.Error(err))
+					logger.Error("MiniRiver couldn't save LastUpdateID to the database", zap.Error(err))
 					return
 				}
 			case rony.C_Error:
-				r.logger.Warn("MiniRiver received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
+				logger.Warn("MiniRiver received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
 				err = domain.ParseServerError(m.Message)
 			}
 		},
@@ -110,20 +110,20 @@ func (r *River) syncContacts() {
 				}
 				err := minirepo.Users.SaveAllContacts(x)
 				if err != nil {
-					r.logger.Warn("MiniRiver got error on saving contacts", zap.Error(err))
+					logger.Warn("MiniRiver got error on saving contacts", zap.Error(err))
 					return
 				}
 				err = r.setContactsHash(x.Hash)
 				if err != nil {
-					r.logger.Warn("MiniRiver got error on saving contacts hash", zap.Error(err))
+					logger.Warn("MiniRiver got error on saving contacts hash", zap.Error(err))
 				}
 				r.mainDelegate.DataSynced(false, true, false)
 			case rony.C_Error:
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
-				r.logger.Warn("MiniRiver got server error on syncing contacts", zap.Error(x))
+				logger.Warn("MiniRiver got server error on syncing contacts", zap.Error(x))
 			default:
-				r.logger.Warn("MiniRiver got unknown server response")
+				logger.Warn("MiniRiver got unknown server response")
 			}
 		},
 	)
@@ -138,7 +138,7 @@ func (r *River) syncDialogs() {
 
 	updated, err := r.syncUpdateState()
 	if err != nil {
-		r.logger.Warn("MiniRiver got error on UpdateSync", zap.Error(err))
+		logger.Warn("MiniRiver got error on UpdateSync", zap.Error(err))
 	}
 	if !updated {
 		return
@@ -169,9 +169,9 @@ func (r *River) syncDialogs() {
 				case rony.C_Error:
 					x := &rony.Error{}
 					_ = x.Unmarshal(m.Message)
-					r.logger.Warn("MiniRiver got server error on syncing dialogs", zap.Error(x))
+					logger.Warn("MiniRiver got server error on syncing dialogs", zap.Error(x))
 				default:
-					r.logger.Warn("MiniRiver got unknown server response")
+					logger.Warn("MiniRiver got unknown server response")
 				}
 			},
 		)

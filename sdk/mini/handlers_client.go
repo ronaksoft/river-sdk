@@ -236,13 +236,13 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, da domain.Callback, fileID 
 	}
 
 	for partIndex := int32(0); partIndex < totalParts; partIndex++ {
-		r.logger.Info("SavePart",
+		logger.Info("SavePart",
 			zap.Int32("PartID", partIndex), zap.Int32("Total", totalParts),
 			zap.Int64("FileSize", fileSize),
 		)
 		err = r.savePart(in, f, fileID, partIndex, totalParts)
 		if err != nil {
-			r.logger.Warn("Error On SavePart (MiniSDK)", zap.Error(err))
+			logger.Warn("Error On SavePart (MiniSDK)", zap.Error(err))
 			return err
 		}
 

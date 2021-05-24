@@ -66,13 +66,13 @@ func (r *River) FileDownloadAsync(clusterID int32, fileID int64, accessHash int6
 	switch err {
 	case nil:
 	case badger.ErrKeyNotFound:
-		r.logger.Warn("Error On GetFile (Key not found)",
+		logger.Warn("Error On GetFile (Key not found)",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),
 		)
 	default:
-		r.logger.Warn("Error On GetFile",
+		logger.Warn("Error On GetFile",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),
@@ -87,13 +87,13 @@ func (r *River) FileDownloadSync(clusterID int32, fileID int64, accessHash int64
 	switch err {
 	case nil:
 	case badger.ErrKeyNotFound:
-		r.logger.Warn("Error On GetFile (Key not found)",
+		logger.Warn("Error On GetFile (Key not found)",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),
 		)
 	default:
-		r.logger.Warn("Error On GetFile",
+		logger.Warn("Error On GetFile",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),
@@ -126,7 +126,7 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 	req := new(msg.ClientSendMessageMedia)
 	_ = req.Unmarshal(pendingMessage.Media)
 
-	r.logger.Info("River resumes upload", zap.Int64("MsgID", pendingMessageID))
+	logger.Info("River resumes upload", zap.Int64("MsgID", pendingMessageID))
 	if uploadReq := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); uploadReq == nil {
 		r.fileCtrl.UploadMessageDocument(
 			pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID,
@@ -153,7 +153,7 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 	file, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 
 	if err != nil {
-		r.logger.Warn("Error On GetDocumentHash (Files.Get)",
+		logger.Warn("Error On GetDocumentHash (Files.Get)",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),
@@ -163,7 +163,7 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 	}
 
 	if file.MessageID == 0 {
-		r.logger.Warn("Not a message document",
+		logger.Warn("Not a message document",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),

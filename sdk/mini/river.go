@@ -23,6 +23,14 @@ import (
    Copyright Ronak Software Group 2020
 */
 
+var (
+	logger *logs.Logger
+)
+
+func init() {
+	logger = logs.With("MiniRiver")
+}
+
 type RiverConfig struct {
 	SeedHostPorts string
 	// DbPath is the path of the folder holding the sqlite database.
@@ -71,7 +79,6 @@ type River struct {
 	ConnInfo  *RiverConnection
 	dbPath    string
 	sentryDSN string
-	logger    *logs.Logger
 
 	// localCommands can be satisfied by client cache
 	localCommands map[int64]domain.LocalHandler
@@ -111,8 +118,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.mainDelegate = conf.MainDelegate
 
 	// set log level
-	r.logger = logs.With("River")
-	r.logger.SetLogLevel(conf.LogLevel)
+	logger.SetLogLevel(conf.LogLevel)
 
 	// Initialize Network Controller
 	r.network = networkCtrl.New(
@@ -137,7 +143,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 
 	// Initialize River Connection
-	r.logger.Info("River SetConfig done!")
+	logger.Info("River SetConfig done!")
 
 	// Set current team
 	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
@@ -148,7 +154,7 @@ func (r *River) onNetworkConnect() (err error) {
 }
 
 func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
-	r.logger.Info("We received error (General)",
+	logger.Info("We received error (General)",
 		zap.Uint64("ReqID", requestID),
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),

@@ -18,7 +18,7 @@ func (r *River) IsGifSaved(fileID int64, clusterID int32) bool {
 func (r *River) GetRealTopMessageID(peerID int64, peerType int32) int64 {
 	topMsgID, err := repo.Messages.GetTopMessageID(domain.GetCurrTeamID(), peerID, peerType)
 	if err != nil {
-		r.logger.Error("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.Error(err))
+		logger.Error("SDK::GetRealTopMessageID() => Messages.GetTopMessageID()", zap.Error(err))
 		return -1
 	}
 	return topMsgID
@@ -31,5 +31,5 @@ func (r *River) GetPinnedDialogsCount() int32 {
 
 func (r *River) ResetCalculatedImportHash() {
 	err := repo.System.SaveInt(domain.SkContactsImportHash, 0)
-	r.logger.ErrorOnErr("ResetCalculatedImportHash", err)
+	logger.ErrorOnErr("ResetCalculatedImportHash", err)
 }
