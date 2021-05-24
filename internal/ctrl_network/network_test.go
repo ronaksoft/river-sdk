@@ -4,7 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/ctrl_network"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	. "github.com/smartystreets/goconvey/convey"
@@ -31,7 +31,7 @@ var (
 
 func dummyMessageHandler(messages []*rony.MessageEnvelope) {
 	for _, m := range messages {
-		logs.Info("Message",
+		testenv.Log().Info("Message",
 			zap.String("C", registry.ConstructorName(m.Constructor)),
 			zap.Uint64("ReqID", m.RequestID),
 		)
@@ -39,9 +39,9 @@ func dummyMessageHandler(messages []*rony.MessageEnvelope) {
 }
 
 func dummyUpdateHandler(updateContainer *msg.UpdateContainer) {
-	logs.Info("Update Handler")
+	testenv.Log().Info("Update Handler")
 	for _, u := range updateContainer.Updates {
-		logs.Info("Update",
+		testenv.Log().Info("Update",
 			zap.String("C", registry.ConstructorName(u.Constructor)),
 			zap.Int64("GetUpdateID", u.UpdateID),
 		)
@@ -50,19 +50,19 @@ func dummyUpdateHandler(updateContainer *msg.UpdateContainer) {
 }
 
 func dummyOnConnectHandler() error {
-	logs.Info("Connected")
+	testenv.Log().Info("Connected")
 	return nil
 }
 
 func dummyErrorHandler(requestID uint64, e *rony.Error) {
-	logs.Info("Error Handler",
+	testenv.Log().Info("Error Handler",
 		zap.String("Code", e.Code),
 		zap.String("Items", e.Items),
 	)
 }
 
 func dummyNetworkChangeHandler(newStatus domain.NetworkStatus) {
-	logs.Info("Network Status Changed",
+	testenv.Log().Info("Network Status Changed",
 		zap.String("New Status", newStatus.ToString()),
 	)
 }
@@ -89,7 +89,7 @@ func getServerTime() *rony.MessageEnvelope {
 }
 
 func init() {
-	logs.SetLogLevel(0)
+	testenv.Log().SetLogLevel(0)
 	ctrl = networkCtrl.New(networkCtrl.Config{
 		SeedHosts:   []string{"edge.river.im", "edge.rivermsg.com"},
 		CountryCode: "IR",
@@ -181,7 +181,7 @@ func TestPing(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		logs.Info("Pinged", zap.Duration("D", time.Since(startTime)))
+		testenv.Log().Info("Pinged", zap.Duration("D", time.Since(startTime)))
 	}
 	time.Sleep(5 * time.Second)
 	ctrl.Stop()

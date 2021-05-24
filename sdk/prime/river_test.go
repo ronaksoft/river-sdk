@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
@@ -35,7 +35,7 @@ func TestSDK(t *testing.T) {
 }
 
 func init() {
-	logs.Info("Creating New River SDK Instance")
+	testenv.Log().Info("Creating New River SDK Instance")
 	r := new(River)
 	conInfo := new(RiverConnection)
 	connDelegate := &ConnInfoDelegates{}
@@ -90,26 +90,26 @@ func (d *MainDelegateDummy) OnDeferredRequests(requestID int64, b []byte) {}
 
 func (d *MainDelegateDummy) OnNetworkStatusChanged(quality int) {
 	state := domain.NetworkStatus(quality)
-	logs.Info("Network status changed", zap.String("Status", state.ToString()))
+	testenv.Log().Info("Network status changed", zap.String("Status", state.ToString()))
 }
 
 func (d *MainDelegateDummy) OnSyncStatusChanged(newStatus int) {
 	state := domain.SyncStatus(newStatus)
-	logs.Info("Sync status changed", zap.String("Status", state.ToString()))
+	testenv.Log().Info("Sync status changed", zap.String("Status", state.ToString()))
 }
 
 func (d *MainDelegateDummy) OnAuthKeyCreated(authID int64) {
-	logs.Info("Auth Key Created", zap.Int64("AuthID", authID))
+	testenv.Log().Info("Auth Key Created", zap.Int64("AuthID", authID))
 }
 
 func (d *MainDelegateDummy) OnGeneralError(b []byte) {
 	e := new(rony.Error)
 	e.Unmarshal(b)
-	logs.Error("Received general error", zap.String("Code", e.Code), zap.String("Items", e.Items))
+	testenv.Log().Error("Received general error", zap.String("Code", e.Code), zap.String("Items", e.Items))
 }
 
 func (d *MainDelegateDummy) OnSessionClosed(res int) {
-	logs.Info("Session Closed", zap.Int("Res", res))
+	testenv.Log().Info("Session Closed", zap.Int("Res", res))
 }
 
 func (d *MainDelegateDummy) ShowLoggerAlert() {}
@@ -134,14 +134,14 @@ func (RequestDelegateDummy) OnTimeout(err error) {
 type FileDelegateDummy struct{}
 
 func (d *FileDelegateDummy) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash, percent int64, peerID int64) {
-	logs.Info("Download progress changed",
+	testenv.Log().Info("Download progress changed",
 		zap.Int64("Progress", percent),
 		zap.Int64("PeerID", peerID),
 	)
 }
 
 func (d *FileDelegateDummy) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
-	logs.Info("Download completed",
+	testenv.Log().Info("Download completed",
 		zap.String("ReqID", reqID),
 		zap.String("FilePath", filePath),
 		zap.Int64("PeerID", peerID),
@@ -150,5 +150,5 @@ func (d *FileDelegateDummy) OnCompleted(reqID string, clusterID int32, fileID, a
 }
 
 func (d *FileDelegateDummy) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
-	logs.Error("CancelCB")
+	testenv.Log().Error("CancelCB")
 }

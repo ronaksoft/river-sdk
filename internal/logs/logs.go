@@ -20,6 +20,7 @@ var (
 	_LogDir   string
 	_LogLevel AtomicLevel
 	_Log      *Logger
+	_FileLog  *Logger
 )
 
 func init() {
@@ -64,9 +65,8 @@ func SetFilePath(logDir string) error {
 		if err != nil {
 			return err
 		}
-		_Log.z = _Log.z.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-			return zapcore.NewTee(
-				core,
+		_FileLog = &Logger{
+			z: zap.New(
 				zapcore.NewCore(
 					zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
 						TimeKey:        "ts",
@@ -84,9 +84,8 @@ func SetFilePath(logDir string) error {
 					zapcore.Lock(logFile),
 					_LogLevel,
 				),
-			)
-		}))
-
+			),
+		}
 	}
 	return nil
 }
@@ -151,45 +150,6 @@ func With(name string) *Logger {
 
 func Directory() string {
 	return _LogDir
-}
-
-func SetLogLevel(l int) {
-	_LogLevel.SetLevel(zapcore.Level(l))
-}
-
-func Debug(msg string, fields ...zap.Field) {
-	if _Log == nil {
-		return
-	}
-	_Log.Debug(msg, fields...)
-}
-
-func Warn(msg string, fields ...zap.Field) {
-	if _Log == nil {
-		return
-	}
-	_Log.Warn(msg, fields...)
-}
-
-func Info(msg string, fields ...zap.Field) {
-	if _Log == nil {
-		return
-	}
-	_Log.Info(msg, fields...)
-}
-
-func Error(msg string, fields ...zap.Field) {
-	if _Log == nil {
-		return
-	}
-	_Log.Error(msg, fields...)
-}
-
-func Fatal(msg string, fields ...zap.Field) {
-	if _Log == nil {
-		return
-	}
-	_Log.Fatal(msg, fields...)
 }
 
 func PanicF(format string, args ...interface{}) {

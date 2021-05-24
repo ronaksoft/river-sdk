@@ -32,43 +32,51 @@ func (l *Logger) With(name string, fields ...Field) *Logger {
 	}
 }
 
+func (l *Logger) write(lvl zapcore.Level, msg string, fields ...zap.Field) {
+	msg = fmt.Sprintf("[%s]: %s", l.prefix, msg)
+	if ce := l.z.Check(lvl, msg); ce != nil {
+		ce.Write(fields...)
+	}
+	if _FileLog != nil {
+		if ce := _FileLog.z.Check(lvl, msg); ce != nil {
+			ce.Write(fields...)
+		}
+	}
+}
+
 func (l *Logger) WarnOnErr(guideTxt string, err error, fields ...zap.Field) {
 	if err != nil {
 		fields = append(fields, zap.Error(err))
-		l.z.Warn(guideTxt, fields...)
+		l.Warn(guideTxt, fields...)
 	}
 }
 
 func (l *Logger) ErrorOnErr(guideTxt string, err error, fields ...zap.Field) {
 	if err != nil {
 		fields = append(fields, zap.Error(err))
-		l.z.Error(guideTxt, fields...)
+		l.Error(guideTxt, fields...)
 	}
 }
 
 func (l *Logger) Debug(msg string, fields ...zap.Field) {
-	msg = fmt.Sprintf("[%s]: %s", l.prefix, msg)
-	l.z.Debug(msg, fields...)
+	l.write(zap.DebugLevel, msg, fields...)
+
 }
 
 func (l *Logger) Warn(msg string, fields ...zap.Field) {
-	msg = fmt.Sprintf("[%s]: %s", l.prefix, msg)
-	l.z.Warn(msg, fields...)
+	l.write(zap.WarnLevel, msg, fields...)
 }
 
 func (l *Logger) Info(msg string, fields ...zap.Field) {
-	msg = fmt.Sprintf("[%s]: %s", l.prefix, msg)
-	l.z.Info(msg, fields...)
+	l.write(zap.InfoLevel, msg, fields...)
 }
 
 func (l *Logger) Error(msg string, fields ...zap.Field) {
-	msg = fmt.Sprintf("[%s]: %s", l.prefix, msg)
-	l.z.Error(msg, fields...)
+	l.write(zap.ErrorLevel, msg, fields...)
 }
 
 func (l *Logger) Fatal(msg string, fields ...zap.Field) {
-	msg = fmt.Sprintf("[%s]: %s", l.prefix, msg)
-	l.z.Fatal(msg, fields...)
+	l.write(zap.FatalLevel, msg, fields...)
 
 }
 

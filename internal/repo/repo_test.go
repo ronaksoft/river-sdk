@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony/tools"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/zap"
@@ -25,7 +25,7 @@ import (
 
 func init() {
 	repo.MustInit("./_data", false)
-	logs.SetLogLevel(2)
+	testenv.Log().SetLogLevel(2)
 }
 
 func createMediaMessage(body string, filename string, labelIDs []int32) *msg.UserMessage {
@@ -206,7 +206,7 @@ func TestConcurrent(t *testing.T) {
 			})
 			waitGroup.Done()
 			if err != nil {
-				logs.Fatal("Error On Save Pending", zap.Error(err))
+				testenv.Log().Fatal("Error On Save Pending", zap.Error(err))
 			}
 		}(i)
 		waitGroup.Add(1)

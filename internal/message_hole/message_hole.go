@@ -12,6 +12,14 @@ import (
 	"sync"
 )
 
+var (
+	logger *logs.Logger
+)
+
+func init() {
+	logger = logs.With("MessageHole")
+}
+
 type BarType int
 
 const (
@@ -291,7 +299,7 @@ func loadManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory) *H
 	}
 
 	if !hm.Valid() {
-		logs.Error("HoleManager Not Valid", zap.String("Dump", hm.String()))
+		logger.Error("HoleManager Not Valid", zap.String("Dump", hm.String()))
 		hm = newHoleManager()
 		b, _ := json.Marshal(hm)
 		repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, cat, b)
@@ -303,7 +311,7 @@ func loadManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory) *H
 func saveManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory, hm *HoleManager) {
 	b, err := json.Marshal(hm.bars)
 	if err != nil {
-		logs.Error("Error On HoleManager", zap.Error(err))
+		logger.Error("Error On HoleManager", zap.Error(err))
 		return
 	}
 	repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, cat, b)
