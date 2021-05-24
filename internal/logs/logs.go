@@ -97,3 +97,62 @@ func Directory() string {
 func SetLogLevel(l int) {
 	_LogLevel.SetLevel(zapcore.Level(l))
 }
+
+func Debug(msg string, fields ...zap.Field) {
+	if _Log == nil {
+		return
+	}
+	_Log.Debug(msg, fields...)
+}
+
+func Warn(msg string, fields ...zap.Field) {
+	if _Log == nil {
+		return
+	}
+	_Log.Warn(msg, fields...)
+}
+
+func WarnOnErr(guideTxt string, err error, fields ...zap.Field) {
+	if _Log == nil {
+		return
+	}
+	if err != nil {
+		fields = append(fields, zap.Error(err))
+		_Log.Warn(guideTxt, fields...)
+	}
+}
+
+func Info(msg string, fields ...zap.Field) {
+	if _Log == nil {
+		return
+	}
+	_Log.Info(msg, fields...)
+}
+
+func Error(msg string, fields ...zap.Field) {
+	if _Log == nil {
+		return
+	}
+	_Log.Error(msg, fields...)
+}
+
+func ErrorOnErr(guideTxt string, err error, fields ...zap.Field) {
+	if _Log == nil {
+		return
+	}
+	if err != nil {
+		fields = append(fields, zap.Error(err))
+		_Log.Error(guideTxt, fields...)
+	}
+}
+
+func Fatal(msg string, fields ...zap.Field) {
+	if _Log == nil {
+		return
+	}
+	_Log.Fatal(msg, fields...)
+}
+
+func PanicF(format string, args ...interface{}) {
+	panic(fmt.Sprintf(format, args...))
+}

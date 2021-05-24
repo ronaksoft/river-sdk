@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/boltdb/bolt"
 	"github.com/tidwall/buntdb"
+	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 )
@@ -58,7 +59,9 @@ func Init(dbPath string) (err error) {
 		}
 		for _, b := range buckets {
 			_, err = tx.CreateBucketIfNotExists(b)
-			logs.WarnOnErr("MiniRepo got error on creating bucket", err)
+			if err != nil {
+				logs.Error("MiniRepo got error on creating bucket", zap.Error(err))
+			}
 		}
 		return nil
 	})

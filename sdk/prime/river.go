@@ -125,6 +125,7 @@ type River struct {
 	optimizeForLowMemory bool
 	resetQueueOnStartup  bool
 	sentryDSN            string
+	logger               *logs.Logger
 }
 
 func (r *River) GetConnInfo() domain.RiverConfigurator {
@@ -185,9 +186,10 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// set log level
 	logs.SetLogLevel(conf.LogLevel)
 
-	// set log file path
-	if conf.LogDirectory != "" {
-		_ = logs.SetLogFilePath(conf.LogDirectory)
+	var err error
+	r.logger, err = logs.New(conf.LogDirectory)
+	if err != nil {
+		logs.PanicF("got error on initializing the logger: %v", err)
 	}
 
 	// Initialize realtime requests
@@ -244,6 +246,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		ProgressChangedCB:    r.fileDelegate.OnProgressChanged,
 		CancelCB:             r.fileDelegate.OnCancel,
 		PostUploadProcessCB:  r.postUploadProcess,
+		Logger:               r.logger.With("FileCtrl"),
 	})
 
 	// Initialize queueController
@@ -456,10 +459,6 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 		nil,
 	)
 
-	for _, update := range updateContainer.Updates {
-		logs.UpdateLog(update.UpdateID, update.Constructor)
-	}
-
 	outOfSync := false
 	if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.GetUpdateID()+1 {
 		logs.Info("We are out of sync",
@@ -504,7 +503,7 @@ func (r *River) postUploadProcess(uploadRequest *msg.ClientFileRequest) bool {
 }
 func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success bool) {
 	// This is a upload for message send
-	pendingMessage := repo.PendingMessages.GetByID(uploadRequest.MessageID)
+	pendingMessage, _ := repo.PendingMessages.GetByID(uploadRequest.MessageID)
 	if pendingMessage == nil {
 		return true
 	}
@@ -715,7 +714,7 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 
 func (r *River) registerModule(modules ...module.Module) {
 	for _, m := range modules {
-		m.Init(r, logs.With(zap.String("Module", m.Name())))
+		m.Init(r, r.logger.With(m.Name()))
 		r.modules[m.Name()] = m
 		for c, h := range m.LocalHandlers() {
 			r.localCommands[c] = h

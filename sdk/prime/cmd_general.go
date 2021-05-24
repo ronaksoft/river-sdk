@@ -532,7 +532,7 @@ func (r *River) CancelRequest(requestID int64) {
 
 // DeletePendingMessage removes pending message from DB
 func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
-	pmsg := repo.PendingMessages.GetByID(id)
+	pmsg, _ := repo.PendingMessages.GetByID(id)
 	if pmsg == nil {
 		return
 	}
@@ -547,7 +547,7 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 
 // RetryPendingMessage puts pending message again in command queue to re send it
 func (r *River) RetryPendingMessage(id int64) bool {
-	pmsg := repo.PendingMessages.GetByID(id)
+	pmsg, _ := repo.PendingMessages.GetByID(id)
 	if pmsg == nil {
 		return false
 	}
@@ -698,8 +698,8 @@ func (r *River) AppStart() error {
 	statusOnline = true
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
-	logs.Info("River Starting")
-	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
+	r.logger.Info("River Starting")
+	r.logger.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
 
 	// Initialize MessageHole
 	messageHole.Init()

@@ -23,10 +23,6 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func SetLogLevel(l int) {
-	logs.SetLogLevel(l)
-}
-
 type RiverConfig struct {
 	SeedHostPorts string
 	// DbPath is the path of the folder holding the sqlite database.
@@ -75,6 +71,7 @@ type River struct {
 	ConnInfo  *RiverConnection
 	dbPath    string
 	sentryDSN string
+	logger    *logs.Logger
 
 	// localCommands can be satisfied by client cache
 	localCommands map[int64]domain.LocalHandler
@@ -95,6 +92,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	r.sentryDSN = conf.SentryDSN
 	r.ConnInfo = conf.ConnInfo
+	r.logger, _ = logs.New("")
 
 	if conf.MaxInFlightDownloads <= 0 {
 		conf.MaxInFlightDownloads = 10
@@ -114,12 +112,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.mainDelegate = conf.MainDelegate
 
 	// set log level
-	logs.SetLogLevel(conf.LogLevel)
-
-	// set log file path
-	if conf.LogDirectory != "" {
-		_ = logs.SetLogFilePath(conf.LogDirectory)
-	}
+	r.logger.SetLogLevel(conf.LogLevel)
 
 	// Initialize Network Controller
 	r.network = networkCtrl.New(
@@ -144,7 +137,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 
 	// Initialize River Connection
-	logs.Info("River SetConfig done!")
+	r.logger.Info("River SetConfig done!")
 
 	// Set current team
 	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
@@ -155,7 +148,7 @@ func (r *River) onNetworkConnect() (err error) {
 }
 
 func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
-	logs.Info("We received error (General)",
+	r.logger.Info("We received error (General)",
 		zap.Uint64("ReqID", requestID),
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),

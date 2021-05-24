@@ -274,7 +274,6 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
 		return saveDialog(txn, dialog)
 	})
 
-
 	return err
 }
 
@@ -327,14 +326,12 @@ func (r *repoMessages) GetMessageHistory(
 		maxID = dialog.TopMessageID
 		fallthrough
 	case maxID != 0 && minID == 0:
-		var stopWatch1, stopWatch2 time.Time
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
 			it.Seek(getMessageKey(teamID, peerID, peerType, maxID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
@@ -357,18 +354,15 @@ func (r *repoMessages) GetMessageHistory(
 				})
 			}
 			it.Close()
-			stopWatch2 = time.Now()
 			return nil
 		})
 	case maxID == 0 && minID != 0:
-		var stopWatch1, stopWatch2, stopWatch3 time.Time
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
 			opts.Reverse = false
 			it := txn.NewIterator(opts)
 			it.Seek(getMessageKey(teamID, peerID, peerType, minID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
@@ -391,11 +385,9 @@ func (r *repoMessages) GetMessageHistory(
 				})
 			}
 			it.Close()
-			stopWatch2 = time.Now()
 			sort.Slice(userMessages, func(i, j int) bool {
 				return userMessages[i].ID > userMessages[j].ID
 			})
-			stopWatch3 = time.Now()
 			return nil
 		})
 	default:
@@ -479,8 +471,6 @@ func (r *repoMessages) GetMediaMessageHistory(
 	teamID, peerID int64, peerType int32, minID, maxID int64, limit int32, cat msg.MediaCategory,
 ) (userMessages []*msg.UserMessage, users []*msg.User, groups []*msg.Group) {
 	userMessages = make([]*msg.UserMessage, 0, limit)
-	var stopWatch1, stopWatch2 time.Time
-
 	switch {
 	case maxID == 0 && minID == 0:
 		dialog, err := Dialogs.Get(teamID, peerID, peerType)
@@ -496,7 +486,6 @@ func (r *repoMessages) GetMediaMessageHistory(
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
 			it.Seek(getMessageKey(teamID, peerID, peerType, maxID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
@@ -518,7 +507,6 @@ func (r *repoMessages) GetMediaMessageHistory(
 				})
 			}
 			it.Close()
-			stopWatch2 = time.Now()
 			return nil
 		})
 	case minID > 0:
@@ -527,7 +515,6 @@ func (r *repoMessages) GetMediaMessageHistory(
 			opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
 			it := txn.NewIterator(opts)
 			it.Seek(getMessageKey(teamID, peerID, peerType, minID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
@@ -549,14 +536,11 @@ func (r *repoMessages) GetMediaMessageHistory(
 				})
 			}
 			it.Close()
-			stopWatch2 = time.Now()
 			return nil
 		})
 	default:
 
 	}
-
-
 
 	users, groups = extractMessages(userMessages...)
 	return
@@ -665,7 +649,7 @@ func (r *repoMessages) ClearHistory(userID int64, teamID, peerID int64, peerType
 }
 
 func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) error {
-	return  badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, msgID := range messageIDs {
 			userMessage, err := getMessageByID(txn, msgID)
 			if err != nil {

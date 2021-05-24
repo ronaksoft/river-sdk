@@ -79,9 +79,9 @@ func (l *Logger) SetSentry(userID, authID int64, dsn string) {
 
 }
 
-func (l *Logger) With(fields ...Field) *Logger {
+func (l *Logger) With(name string) *Logger {
 	return &Logger{
-		z: l.z.With(fields...),
+		z: l.z.With(zap.String("M", name)),
 	}
 }
 

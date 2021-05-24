@@ -46,7 +46,7 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 		return
 	}
 	res := &msg.MessagesDialogs{}
-	res.Dialogs = repo.Dialogs.List(domain.GetTeamID(in), req.Offset, req.Limit)
+	res.Dialogs, _ = repo.Dialogs.List(domain.GetTeamID(in), req.Offset, req.Limit)
 	res.Count = repo.Dialogs.CountDialogs(domain.GetTeamID(in))
 
 	// If the localDB had no data send the request to server
@@ -91,7 +91,7 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 	}
 
 	// Load Messages
-	res.Messages = repo.Messages.GetMany(mMessages.ToArray())
+	res.Messages, _ = repo.Messages.GetMany(mMessages.ToArray())
 
 	// Load Pending messages
 	res.Messages = append(res.Messages, pendingMessages...)
@@ -586,7 +586,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da domain.Ca
 	}
 
 	// Prepare the the result before sending back to the client
-	preSuccessCB := genGetHistoryCB(da.OnComplete, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
+	preSuccessCB := r.genGetHistoryCB(da.OnComplete, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
 
 	// We are Offline/Disconnected
 	if !r.SDK().NetCtrl().Connected() {
@@ -810,7 +810,7 @@ func (r *message) messagesDelete(in, out *rony.MessageEnvelope, da domain.Callba
 	}
 	if len(pendingMessageIDs) > 0 {
 		for _, id := range pendingMessageIDs {
-			pmsg := repo.PendingMessages.GetByID(id)
+			pmsg, _ := repo.PendingMessages.GetByID(id)
 			if pmsg == nil {
 				return
 			}
@@ -846,7 +846,7 @@ func (r *message) messagesGet(in, out *rony.MessageEnvelope, da domain.Callback)
 		}
 	}
 
-	messages := repo.Messages.GetMany(msgIDs.ToArray())
+	messages, _ := repo.Messages.GetMany(msgIDs.ToArray())
 	messages = append(messages, repo.PendingMessages.GetMany(pMsgIDs.ToArray())...)
 
 	mUsers := domain.MInt64B{}

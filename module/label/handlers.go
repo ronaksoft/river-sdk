@@ -3,7 +3,6 @@ package label
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
@@ -30,7 +29,7 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
 	}
 
 	r.Log().Info("LabelGet", zap.Int64("TeamID", domain.GetTeamID(in)))
-	labels := repo.Labels.GetAll(domain.GetTeamID(in))
+	labels, _ := repo.Labels.GetAll(domain.GetTeamID(in))
 	sort.Slice(labels, func(i, j int) bool {
 		return labels[i].Count > labels[j].Count
 	})

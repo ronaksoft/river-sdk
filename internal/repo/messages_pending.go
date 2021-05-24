@@ -377,7 +377,7 @@ func (r *repoMessagesPending) Delete(msgID int64) error {
 	})
 }
 
-func (r *repoMessagesPending) DeleteByRealID(msgID int64)  {
+func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		_ = txn.Delete(getPendingMessageRealKey(msgID))
 		return nil

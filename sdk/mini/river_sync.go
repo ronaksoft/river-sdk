@@ -3,7 +3,6 @@ package mini
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -35,20 +34,20 @@ func (r *River) syncServerTime() (err error) {
 				x := &msg.SystemServerTime{}
 				err = x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
+					r.logger.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 					return
 				}
 				clientTime := time.Now().Unix()
 				serverTime := x.Timestamp
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
 
-				logs.Debug("MiniRiver received SystemServerTime",
+				r.logger.Debug("MiniRiver received SystemServerTime",
 					zap.Int64("ServerTime", serverTime),
 					zap.Int64("ClientTime", clientTime),
 					zap.Duration("Difference", domain.TimeDelta),
 				)
 			case rony.C_Error:
-				logs.Warn("MiniRiver received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
+				r.logger.Warn("MiniRiver received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
 				err = domain.ParseServerError(m.Message)
 			}
 		},
@@ -73,7 +72,7 @@ func (r *River) syncUpdateState() (updated bool, err error) {
 				x := &msg.UpdateState{}
 				err = x.Unmarshal(m.Message)
 				if err != nil {
-					logs.Error("MiniRiver couldn't unmarshal SystemGetServerTime response", zap.Error(err))
+					r.logger.Error("MiniRiver couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 					return
 				}
 				if x.UpdateID > currentUpdateID {
@@ -81,11 +80,11 @@ func (r *River) syncUpdateState() (updated bool, err error) {
 				}
 				err = r.setLastUpdateID(x.UpdateID)
 				if err != nil {
-					logs.Error("MiniRiver couldn't save LastUpdateID to the database", zap.Error(err))
+					r.logger.Error("MiniRiver couldn't save LastUpdateID to the database", zap.Error(err))
 					return
 				}
 			case rony.C_Error:
-				logs.Warn("MiniRiver received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
+				r.logger.Warn("MiniRiver received error on GetSystemServerTime", zap.Error(domain.ParseServerError(m.Message)))
 				err = domain.ParseServerError(m.Message)
 			}
 		},
@@ -111,20 +110,20 @@ func (r *River) syncContacts() {
 				}
 				err := minirepo.Users.SaveAllContacts(x)
 				if err != nil {
-					logs.Warn("MiniRiver got error on saving contacts", zap.Error(err))
+					r.logger.Warn("MiniRiver got error on saving contacts", zap.Error(err))
 					return
 				}
 				err = r.setContactsHash(x.Hash)
 				if err != nil {
-					logs.Warn("MiniRiver got error on saving contacts hash", zap.Error(err))
+					r.logger.Warn("MiniRiver got error on saving contacts hash", zap.Error(err))
 				}
 				r.mainDelegate.DataSynced(false, true, false)
 			case rony.C_Error:
 				x := &rony.Error{}
 				_ = x.Unmarshal(m.Message)
-				logs.Warn("MiniRiver got server error on syncing contacts", zap.Error(x))
+				r.logger.Warn("MiniRiver got server error on syncing contacts", zap.Error(x))
 			default:
-				logs.Warn("MiniRiver got unknown server response")
+				r.logger.Warn("MiniRiver got unknown server response")
 			}
 		},
 	)
@@ -139,7 +138,7 @@ func (r *River) syncDialogs() {
 
 	updated, err := r.syncUpdateState()
 	if err != nil {
-		logs.Warn("MiniRiver got error on UpdateSync", zap.Error(err))
+		r.logger.Warn("MiniRiver got error on UpdateSync", zap.Error(err))
 	}
 	if !updated {
 		return
@@ -170,9 +169,9 @@ func (r *River) syncDialogs() {
 				case rony.C_Error:
 					x := &rony.Error{}
 					_ = x.Unmarshal(m.Message)
-					logs.Warn("MiniRiver got server error on syncing dialogs", zap.Error(x))
+					r.logger.Warn("MiniRiver got server error on syncing dialogs", zap.Error(x))
 				default:
-					logs.Warn("MiniRiver got unknown server response")
+					r.logger.Warn("MiniRiver got unknown server response")
 				}
 			},
 		)
