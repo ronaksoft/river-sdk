@@ -6,6 +6,9 @@ github.com/DataDog/zstd
 # github.com/RoaringBitmap/roaring v0.5.1
 ## explicit
 github.com/RoaringBitmap/roaring
+# github.com/Workiva/go-datastructures v1.0.53
+## explicit
+github.com/Workiva/go-datastructures/queue
 # github.com/abiosoft/ishell v2.0.0+incompatible
 ## explicit
 # github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db
@@ -257,7 +260,7 @@ github.com/panjf2000/gnet/ringbuffer
 # github.com/pelletier/go-toml v1.6.0
 ## explicit
 github.com/pelletier/go-toml
-# github.com/philhofer/fwd v1.0.0
+# github.com/philhofer/fwd v1.1.1
 github.com/philhofer/fwd
 # github.com/pkg/errors v0.9.1
 ## explicit
@@ -365,8 +368,7 @@ github.com/tidwall/rtree
 github.com/tidwall/rtree/base
 # github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563
 github.com/tidwall/tinyqueue
-# github.com/tinylib/msgp v1.1.2
-## explicit
+# github.com/tinylib/msgp v1.1.5
 github.com/tinylib/msgp/msgp
 # github.com/valyala/bytebufferpool v1.0.0
 github.com/valyala/bytebufferpool

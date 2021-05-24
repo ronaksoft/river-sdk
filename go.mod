@@ -3,6 +3,7 @@ module git.ronaksoft.com/river/sdk
 require (
 	git.ronaksoft.com/river/msg v0.0.0-20210524122318-74ebecb9e420
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
+	github.com/Workiva/go-datastructures v1.0.53
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
@@ -31,7 +32,6 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.1
 	github.com/tidwall/buntdb v1.1.7
-	github.com/tinylib/msgp v1.1.2 // indirect
 	github.com/valyala/fasthttp v1.24.0
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	github.com/willf/bitset v1.1.11 // indirect

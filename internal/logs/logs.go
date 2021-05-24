@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -92,12 +91,10 @@ func SetFilePath(logDir string) error {
 }
 
 func SetRemoteLog(url string) {
-	remoteWriter := RemoteWrite{
-		HttpClient: http.Client{
-			Timeout: time.Millisecond * 250,
-		},
-		Url: url,
+	if remoteLogWriter != nil {
+		return
 	}
+	remoteLogWriter = newRemoteWrite(url)
 	_Log.z = _Log.z.WithOptions(
 		zap.WrapCore(func(core zapcore.Core) zapcore.Core {
 			return zapcore.NewTee(
@@ -116,7 +113,7 @@ func SetRemoteLog(url string) {
 						EncodeDuration: zapcore.StringDurationEncoder,
 						EncodeCaller:   zapcore.ShortCallerEncoder,
 					}),
-					remoteWriter,
+					remoteLogWriter,
 					_LogLevel,
 				),
 			)
