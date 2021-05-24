@@ -51,7 +51,6 @@ func (r *River) ExecuteWithTeam(teamID, accessHash, constructor int64, commandBy
 			func(err error) {
 				cb.OnTimeout()
 			}, flags),
-		domain.DefaultTimeout,
 	)
 }
 
