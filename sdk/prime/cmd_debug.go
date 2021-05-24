@@ -3,7 +3,6 @@ package riversdk
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/module"
 	"github.com/ronaksoft/rony"
@@ -41,7 +40,7 @@ func (r *River) GetHole(peerID int64, peerType int32) []byte {
 func (r *River) CancelFileRequest(reqID string) {
 	err := repo.Files.DeleteFileRequest(reqID)
 	if err != nil {
-		logs.Warn("River got error on delete file request", zap.Error(err))
+		r.logger.Warn("River got error on delete file request", zap.Error(err))
 	}
 }
 

@@ -83,7 +83,7 @@ func (r *River) executeCommand(
 		serverForce      = delegate.Flags()&domain.RequestServerForced != 0
 	)
 
-	logs.Debug("River executes command",
+	r.logger.Debug("River executes command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
@@ -121,20 +121,20 @@ func (r *River) executeCommand(
 	// If the constructor is a local command then
 	handler, ok := r.localCommands[constructor]
 	if ok && !serverForce {
-		go executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, da)
+		go r.executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytesDump, da)
 		return
 	}
 
-	go executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytesDump, da, msTimeout)
+	go r.executeRemoteCommand(teamID, teamAccess, uint64(requestID), constructor, commandBytesDump, da, msTimeout)
 	return
 }
-func executeLocalCommand(
+func (r *River) executeLocalCommand(
 	teamID int64, teamAccess uint64,
 	handler domain.LocalHandler,
 	requestID uint64, constructor int64, commandBytes []byte,
 	cb domain.Callback,
 ) {
-	logs.Debug("We execute local command",
+	r.logger.Debug("We execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
@@ -150,14 +150,13 @@ func executeLocalCommand(
 	}
 	handler(in, out, cb)
 }
-func executeRemoteCommand(
+func (r *River) executeRemoteCommand(
 	teamID int64, teamAccess uint64,
-	r *River,
 	requestID uint64, constructor int64, commandBytes []byte,
 	cb domain.Callback,
 	msTimeout int64,
 ) {
-	logs.Debug("We execute remote command",
+	r.logger.Debug("We execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
@@ -236,7 +235,7 @@ func deepCopy(commandBytes []byte) []byte {
 	return buff
 }
 func releaseDelegate(r *River, requestID uint64) {
-	logs.Debug("River releases delegate",
+	r.logger.Debug("River releases delegate",
 		zap.Uint64("ReqID", requestID),
 	)
 	r.delegateMutex.Lock()
@@ -254,30 +253,30 @@ func getDelegate(r *River, requestID uint64) (RequestDelegate, bool) {
 
 // CreateAuthKey creates an AuthID and AuthKey to be used for transporting messages between client and server
 func (r *River) CreateAuthKey() (err error) {
-	logs.Info("River::CreateAuthKey()")
+	r.logger.Info("River::CreateAuthKey()")
 
 	// Wait for network
 	r.networkCtrl.WaitForNetwork(false)
 
-	sk, err := getServerKeys(r)
+	sk, err := r.getServerKeys()
 	if err != nil {
-		logs.Warn("River got error on SystemGetServers")
+		r.logger.Warn("River got error on SystemGetServers")
 		return
 	}
 
-	err, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ := initConnect(r)
+	err, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ := r.initConnect()
 	if err != nil {
-		logs.Warn("River got error on InitConnect", zap.Error(err))
+		r.logger.Warn("River got error on InitConnect", zap.Error(err))
 		return
 	}
-	logs.Info("River passed the 1st step of CreateAuthKey",
+	r.logger.Info("River passed the 1st step of CreateAuthKey",
 		zap.Uint64("ServerNonce", serverNonce),
 		zap.Uint64("ServerPubFP", serverPubFP),
 		zap.Uint64("ServerPQ", serverPQ),
 	)
 
-	err = initCompleteAuth(r, sk, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ)
-	logs.Info("River passed the 2nd step of CreateAuthKey")
+	err = r.initCompleteAuth(sk, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ)
+	r.logger.Info("River passed the 2nd step of CreateAuthKey")
 
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
@@ -286,8 +285,8 @@ func (r *River) CreateAuthKey() (err error) {
 
 	return
 }
-func getServerKeys(r *River) (sk *msg.SystemKeys, err error) {
-	logs.Info("River::GetServerKeys")
+func (r *River) getServerKeys() (sk *msg.SystemKeys, err error) {
+	r.logger.Info("River::GetServerKeys")
 	req := &msg.SystemGetServerKeys{}
 	reqBytes, _ := req.Marshal()
 	waitGroup := new(sync.WaitGroup)
@@ -300,17 +299,17 @@ func getServerKeys(r *River) (sk *msg.SystemKeys, err error) {
 		},
 		func(res *rony.MessageEnvelope) {
 			defer waitGroup.Done()
-			logs.Debug("River::GetServerKeys() Success Callback Called")
+			r.logger.Debug("River::GetServerKeys() Success Callback Called")
 			switch res.Constructor {
 			case msg.C_SystemKeys:
 				sk = &msg.SystemKeys{}
 				err = sk.Unmarshal(res.Message)
 				if err != nil {
-					logs.Error("couldn't unmarshal SystemKeys response", zap.Error(err))
+					r.logger.Error("couldn't unmarshal SystemKeys response", zap.Error(err))
 					return
 				}
 
-				logs.Debug("received SystemKeys",
+				r.logger.Debug("received SystemKeys",
 					zap.Int("Keys", len(sk.RSAPublicKeys)),
 					zap.Int("DHGroups", len(sk.DHGroups)),
 				)
@@ -322,15 +321,15 @@ func getServerKeys(r *River) (sk *msg.SystemKeys, err error) {
 		},
 		nil,
 	)
-	executeRemoteCommand(
-		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_SystemGetServerKeys, reqBytes, cb, -1,
+	r.executeRemoteCommand(
+		0, 0, uint64(domain.SequentialUniqueID()), msg.C_SystemGetServerKeys, reqBytes, cb, -1,
 	)
 	waitGroup.Wait()
 	return
 
 }
-func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) {
-	logs.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
+func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) {
+	r.logger.Info("River::CreateAuthKey() 1st Step Started :: InitConnect")
 	req1 := new(msg.InitConnect)
 	req1.ClientNonce = uint64(domain.SequentialUniqueID())
 	req1Bytes, _ := req1.Marshal()
@@ -343,20 +342,20 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 		},
 		func(res *rony.MessageEnvelope) {
 			defer waitGroup.Done()
-			logs.Debug("River::CreateAuthKey() Success Callback Called")
+			r.logger.Debug("River::CreateAuthKey() Success Callback Called")
 			switch res.Constructor {
 			case msg.C_InitResponse:
 				x := new(msg.InitResponse)
 				err = x.Unmarshal(res.Message)
 				if err != nil {
-					logs.Error("River::CreateAuthKey() Success Callback", zap.Error(err))
+					r.logger.Error("River::CreateAuthKey() Success Callback", zap.Error(err))
 				}
 				clientNonce = x.ClientNonce
 				serverNonce = x.ServerNonce
 				serverPubFP = x.RSAPubKeyFingerPrint
 				serverDHFP = x.DHGroupFingerPrint
 				serverPQ = x.PQ
-				logs.Debug("River::CreateAuthKey() InitResponse Received",
+				r.logger.Debug("River::CreateAuthKey() InitResponse Received",
 					zap.Uint64("ServerNonce", serverNonce),
 					zap.Uint64("ClientNonce", clientNonce),
 					zap.Uint64("ServerDhFingerPrint", serverDHFP),
@@ -369,18 +368,18 @@ func initConnect(r *River) (err error, clientNonce, serverNonce, serverPubFP, se
 			}
 		}, nil,
 	)
-	executeRemoteCommand(
-		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_InitConnect, req1Bytes, cb, -1,
+	r.executeRemoteCommand(
+		0, 0, uint64(domain.SequentialUniqueID()), msg.C_InitConnect, req1Bytes, cb, -1,
 	)
 	waitGroup.Wait()
 	return
 }
-func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
-	logs.Info("River::CreateAuthKey() 2nd Step Started :: InitCompleteAuth")
+func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
+	r.logger.Info("River::CreateAuthKey() 2nd Step Started :: InitCompleteAuth")
 	req2 := new(msg.InitCompleteAuth)
 	req2.ServerNonce = serverNonce
 	req2.ClientNonce = clientNonce
-	dhGroup, err := getDhGroup(sk, int64(serverDHFP))
+	dhGroup, err := r.getDhGroup(sk, int64(serverDHFP))
 	if err != nil {
 		return err
 	}
@@ -399,7 +398,7 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 		req2.P = q.Uint64()
 		req2.Q = p.Uint64()
 	}
-	logs.Debug("River::CreateAuthKey() PQ Split",
+	r.logger.Debug("River::CreateAuthKey() PQ Split",
 		zap.Uint64("P", req2.P),
 		zap.Uint64("Q", req2.Q),
 	)
@@ -407,7 +406,7 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 	q2Internal := new(msg.InitCompleteAuthInternal)
 	q2Internal.SecretNonce = []byte(domain.RandomID(16))
 
-	serverPubKey, err := getPublicKey(sk, int64(serverPubFP))
+	serverPubKey, err := r.getPublicKey(sk, int64(serverPubFP))
 	if err != nil {
 		return err
 	}
@@ -420,7 +419,7 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 	decrypted, _ := q2Internal.Marshal()
 	encrypted, err := rsa.EncryptPKCS1v15(rand.Reader, &rsaPublicKey, decrypted)
 	if err != nil {
-		logs.Error("River::CreateAuthKey() -> EncryptPKCS1v15()", zap.Error(err))
+		r.logger.Error("River::CreateAuthKey() -> EncryptPKCS1v15()", zap.Error(err))
 	}
 	req2.EncryptedPayload = encrypted
 	req2Bytes, _ := req2.Marshal()
@@ -442,7 +441,7 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 				case msg.InitAuthCompleted_OK:
 					serverDhKey, err := dh.ComputeKey(dhkx.NewPublicKey(x.ServerDHPubKey), clientDhKey)
 					if err != nil {
-						logs.Error("River::CreateAuthKey() -> ComputeKey()", zap.Error(err))
+						r.logger.Error("River::CreateAuthKey() -> ComputeKey()", zap.Error(err))
 						return
 					}
 					// r.ConnInfo.AuthKey = serverDhKey.Bytes()
@@ -483,14 +482,14 @@ func initCompleteAuth(r *River, sk *msg.SystemKeys, clientNonce, serverNonce, se
 		},
 		nil,
 	)
-	executeRemoteCommand(
-		0, 0, r, uint64(domain.SequentialUniqueID()), msg.C_InitCompleteAuth, req2Bytes, cb, -1,
+	r.executeRemoteCommand(
+		0, 0, uint64(domain.SequentialUniqueID()), msg.C_InitCompleteAuth, req2Bytes, cb, -1,
 	)
 	waitGroup.Wait()
 	return
 }
-func getPublicKey(pk *msg.SystemKeys, keyFP int64) (*msg.RSAPublicKey, error) {
-	logs.Info("Public Key loaded",
+func (r *River) getPublicKey(pk *msg.SystemKeys, keyFP int64) (*msg.RSAPublicKey, error) {
+	r.logger.Info("Public Key loaded",
 		zap.Int64("keyFP", keyFP),
 	)
 	for _, pk := range pk.RSAPublicKeys {
@@ -501,8 +500,8 @@ func getPublicKey(pk *msg.SystemKeys, keyFP int64) (*msg.RSAPublicKey, error) {
 	}
 	return nil, domain.ErrNotFound
 }
-func getDhGroup(pk *msg.SystemKeys, keyFP int64) (*msg.DHGroup, error) {
-	logs.Info("DHGroup Key loaded",
+func (r *River) getDhGroup(pk *msg.SystemKeys, keyFP int64) (*msg.DHGroup, error) {
+	r.logger.Info("DHGroup Key loaded",
 		zap.Int64("keyFP", keyFP),
 	)
 	for _, dh := range pk.DHGroups {
@@ -579,7 +578,7 @@ func (r *River) RetryPendingMessage(id int64) bool {
 		nil, nil, true,
 	)
 
-	logs.Debug("River::RetryPendingMessage() Request enqueued")
+	r.logger.Debug("River::RetryPendingMessage() Request enqueued")
 	return true
 }
 
@@ -591,7 +590,7 @@ func (r *River) GetSyncStatus() int32 {
 // Logout drop queue & database , etc ...
 func (r *River) Logout(notifyServer bool, reason int) error {
 	_, err, _ := domain.SingleFlight.Do("Logout", func() (interface{}, error) {
-		logs.Info("Logout Called")
+		r.logger.Info("Logout Called")
 
 		// unregister device if token exist
 		if notifyServer {
@@ -600,12 +599,12 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 			waitGroup.Add(1)
 			r.syncCtrl.Logout(waitGroup, 3)
 			waitGroup.Wait()
-			logs.Info("We sent a AuthLogout request to server, received response")
+			r.logger.Info("We sent a AuthLogout request to server, received response")
 		}
 
 		if r.mainDelegate != nil {
 			r.mainDelegate.OnSessionClosed(reason)
-			logs.Info("We called SessionClosed delegate")
+			r.logger.Info("We called SessionClosed delegate")
 		}
 
 		// Stop Controllers
@@ -613,10 +612,10 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		r.queueCtrl.Stop()
 		r.fileCtrl.Stop()
 		r.networkCtrl.Stop()
-		logs.Info("We stopped all the controllers")
+		r.logger.Info("We stopped all the controllers")
 
 		repo.DropAll()
-		logs.Info("We reset our database")
+		r.logger.Info("We reset our database")
 
 		r.ConnInfo.FirstName = ""
 		r.ConnInfo.LastName = ""
@@ -625,16 +624,16 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		r.ConnInfo.Username = ""
 		r.ConnInfo.Bio = ""
 		r.ConnInfo.Save()
-		logs.Info("We reset our connection info")
+		r.logger.Info("We reset our connection info")
 
 		err := r.AppStart()
 		if err != nil {
 			return nil, err
 		}
-		logs.Info("We started the app again")
+		r.logger.Info("We started the app again")
 
 		r.networkCtrl.Connect()
-		logs.Info("We start connecting to server")
+		r.logger.Info("We start connecting to server")
 		return nil, err
 	})
 	return err
@@ -668,13 +667,13 @@ func (r *River) AppForeground(online bool) {
 	if r.networkCtrl.GetQuality() == domain.NetworkConnected {
 		err := r.networkCtrl.Ping(domain.RandomUint64(), domain.WebsocketPingTimeout)
 		if err != nil {
-			logs.Info("AppForeground:: Ping failed, we reconnect", zap.Error(err))
+			r.logger.Info("AppForeground:: Ping failed, we reconnect", zap.Error(err))
 			r.networkCtrl.Reconnect()
 		} else {
 			r.syncCtrl.Sync()
 		}
 	} else {
-		logs.Info("AppForeground:: Network was disconnected we reconnect")
+		r.logger.Info("AppForeground:: Network was disconnected we reconnect")
 		r.networkCtrl.Reconnect()
 	}
 	if online {
@@ -723,7 +722,7 @@ func (r *River) AppStart() error {
 		domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
 		err := domain.SysConfig.Unmarshal(confBytes)
 		if err != nil {
-			logs.Warn("We could not unmarshal SysConfig", zap.Error(err))
+			r.logger.Warn("We could not unmarshal SysConfig", zap.Error(err))
 		}
 	}
 
@@ -746,7 +745,7 @@ func (r *River) AppStart() error {
 	lastReIndexTime, err := repo.System.LoadInt(domain.SkReIndexTime)
 	if err != nil || time.Now().Unix()-int64(lastReIndexTime) > domain.Day {
 		go func() {
-			logs.Info("ReIndexing Users & Groups")
+			r.logger.Info("ReIndexing Users & Groups")
 			repo.Users.ReIndex(domain.GetCurrTeamID())
 			repo.Groups.ReIndex()
 			repo.Messages.ReIndex()
@@ -758,7 +757,7 @@ func (r *River) AppStart() error {
 	domain.WindowLog = func(txt string) {
 		r.mainDelegate.AddLog(txt)
 	}
-	logs.Info("River Started")
+	r.logger.Info("River Started")
 
 	// Try to keep the user's status online
 	go r.updateStatusJob()

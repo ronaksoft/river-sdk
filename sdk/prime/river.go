@@ -299,7 +299,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 }
 
 func (r *River) onNetworkConnect() (err error) {
-	defer logs.RecoverPanic(
+	defer r.logger.RecoverPanic(
 		"River::onNetworkConnect",
 		domain.M{
 			"OS":  domain.ClientOS,
@@ -339,7 +339,7 @@ func (r *River) onNetworkConnect() (err error) {
 
 	serverUpdateID, err = r.syncCtrl.AuthRecall("NetworkConnect")
 	if err != nil {
-		logs.Warn("Error On AuthRecall", zap.Error(err))
+		r.logger.Warn("Error On AuthRecall", zap.Error(err))
 	}
 	domain.WindowLog(fmt.Sprintf("AuthRecalled: %s", time.Since(domain.StartTime)))
 	waitGroup.Wait()
@@ -382,7 +382,7 @@ func (r *River) onNetworkConnect() (err error) {
 }
 
 func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
-	logs.Info("SDK received error (General)",
+	r.logger.Info("SDK received error (General)",
 		zap.Uint64("ReqID", requestID),
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),
@@ -406,7 +406,7 @@ func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 }
 
 func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
-	defer logs.RecoverPanic(
+	defer r.logger.RecoverPanic(
 		"River::onReceivedMessage",
 		domain.M{
 			"OS":  domain.ClientOS,
@@ -428,12 +428,12 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
 		mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.DepartureTime))
 		select {
 		case reqCB.ResponseChannel <- msgs[idx]:
-			logs.Debug("SDK received response",
+			r.logger.Debug("SDK received response",
 				zap.Uint64("ReqID", reqCB.RequestID),
 				zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 			)
 		default:
-			logs.Error("SDK received response but no callback, we drop response",
+			r.logger.Error("SDK received response but no callback, we drop response",
 				zap.Uint64("ReqID", reqCB.RequestID),
 				zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 			)
@@ -443,7 +443,7 @@ func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
 }
 
 func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
-	defer logs.RecoverPanic(
+	defer r.logger.RecoverPanic(
 		"River::onReceivedUpdate",
 		domain.M{
 			"OS":              domain.ClientOS,
@@ -455,7 +455,7 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 
 	outOfSync := false
 	if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.GetUpdateID()+1 {
-		logs.Info("We are out of sync",
+		r.logger.Info("We are out of sync",
 			zap.Int64("ContainerMinID", updateContainer.MinUpdateID),
 			zap.Int64("ClientUpdateID", r.syncCtrl.GetUpdateID()),
 		)
@@ -470,7 +470,7 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 }
 
 func (r *River) postUploadProcess(uploadRequest *msg.ClientFileRequest) bool {
-	defer logs.RecoverPanic(
+	defer r.logger.RecoverPanic(
 		"River::postUploadProcess",
 		domain.M{
 			"OS":       domain.ClientOS,
@@ -480,7 +480,7 @@ func (r *River) postUploadProcess(uploadRequest *msg.ClientFileRequest) bool {
 		nil,
 	)
 
-	logs.Info("River Post Upload Process",
+	r.logger.Info("River Post Upload Process",
 		zap.Bool("IsProfile", uploadRequest.IsProfilePhoto),
 		zap.Int64("MessageID", uploadRequest.MessageID),
 		zap.Int64("FileID", uploadRequest.FileID),
@@ -517,7 +517,7 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 		return repo.PendingMessages.UpdateClientMessageMedia(pendingMessage, uploadRequest.TotalParts, req.MediaType, fileLoc)
 	})
 	if err != nil {
-		logs.Error("Error On UpdateClientMessageMedia", zap.Error(err))
+		r.logger.Error("Error On UpdateClientMessageMedia", zap.Error(err))
 	}
 
 	// Create SendMessageMedia Request
@@ -580,15 +580,15 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
 	successCB := func(m *rony.MessageEnvelope) {
-		logs.Info("MessagesSendMedia success callback called", zap.String("C", registry.ConstructorName(m.Constructor)))
+		r.logger.Info("MessagesSendMedia success callback called", zap.String("C", registry.ConstructorName(m.Constructor)))
 		switch m.Constructor {
 		case rony.C_Error:
 			success = false
 			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
-				logs.Error("We couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
+				r.logger.Error("We couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
 			}
-			logs.Error("SDK received error on MessagesSendMedia response",
+			r.logger.Error("SDK received error on MessagesSendMedia response",
 				zap.String("Code", x.Code),
 				zap.String("Item", x.Items),
 			)
@@ -602,7 +602,7 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 	}
 	timeoutCB := func() {
 		success = false
-		logs.Debug("We got Timeout! on MessagesSendMedia response")
+		r.logger.Debug("We got Timeout! on MessagesSendMedia response")
 		waitGroup.Done()
 	}
 	r.queueCtrl.EnqueueCommand(
@@ -634,21 +634,21 @@ func (r *River) uploadGroupPhoto(uploadRequest *msg.ClientFileRequest) (success 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
 	successCB := func(m *rony.MessageEnvelope) {
-		logs.Debug("GroupUploadPhoto success callback called")
+		r.logger.Debug("GroupUploadPhoto success callback called")
 		switch m.Constructor {
 		case rony.C_Error:
 			success = false
 			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
-				logs.Error("We couldn't unmarshal GroupUploadPhoto (Error) response", zap.Error(err))
+				r.logger.Error("We couldn't unmarshal GroupUploadPhoto (Error) response", zap.Error(err))
 			}
-			logs.Error("We received error on GroupUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			r.logger.Error("We received error on GroupUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 		}
 		waitGroup.Done()
 	}
 	timeoutCB := func() {
 		success = false
-		logs.Debug("We got Timeout! on GroupUploadPhoto response")
+		r.logger.Debug("We got Timeout! on GroupUploadPhoto response")
 		waitGroup.Done()
 	}
 	r.queueCtrl.EnqueueCommand(
@@ -677,21 +677,21 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
 	successCB := func(m *rony.MessageEnvelope) {
-		logs.Debug("AccountUploadPhoto success callback called")
+		r.logger.Debug("AccountUploadPhoto success callback called")
 		switch m.Constructor {
 		case rony.C_Error:
 			success = false
 			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
-				logs.Error("We couldn't unmarshal AccountUploadPhoto (Error) response", zap.Error(err))
+				r.logger.Error("We couldn't unmarshal AccountUploadPhoto (Error) response", zap.Error(err))
 			}
-			logs.Error("We received error on AccountUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			r.logger.Error("We received error on AccountUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 		}
 		waitGroup.Done()
 	}
 	timeoutCB := func() {
 		success = false
-		logs.Debug("Timeout! on AccountUploadPhoto response")
+		r.logger.Debug("Timeout! on AccountUploadPhoto response")
 		waitGroup.Done()
 	}
 	r.queueCtrl.EnqueueCommand(

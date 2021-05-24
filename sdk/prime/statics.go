@@ -3,9 +3,7 @@ package riversdk
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/dgraph-io/badger/v2"
-	"go.uber.org/zap"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -30,7 +28,6 @@ func GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {
 		err := algo.Unmarshal(algorithmData)
 
 		if err != nil {
-			logs.Warn("Error On Unmarshal Algorithm", zap.Error(err))
 			return nil
 		}
 
@@ -52,7 +49,6 @@ func GenInputPassword(password []byte, accountPasswordBytes []byte) []byte {
 	algo := &msg.PasswordAlgorithmVer6A{}
 	err = algo.Unmarshal(ap.AlgorithmData)
 	if err != nil {
-		logs.Warn("Error On GenInputPassword", zap.Error(err))
 		return nil
 	}
 
