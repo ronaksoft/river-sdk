@@ -59,7 +59,8 @@ func New(logDir string) (*Logger, error) {
 	if logDir != "" {
 		t := time.Now()
 		logFileName := fmt.Sprintf("LOG-%d-%02d-%02d.log", t.Year(), t.Month(), t.Day())
-		logFile, err := os.OpenFile(path.Join(logDir, logFileName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+		_ = os.MkdirAll(logDir, 0600)
+		logFile, err := os.OpenFile(path.Join(logDir, logFileName), os.O_APPEND|os.O_CREATE, 0600)
 		if err != nil {
 			return nil, err
 		}
