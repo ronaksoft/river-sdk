@@ -17,20 +17,21 @@ import (
 */
 
 var (
-	ErrActionNotFound        = errors.New("action not found")
-	ErrInvalidCallId         = errors.New("invalid call id")
-	ErrInvalidConnId         = errors.New("invalid conn id")
-	ErrInvalidPeerInput      = errors.New("invalid peer input")
-	ErrInvalidCallRequest    = errors.New("invalid call request")
-	ErrNoActiveCall          = errors.New("no active call")
-	ErrNoSDP                 = errors.New("no sdp")
-	ErrCannotSetAnswerSDP    = errors.New("cannot set answer sdp")
-	ErrNoCallRequest         = errors.New("no call request")
-	ErrCannotInitStream      = errors.New("cannot init stream")
-	ErrCannotInitConnection  = errors.New("cannot init connection")
-	ErrCannotCloseConnection = errors.New("cannot close connection")
-	ErrInvalidRequest        = errors.New("invalid request")
-	ErrInvalidResponse       = errors.New("invalid response")
+	ErrActionNotFound             = errors.New("action not found")
+	ErrInvalidCallId              = errors.New("invalid call id")
+	ErrInvalidConnId              = errors.New("invalid conn id")
+	ErrInvalidPeerInput           = errors.New("invalid peer input")
+	ErrInvalidCallRequest         = errors.New("invalid call request")
+	ErrNoActiveCall               = errors.New("no active call")
+	ErrNoSDP                      = errors.New("no sdp")
+	ErrCannotSetAnswerSDP         = errors.New("cannot set answer sdp")
+	ErrNoCallRequest              = errors.New("no call request")
+	ErrCannotInitStream           = errors.New("cannot init stream")
+	ErrCannotInitConnection       = errors.New("cannot init connection")
+	ErrCannotCloseConnection      = errors.New("cannot close connection")
+	ErrInvalidRequest             = errors.New("invalid request")
+	ErrInvalidResponse            = errors.New("invalid response")
+	ErrCallbacksAreNotInitialized = errors.New("callbacks are not initialized")
 )
 
 type UpdatePhoneCall struct {
@@ -68,6 +69,7 @@ type Info struct {
 	requestParticipantIds  []int64
 	requests               []*UpdatePhoneCall
 	iceServer              *msg.IceServer
+	requestMap             map[int64]struct{}
 	mu                     *sync.RWMutex
 }
 

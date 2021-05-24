@@ -39,6 +39,10 @@ func (c *call) tryReconnect(connId int32) (err error) {
 
 func (c *call) destroy(callID int64) {
 	closeFn := func(conn *Connection) {
+		if c.callback.CloseConnection == nil {
+			logs.Error("callbacks are not initialized")
+			return
+		}
 		_ = c.callback.CloseConnection(conn.ConnId, true)
 		if conn.connectTicker != nil {
 			conn.connectTicker.Stop()
@@ -54,6 +58,11 @@ func (c *call) destroy(callID int64) {
 	c.mu.RUnlock()
 	c.mu.Lock()
 	c.peerConnections = make(map[int32]*Connection)
+	if info, ok := c.callInfo[callID]; ok {
+		for reqID := range info.requestMap {
+			c.SDK().QueueCtrl().CancelRequest(reqID)
+		}
+	}
 	delete(c.callInfo, callID)
 	c.activeCallID = 0
 	c.peer = nil
@@ -179,6 +188,11 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 		return
 	}
 
+	if c.callback.InitStream == nil {
+		err = ErrCallbacksAreNotInitialized
+		return
+	}
+
 	ok := c.callback.InitStream(true, video)
 	if !ok {
 		err = ErrCannotInitStream
@@ -295,6 +309,11 @@ func (c *call) accept(callID int64, video bool) (err error) {
 	}
 
 	if !info.dialed {
+		if c.callback.InitStream == nil {
+			err = ErrCallbacksAreNotInitialized
+			return
+		}
+
 		ok := c.callback.InitStream(true, video)
 		if !ok {
 			err = ErrCannotInitStream
@@ -539,6 +558,7 @@ func (c *call) initCallParticipants(callID int64, participants []*msg.InputUser)
 		requestParticipantIds: nil,
 		requests:              nil,
 		iceServer:             nil,
+		requestMap:            make(map[int64]struct{}),
 		mu:                    &sync.RWMutex{},
 	}
 	c.mu.Unlock()
@@ -587,6 +607,7 @@ func (c *call) initParticipants(callID int64, participants []*msg.PhoneParticipa
 				requestParticipantIds: nil,
 				requests:              nil,
 				iceServer:             nil,
+				requestMap:            make(map[int64]struct{}),
 				mu:                    &sync.RWMutex{},
 			}
 			c.mu.Unlock()
@@ -669,6 +690,7 @@ func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequ
 		requestParticipantIds: []int64{in.UserID},
 		requests:              []*UpdatePhoneCall{in},
 		iceServer:             nil,
+		requestMap:            make(map[int64]struct{}),
 		mu:                    &sync.RWMutex{},
 	}
 	c.mu.Unlock()
@@ -894,7 +916,9 @@ func (c *call) callUser(peer *msg.InputPeer, initiator bool, phoneParticipants [
 	randomID := domain.RandomInt64(0)
 	res, err = c.apiRequest(peer, randomID, initiator, phoneParticipants, callID, false)
 	if err == nil && callID == 0 {
+		c.mu.Lock()
 		c.activeCallID = res.ID
+		c.mu.Unlock()
 	}
 	return
 }
@@ -975,6 +999,11 @@ func (c *call) modifyMediaStream(video bool) (err error) {
 		return
 	}
 
+	if c.callback.InitStream == nil {
+		err = ErrCallbacksAreNotInitialized
+		return
+	}
+
 	ok := c.callback.InitStream(true, video)
 	if !ok {
 		err = ErrCannotInitStream
@@ -990,6 +1019,11 @@ func (c *call) modifyMediaStream(video bool) (err error) {
 
 func (c *call) upgradeConnection(video bool) (err error) {
 	if c.activeCallID == 0 {
+		return
+	}
+
+	if c.callback.InitStream == nil {
+		err = ErrCallbacksAreNotInitialized
 		return
 	}
 
@@ -1154,6 +1188,11 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 	if !conn.Reconnecting &&
 		((isIceError && c.peerConnections[connId].Init && (state == "disconnected" || state == "failed" || state == "closed")) ||
 			state == "disconnected") {
+		if c.callback.CloseConnection == nil {
+			err = ErrCallbacksAreNotInitialized
+			return
+		}
+
 		ok := c.callback.CloseConnection(connId, false)
 		if !ok {
 			err = ErrCannotCloseConnection
@@ -1462,6 +1501,10 @@ func (c *call) removeParticipant(userID int64, callID *int64) bool {
 	_, hasConn := c.peerConnections[connId]
 	c.mu.RUnlock()
 	if hasConn {
+		if c.callback.CloseConnection == nil {
+			return false
+		}
+
 		_ = c.callback.CloseConnection(connId, false)
 	}
 
@@ -1807,6 +1850,11 @@ func (c *call) sdpAnswerUpdated(in *UpdatePhoneCall) {
 		return
 	}
 
+	if c.callback.SetAnswerSDP == nil {
+		logs.Error("callbacks are not initialized")
+		return
+	}
+
 	_ = c.callback.SetAnswerSDP(connId, answerSDPData)
 }
 
@@ -2031,5 +2079,36 @@ func (c *call) checkCallTimeout(connId int32) {
 }
 
 func (c *call) callUpdate(action msg.CallUpdate, b []byte) {
+	if c.callback.OnUpdate == nil {
+		logs.Error("callbacks are not initialized")
+		return
+	}
+
 	c.callback.OnUpdate(int32(action), b)
+}
+
+func (c *call) appendCallRequestID(callID, reqID int64) {
+	if callID == 0 {
+		return
+	}
+
+	info := c.getCallInfo(callID)
+	if info != nil {
+		info.mu.Lock()
+		info.requestMap[reqID] = struct{}{}
+		info.mu.Unlock()
+	}
+}
+
+func (c *call) removeCallRequestID(callID, reqID int64) {
+	if callID == 0 {
+		return
+	}
+
+	info := c.getCallInfo(callID)
+	if info != nil {
+		info.mu.Lock()
+		delete(info.requestMap, reqID)
+		info.mu.Unlock()
+	}
 }

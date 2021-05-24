@@ -55,7 +55,7 @@ func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneInitCall, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneInitCall, reqBytes, timeoutCallback, successCallback, true, callID)
 
 	return
 }
@@ -97,7 +97,7 @@ func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, p
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneRequestCall, reqBytes, timeoutCallback, successCallback, !batch)
+	c.executeRemoteCommand(msg.C_PhoneRequestCall, reqBytes, timeoutCallback, successCallback, !batch, callID)
 	return
 }
 
@@ -136,7 +136,7 @@ func (c *call) apiAccept(peer *msg.InputPeer, callID int64, participants []*msg.
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneAcceptCall, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneAcceptCall, reqBytes, timeoutCallback, successCallback, true, callID)
 	return
 }
 
@@ -175,7 +175,7 @@ func (c *call) apiReject(peer *msg.InputPeer, callID int64, reason msg.DiscardRe
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneDiscardCall, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneDiscardCall, reqBytes, timeoutCallback, successCallback, true, callID)
 	return
 }
 
@@ -212,7 +212,7 @@ func (c *call) apiJoin(peer *msg.InputPeer, callID int64) (res *msg.PhonePartici
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneJoinCall, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneJoinCall, reqBytes, timeoutCallback, successCallback, true, callID)
 	return
 }
 
@@ -250,7 +250,7 @@ func (c *call) apiAddParticipant(peer *msg.InputPeer, callID int64, participants
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneAddParticipant, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneAddParticipant, reqBytes, timeoutCallback, successCallback, true, callID)
 	return
 }
 
@@ -289,7 +289,7 @@ func (c *call) apiRemoveParticipant(peer *msg.InputPeer, callID int64, participa
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneRemoveParticipant, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneRemoveParticipant, reqBytes, timeoutCallback, successCallback, true, callID)
 	return
 }
 
@@ -326,7 +326,7 @@ func (c *call) apiGetParticipant(peer *msg.InputPeer, callID int64) (res *msg.Ph
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneGetParticipants, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneGetParticipants, reqBytes, timeoutCallback, successCallback, true, callID)
 
 	return
 }
@@ -366,7 +366,7 @@ func (c *call) apiUpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneUpdateAdmin, reqBytes, timeoutCallback, successCallback, true)
+	c.executeRemoteCommand(msg.C_PhoneUpdateAdmin, reqBytes, timeoutCallback, successCallback, true, callID)
 
 	return
 }
@@ -407,7 +407,7 @@ func (c *call) apiSendUpdate(peer *msg.InputPeer, callID int64, participants []*
 		}
 	}
 
-	c.executeRemoteCommand(msg.C_PhoneUpdateCall, reqBytes, timeoutCallback, successCallback, instant)
+	c.executeRemoteCommand(msg.C_PhoneUpdateCall, reqBytes, timeoutCallback, successCallback, instant, callID)
 	return
 }
 
@@ -421,7 +421,7 @@ func (c *call) setTeamInput(teamId int64, teamAccess uint64) {
 func (c *call) executeRemoteCommand(
 	constructor int64, commandBytes []byte,
 	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	instant bool,
+	instant bool, callID int64,
 ) {
 	c.Log().Debug("Execute command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -436,17 +436,9 @@ func (c *call) executeRemoteCommand(
 
 	retry := 0
 	var innerTimeoutCB domain.TimeoutCallback
-	cb := domain.NewCallback(innerTimeoutCB, successCB, nil)
-
-	executeFn := func() {
-		retry++
-		_, _ = c.SDK().ExecuteWithTeam(
-			c.teamInput.teamID, int64(c.teamInput.teamAccess), constructor, commandBytes,
-			cb,
-			rdt,
-			10000,
-		)
-	}
+	var innerSuccessCB domain.MessageHandler
+	var executeFn func()
+	var reqID int64
 
 	innerTimeoutCB = func() {
 		if retry < 3 {
@@ -456,6 +448,25 @@ func (c *call) executeRemoteCommand(
 			}()
 		} else {
 			timeoutCB()
+		}
+	}
+
+	innerSuccessCB = func(m *rony.MessageEnvelope) {
+		successCB(m.Clone())
+		c.removeCallRequestID(callID, reqID)
+	}
+
+	cb := domain.NewCallback(innerTimeoutCB, innerSuccessCB, nil)
+
+	executeFn = func() {
+		retry++
+		var err error
+		reqID, err = c.SDK().ExecuteWithTeam(
+			c.teamInput.teamID, int64(c.teamInput.teamAccess), constructor, commandBytes,
+			cb, rdt, 10000,
+		)
+		if err == nil {
+			c.appendCallRequestID(callID, reqID)
 		}
 	}
 
