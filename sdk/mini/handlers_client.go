@@ -6,7 +6,6 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
@@ -237,13 +236,13 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, da domain.Callback, fileID 
 	}
 
 	for partIndex := int32(0); partIndex < totalParts; partIndex++ {
-		logs.Info("SavePart",
+		logger.Info("SavePart",
 			zap.Int32("PartID", partIndex), zap.Int32("Total", totalParts),
 			zap.Int64("FileSize", fileSize),
 		)
 		err = r.savePart(in, f, fileID, partIndex, totalParts)
 		if err != nil {
-			logs.Warn("Error On SavePart (MiniSDK)", zap.Error(err))
+			logger.Warn("Error On SavePart (MiniSDK)", zap.Error(err))
 			return err
 		}
 

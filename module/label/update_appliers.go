@@ -2,7 +2,6 @@ package label
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"go.uber.org/zap"
 )
@@ -23,7 +22,7 @@ func (r *label) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvel
 		return nil, err
 	}
 
-	logs.Debug("LabelModule applies UpdateLabelItemsAdded",
+	r.Log().Debug("LabelModule applies UpdateLabelItemsAdded",
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64s("MsgIDs", x.MessageIDs),
 		zap.Int32s("LabelIDs", x.LabelIDs),
@@ -61,7 +60,7 @@ func (r *label) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return nil, err
 	}
 
-	logs.Debug("LabelModule applies UpdateLabelItemsRemoved",
+	r.Log().Debug("LabelModule applies UpdateLabelItemsRemoved",
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64s("MsgIDs", x.MessageIDs),
 		zap.Int32s("LabelIDs", x.LabelIDs),
@@ -89,7 +88,7 @@ func (r *label) updateLabelSet(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, er
 		return nil, err
 	}
 
-	logs.Debug("LabelModule applies UpdateLabelSet",
+	r.Log().Debug("LabelModule applies UpdateLabelSet",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -107,7 +106,7 @@ func (r *label) updateLabelDeleted(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 		return nil, err
 	}
 
-	logs.Debug("LabelModule applies UpdateLabelDeleted",
+	r.Log().Debug("LabelModule applies UpdateLabelDeleted",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 

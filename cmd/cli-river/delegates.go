@@ -2,7 +2,6 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
@@ -160,26 +159,26 @@ func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHas
 type CallDelegate struct{}
 
 func (c *CallDelegate) OnUpdate(action int32, b []byte) {
-	logs.Info("CallDelegate On UpdateReceived", zap.String("C", msg.CallUpdate(action).String()))
+	_Log.Info("CallDelegate On UpdateReceived", zap.String("C", msg.CallUpdate(action).String()))
 }
 
 func (c *CallDelegate) InitStream(audio, video bool) bool {
-	logs.Info("CallDelegate On InitStream", zap.Bool("Audio", audio), zap.Bool("Vide", video))
+	_Log.Info("CallDelegate On InitStream", zap.Bool("Audio", audio), zap.Bool("Vide", video))
 	return true
 }
 
 func (c *CallDelegate) InitConnection(connId int32, b []byte) int64 {
-	logs.Info("CallDelegate On InitConnection", zap.Int32("ConnID", connId))
+	_Log.Info("CallDelegate On InitConnection", zap.Int32("ConnID", connId))
 	return 1
 }
 
 func (c *CallDelegate) CloseConnection(connId int32, all bool) bool {
-	logs.Info("CallDelegate On CloseConnection", zap.Int32("ConnID", connId), zap.Bool("All", all))
+	_Log.Info("CallDelegate On CloseConnection", zap.Int32("ConnID", connId), zap.Bool("All", all))
 	return true
 }
 
 func (c *CallDelegate) GetOfferSDP(connId int32) []byte {
-	logs.Info("CallDelegate On GetOfferSDP", zap.Int32("ConnID", connId))
+	_Log.Info("CallDelegate On GetOfferSDP", zap.Int32("ConnID", connId))
 	offerSdp := &msg.PhoneActionSDPOffer{
 		SDP:  "",
 		Type: "",
@@ -202,18 +201,18 @@ func (c *CallDelegate) GetOfferSDP(connId int32) []byte {
 }
 
 func (c *CallDelegate) SetOfferGetAnswerSDP(connId int32, req []byte) []byte {
-	logs.Info("CallDelegate On SetOfferGetAnswerSDP", zap.Int32("ConnID", connId))
+	_Log.Info("CallDelegate On SetOfferGetAnswerSDP", zap.Int32("ConnID", connId))
 	return nil
 
 }
 
 func (c *CallDelegate) SetAnswerSDP(connId int32, b []byte) bool {
-	logs.Info("CallDelegate On SetAnswerSDP", zap.Int32("ConnID", connId))
+	_Log.Info("CallDelegate On SetAnswerSDP", zap.Int32("ConnID", connId))
 	return true
 }
 
 func (c *CallDelegate) AddIceCandidate(connId int32, b []byte) bool {
-	logs.Info("CallDelegate On AddIceCandidate", zap.Int32("ConnID", connId))
+	_Log.Info("CallDelegate On AddIceCandidate", zap.Int32("ConnID", connId))
 	return true
 }
 

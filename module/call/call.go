@@ -72,12 +72,12 @@ func New(config *Config) *call {
 	}
 
 	/*
-	C_ClientCallSendIceCandidate
-	C_ClientCallStart
-	C_ClientCallSendMediaSettings
-	C_ClientCallDestroy
-	C_ClientCallReject
-	C_ClientCallAccept
+		C_ClientCallSendIceCandidate
+		C_ClientCallStart
+		C_ClientCallSendMediaSettings
+		C_ClientCallDestroy
+		C_ClientCallReject
+		C_ClientCallAccept
 	*/
 	c.RegisterHandlers(
 		map[int64]domain.LocalHandler{

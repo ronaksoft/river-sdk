@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/ronaksoft/rony/pools"
@@ -288,14 +287,12 @@ func (r *repoMessagesPending) GetByRandomID(randomID int64) (*msg.ClientPendingM
 	return pm, nil
 }
 
-func (r *repoMessagesPending) GetByID(msgID int64) (pm *msg.ClientPendingMessage) {
-	err := badgerView(func(txn *badger.Txn) error {
-		var err error
+func (r *repoMessagesPending) GetByID(msgID int64) (pm *msg.ClientPendingMessage, err error) {
+	err = badgerView(func(txn *badger.Txn) error {
 		pm, err = getPendingMessageByID(txn, msgID)
 		return err
 	})
-	logs.ErrorOnErr("RepoPending got error on get by id", err)
-	return pm
+	return
 }
 
 func (r *repoMessagesPending) GetMany(messageIDs []int64) []*msg.UserMessage {
@@ -381,18 +378,17 @@ func (r *repoMessagesPending) Delete(msgID int64) error {
 }
 
 func (r *repoMessagesPending) DeleteByRealID(msgID int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		_ = txn.Delete(getPendingMessageRealKey(msgID))
 		return nil
 	})
-	logs.ErrorOnErr("RepoPending got error on delete by real id", err)
+
 }
 
 func (r *repoMessagesPending) DeleteMany(msgIDs []int64) {
 	_ = badgerUpdate(func(txn *badger.Txn) error {
 		for _, msgID := range msgIDs {
-			err := deletePendingMessage(txn, msgID)
-			logs.ErrorOnErr("RepoPending got error on delete many", err)
+			_ = deletePendingMessage(txn, msgID)
 		}
 		return nil
 	})
@@ -402,7 +398,7 @@ func (r *repoMessagesPending) DeleteMany(msgIDs []int64) {
 func (r *repoMessagesPending) GetManyRequestIDs(msgIDs []int64) []int64 {
 	requestIDs := make([]int64, 0, len(msgIDs))
 	for _, msgID := range msgIDs {
-		pm := r.GetByID(msgID)
+		pm, _ := r.GetByID(msgID)
 		if pm == nil {
 			continue
 		}
@@ -438,8 +434,8 @@ func (r *repoMessagesPending) DeletePeerAllMessages(peerID int64, peerType int32
 	return res
 }
 
-func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		pm := new(msg.ClientPendingMessage)
 		item, err := txn.Get(getPendingMessageRandomKey(randomID))
 		if err != nil {
@@ -454,7 +450,7 @@ func (r *repoMessagesPending) SaveByRealID(randomID, realMsgID int64) {
 		bytes, _ := pm.Marshal()
 		return txn.SetEntry(badger.NewEntry(getPendingMessageRealKey(realMsgID), bytes))
 	})
-	logs.ErrorOnErr("RepoPending got error on save by real id", err)
+
 }
 
 const (

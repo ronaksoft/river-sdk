@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/boltdb/bolt"
 	"github.com/tidwall/buntdb"
+	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 )
@@ -24,11 +25,16 @@ var (
 	Users   *repoUsers
 	Groups  *repoGroups
 	General *repoGenerals
+	logger  *logs.Logger
 )
 
 type repository struct {
 	db    *bolt.DB
 	index *buntdb.DB
+}
+
+func init() {
+	logger = logs.With("MiniREPO")
 }
 
 func MustInit(dbPath string) {
@@ -58,7 +64,9 @@ func Init(dbPath string) (err error) {
 		}
 		for _, b := range buckets {
 			_, err = tx.CreateBucketIfNotExists(b)
-			logs.WarnOnErr("MiniRepo got error on creating bucket", err)
+			if err != nil {
+				logger.Error("MiniRepo got error on creating bucket", zap.Error(err))
+			}
 		}
 		return nil
 	})

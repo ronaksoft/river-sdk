@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/ronaksoft/rony/tools"
 	"github.com/tidwall/buntdb"
@@ -67,11 +66,11 @@ func getTopPeerKey(cat msg.TopPeerCategory, teamID, peerID int64, peerType int32
 
 func saveTopPeer(txn *badger.Txn, cat msg.TopPeerCategory, teamID int64, tp *msg.TopPeer) error {
 	if tp.Peer == nil {
-		logs.Warn("Could not save top peer, peer is nit", zap.Any("TP", tp))
+		logger.Warn("Could not save top peer, peer is nit", zap.Any("TP", tp))
 		return domain.ErrDoesNotExists
 	}
 	b, _ := tp.Marshal()
-	logs.Debug("SaveTopPeer",
+	logger.Debug("SaveTopPeer",
 		zap.ByteString("Key", getTopPeerKey(cat, teamID, tp.Peer.ID, tp.Peer.Type)),
 		zap.Float32("Rate", tp.Rate),
 	)

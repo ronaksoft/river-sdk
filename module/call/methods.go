@@ -3,7 +3,6 @@ package call
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -41,7 +40,7 @@ func (c *call) tryReconnect(connId int32) (err error) {
 func (c *call) destroy(callID int64) {
 	closeFn := func(conn *Connection) {
 		if c.callback.CloseConnection == nil {
-			logs.Error("callbacks are not initialized")
+			c.Log().Error("callbacks are not initialized")
 			return
 		}
 		_ = c.callback.CloseConnection(conn.ConnId, true)
@@ -185,7 +184,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 	c.peer = peer
 	initRes, err := c.apiInit(peer, callID)
 	if err != nil {
-		logs.Warn("Init", zap.Error(err))
+		c.Log().Warn("Init", zap.Error(err))
 		return
 	}
 
@@ -212,7 +211,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 		c.initParticipants(c.activeCallID, joinRes.Participants, true)
 		_, err = c.initConnections(peer, c.activeCallID, false, nil)
 		if err != nil {
-			logs.Warn("initConnections", zap.Error(err))
+			c.Log().Warn("initConnections", zap.Error(err))
 			return
 		}
 	} else {
@@ -220,7 +219,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 		c.initCallParticipants(TempCallID, participants)
 		_, err = c.initConnections(peer, TempCallID, true, nil)
 		if err != nil {
-			logs.Warn("initConnections", zap.Error(err))
+			c.Log().Warn("initConnections", zap.Error(err))
 			return
 		}
 
@@ -287,7 +286,7 @@ func (c *call) accept(callID int64, video bool) (err error) {
 				defer wg.Done()
 				_, innerErr := c.initConnections(c.peer, callID, false, req)
 				if innerErr != nil {
-					logs.Warn("initConnections", zap.Error(err))
+					c.Log().Warn("initConnections", zap.Error(err))
 					return
 				}
 
@@ -643,12 +642,12 @@ func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequ
 			info.requests = append(info.requests, in)
 			info.requestParticipantIds = append(info.requestParticipantIds, in.UserID)
 			info.mu.Unlock()
-			logs.Info("[webrtc] request from", zap.Int64("UserID", in.UserID))
+			c.Log().Info("[webrtc] request from", zap.Int64("UserID", in.UserID))
 		}
 		return
 	}
 
-	logs.Info("[webrtc] request from", zap.Int64("UserID", in.UserID))
+	c.Log().Info("[webrtc] request from", zap.Int64("UserID", in.UserID))
 	callParticipants := make(map[int32]*msg.CallParticipant)
 	callParticipantMap := make(map[int64]int32)
 	for _, participant := range sdpData.Participants {
@@ -730,7 +729,7 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 			Type:         sdpOffer.Type,
 		}
 
-		logs.Info("Execute Accept", zap.Int64("PeerID", peer.ID), zap.Int64("ParticipantUserID", p.PhoneParticipant.Peer.UserID))
+		c.Log().Info("Execute Accept", zap.Int64("PeerID", peer.ID), zap.Int64("ParticipantUserID", p.PhoneParticipant.Peer.UserID))
 		res, innerErr = c.apiAccept(peer, callID, []*msg.PhoneParticipantSDP{phoneParticipant})
 		return
 	}
@@ -762,7 +761,7 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 					acceptResults = append(acceptResults, phoneCall)
 					mu.Unlock()
 				} else {
-					logs.Debug("initAnswerConnection", zap.Error(innerErr))
+					c.Log().Debug("initAnswerConnection", zap.Error(innerErr))
 				}
 				wg.Done()
 			}()
@@ -803,7 +802,7 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 							pc.mu.Unlock()
 							_, innerErr := c.callUserSingle(peer, participant, c.activeCallID)
 							if innerErr == nil {
-								logs.Warn("callUserSingle", zap.Error(innerErr))
+								c.Log().Warn("callUserSingle", zap.Error(innerErr))
 							}
 							if pc.Try >= RetryLimit {
 								if pc.connectTicker != nil {
@@ -820,14 +819,14 @@ func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool
 		}
 		_, err = c.callUser(peer, initiator, callResults, c.activeCallID)
 		if err != nil {
-			logs.Warn("callUser", zap.Error(err))
+			c.Log().Warn("callUser", zap.Error(err))
 		}
 	}
 	return
 }
 
 func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDPOffer) (sdpAnswer *msg.PhoneActionSDPAnswer, err error) {
-	logs.Debug("[webrtc] init connection", zap.Int32("connId", connId))
+	c.Log().Debug("[webrtc] init connection", zap.Int32("connId", connId))
 	// Client should check local stream
 	// otherwise panic
 
@@ -1677,7 +1676,7 @@ func (c *call) callAccepted(in *UpdatePhoneCall) {
 	})
 	c.clearRetryInterval(connId)
 	c.appendToAcceptedList(connId)
-	logs.Info("[webrtc] accept signal", zap.Int32("connId", connId))
+	c.Log().Info("[webrtc] accept signal", zap.Int32("connId", connId))
 
 	update := msg.CallUpdateCallAccepted{
 		ConnectionID: connId,
@@ -1852,7 +1851,7 @@ func (c *call) sdpAnswerUpdated(in *UpdatePhoneCall) {
 	}
 
 	if c.callback.SetAnswerSDP == nil {
-		logs.Error("callbacks are not initialized")
+		c.Log().Error("callbacks are not initialized")
 		return
 	}
 
@@ -2056,7 +2055,7 @@ func (c *call) checkCallTimeout(connId int32) {
 		if uErr == nil {
 			c.callUpdate(msg.CallUpdate_CallTimeout, updateData)
 		}
-		logs.Info("[webrtc] call timeout", zap.Int32("ConnId", connId))
+		c.Log().Info("[webrtc] call timeout", zap.Int32("ConnId", connId))
 	} else if c.peer.GetType() == msg.PeerType_PeerGroup {
 		var notAnsweringUserIDs []int64
 		info.mu.RLock()
@@ -2081,7 +2080,7 @@ func (c *call) checkCallTimeout(connId int32) {
 
 func (c *call) callUpdate(action msg.CallUpdate, b []byte) {
 	if c.callback.OnUpdate == nil {
-		logs.Error("callbacks are not initialized")
+		c.Log().Error("callbacks are not initialized")
 		return
 	}
 

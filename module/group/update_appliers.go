@@ -2,7 +2,6 @@ package group
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"go.uber.org/zap"
 )
@@ -23,7 +22,7 @@ func (r *group) updateGroupParticipantAdmin(u *msg.UpdateEnvelope) ([]*msg.Updat
 		return nil, err
 	}
 
-	logs.Debug("GroupModule applies UpdateGroupParticipantAdmin",
+	r.Log().Debug("GroupModule applies UpdateGroupParticipantAdmin",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -39,7 +38,7 @@ func (r *group) updateGroupPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, 
 		return nil, err
 	}
 
-	logs.Debug("GroupModule applies UpdateGroupPhoto",
+	r.Log().Debug("GroupModule applies UpdateGroupPhoto",
 		zap.Int64("GroupID", x.GroupID),
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64("PhotoID", x.PhotoID),
@@ -77,7 +76,7 @@ func (r *group) updateGroupAdmins(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope,
 		return nil, err
 	}
 
-	logs.Debug("GroupModule applies UpdateGroupAdmins",
+	r.Log().Debug("GroupModule applies UpdateGroupAdmins",
 		zap.Int64("GroupID", x.GroupID),
 		zap.Int64("UpdateID", x.UpdateID),
 	)
@@ -93,7 +92,7 @@ func (r *group) updateGroupAdminOnly(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelo
 		return nil, err
 	}
 
-	logs.Debug("GroupModule applies UpdateGroupAdminOnly",
+	r.Log().Debug("GroupModule applies UpdateGroupAdminOnly",
 		zap.Int64("GroupID", x.GroupID),
 		zap.Int64("UpdateID", x.UpdateID),
 	)

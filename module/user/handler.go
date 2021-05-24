@@ -3,7 +3,6 @@ package user
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
@@ -23,7 +22,7 @@ import (
 func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da domain.Callback) {
 	req := &msg.UsersGetFull{}
 	if err := req.Unmarshal(in.Message); err != nil {
-		logs.Error("UserModule::usersGetFull()-> Unmarshal()", zap.Error(err))
+		r.Log().Error("UserModule::usersGetFull()-> Unmarshal()", zap.Error(err))
 		return
 	}
 	userIDs := domain.MInt64B{}

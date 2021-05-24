@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/sdk/mini"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"github.com/fatih/color"
@@ -21,6 +22,7 @@ var (
 	_MiniSDK                 *mini.River
 	_DbID                    string
 	_DbPath                  string
+	_Log                     *logs.Logger
 	green, red, yellow, blue func(format string, a ...interface{}) string
 )
 
@@ -30,6 +32,7 @@ func main() {
 	yellow = color.New(color.FgHiYellow).SprintfFunc()
 	blue = color.New(color.FgHiBlue).SprintfFunc()
 
+	_Log = logs.With("RiverCLI")
 	// Initialize Shell
 	_Shell = ishell.New()
 

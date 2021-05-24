@@ -26,6 +26,7 @@ var (
 	ctx       *Context
 	r         *repository
 	singleton sync.Mutex
+	logger    *logs.Logger
 
 	Account         *repoAccount
 	Dialogs         *repoDialogs
@@ -74,6 +75,7 @@ func Init(dbPath string, lowMemory bool) error {
 			return err
 		}
 
+		logger = logs.With("REPO")
 		ctx = &Context{
 			DBPath: dbPath,
 		}
@@ -134,7 +136,7 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	buntPath := filepath.Join(dbPath, "bunty")
 	_ = os.MkdirAll(buntPath, os.ModePerm)
 	if buntIndex, err := buntdb.Open(fmt.Sprintf("%s/bunty/dialogs.db", strings.TrimRight(dbPath, "/"))); err != nil {
-		logs.Fatal("Context::repoSetDB()->bunt Open()", zap.Error(err))
+		return err
 	} else {
 		r.bunt = buntIndex
 	}
@@ -162,18 +164,15 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 					// create a mapping
 					r.msgSearch, err = bleve.New(searchDbPath, indexMapForMessages())
 					if err != nil {
-						logs.Warn("Error On Open Search(Message)[New]", zap.Error(err))
 						_ = os.RemoveAll(searchDbPath)
 						return err
 					}
 				default:
-					logs.Warn("Error On Open Search(Message)[Default]", zap.Error(err))
 					_ = os.RemoveAll(searchDbPath)
 					return err
 				}
 			} else {
 				r.msgSearch = msgSearch
-				logs.Info("Repo initialized Message Index successfully.")
 			}
 			return nil
 		})
@@ -188,18 +187,15 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 					// create a mapping
 					r.peerSearch, err = bleve.New(peerDbPath, indexMapForPeers())
 					if err != nil {
-						logs.Warn("Error On Open Search(Peers)", zap.Error(err))
 						_ = os.RemoveAll(peerDbPath)
 						return err
 					}
 				default:
-					logs.Warn("Error On Open Search(Peers)", zap.Error(err))
 					_ = os.RemoveAll(peerDbPath)
 					return err
 				}
 			} else {
 				r.peerSearch = peerSearch
-				logs.Info("Repo initialized Peer index successfully.")
 			}
 			return nil
 		})
@@ -289,7 +285,7 @@ func DropAll() {
 func GC() {
 	_ = r.bunt.Shrink()
 	for r.badger.RunValueLogGC(0.7) == nil {
-		logs.Info("Badger ValueLog GC executed")
+		logger.Info("Badger ValueLog GC executed")
 	}
 }
 
@@ -304,9 +300,7 @@ func badgerUpdate(fn func(txn *badger.Txn) error) (err error) {
 		case nil:
 			return nil
 		case badger.ErrConflict:
-			logs.Debug("Badger update conflict")
 		default:
-			logs.Debug("Badger update error", zap.Error(err))
 			return
 		}
 		time.Sleep(time.Duration(domain.RandomInt(10000)) * time.Microsecond)
@@ -355,7 +349,7 @@ var msgIndexer = tools.NewFlusherPool(10, 1000, func(targetID string, entries []
 	}
 	err := r.msgSearch.Batch(b)
 	if err != nil {
-		logs.Warn("MessageIndexer got error", zap.Error(err))
+		logger.Warn("MessageIndexer got error", zap.Error(err))
 	}
 })
 
@@ -397,6 +391,6 @@ var peerIndexer = tools.NewFlusherPool(10, 1000, func(targetID string, entries [
 	}
 	err := r.peerSearch.Batch(b)
 	if err != nil {
-		logs.Warn("PeerIndexer got error", zap.Error(err))
+		logger.Warn("PeerIndexer got error", zap.Error(err))
 	}
 })

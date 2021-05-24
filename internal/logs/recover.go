@@ -16,7 +16,7 @@ import (
 
 func RecoverPanic(funcName string, extraInfo interface{}, compensationFunc func()) {
 	if r := recover(); r != nil {
-		Error("Panic Recovered",
+		_Log.Error("Panic Recovered",
 			zap.String("Func", funcName),
 			zap.Any("Info", extraInfo),
 			zap.Any("Recover", r),

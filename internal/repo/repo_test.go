@@ -138,11 +138,11 @@ func TestPending(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	pm1 := repo.PendingMessages.GetByID(10)
+	pm1, _ := repo.PendingMessages.GetByID(10)
 	fmt.Println(pm1)
 
 	_ = repo.PendingMessages.Delete(10)
-	pm2 := repo.PendingMessages.GetByID(10)
+	pm2, _ := repo.PendingMessages.GetByID(10)
 	fmt.Println(pm2)
 }
 

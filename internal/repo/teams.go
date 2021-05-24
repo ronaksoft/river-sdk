@@ -3,7 +3,6 @@ package repo
 import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/ronaksoft/rony/pools"
@@ -36,7 +35,7 @@ func getTeamKey(teamID int64) []byte {
 
 func (r *repoTeams) List() []*msg.Team {
 	teamList := make([]*msg.Team, 0, 10)
-	err := badgerView(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = tools.StrToByte(fmt.Sprintf("%s.", prefixTeams))
 		it := txn.NewIterator(opts)
@@ -56,7 +55,6 @@ func (r *repoTeams) List() []*msg.Team {
 
 		return nil
 	})
-	logs.ErrorOnErr("RepoTeams got error on GetAll", err)
 	return teamList
 }
 

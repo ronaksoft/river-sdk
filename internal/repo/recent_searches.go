@@ -2,7 +2,6 @@ package repo
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/ronaksoft/rony/pools"
@@ -47,7 +46,7 @@ func getRecentSearchPrefix(teamID int64) []byte {
 
 func (r *repoRecentSearches) List(teamID int64, limit int32) []*msg.ClientRecentSearch {
 	recentSearches := make([]*msg.ClientRecentSearch, 0, limit)
-	err := badgerView(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = getRecentSearchPrefix(teamID)
 		it := txn.NewIterator(opts)
@@ -67,7 +66,7 @@ func (r *repoRecentSearches) List(teamID int64, limit int32) []*msg.ClientRecent
 
 		return nil
 	})
-	logs.ErrorOnErr("RepoRecentSearches got error on GetAll", err)
+
 	return recentSearches
 }
 

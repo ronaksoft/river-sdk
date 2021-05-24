@@ -2,7 +2,6 @@ package team
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -21,28 +20,28 @@ func (r *team) teamsMany(e *rony.MessageEnvelope) {
 	tm := &msg.TeamsMany{}
 	err := tm.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("TeamModule couldn't unmarshal TeamsMany", zap.Error(err))
+		r.Log().Error("TeamModule couldn't unmarshal TeamsMany", zap.Error(err))
 		return
 	}
 
 	err = repo.Users.Save(tm.Users...)
-	logs.ErrorOnErr("TeamModule couldn't save teamsMany users", err)
+	r.Log().ErrorOnErr("TeamModule couldn't save teamsMany users", err)
 
 	err = repo.Teams.Clear()
-	logs.ErrorOnErr("TeamModule couldn't clear saved teams", err)
+	r.Log().ErrorOnErr("TeamModule couldn't clear saved teams", err)
 
 	err = repo.Teams.Save(tm.Teams...)
-	logs.ErrorOnErr("TeamModule couldn't save teamsMany teams", err)
+	r.Log().ErrorOnErr("TeamModule couldn't save teamsMany teams", err)
 }
 
 func (r *team) teamMembers(e *rony.MessageEnvelope) {
 	tm := &msg.TeamMembers{}
 	err := tm.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("TeamModule couldn't unmarshal TeamMembers", zap.Error(err))
+		r.Log().Error("TeamModule couldn't unmarshal TeamMembers", zap.Error(err))
 		return
 	}
 
 	err = repo.Users.Save(tm.Users...)
-	logs.ErrorOnErr("TeamModule couldn't save teamMembers users", err)
+	r.Log().ErrorOnErr("TeamModule couldn't save teamMembers users", err)
 }

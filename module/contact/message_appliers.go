@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
@@ -26,11 +25,11 @@ import (
 func (r *contact) contactsImported(e *rony.MessageEnvelope) {
 	x := new(msg.ContactsImported)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("ContactModule couldn't unmarshal ContactsImported", zap.Error(err))
+		r.Log().Error("ContactModule couldn't unmarshal ContactsImported", zap.Error(err))
 		return
 	}
 
-	logs.Debug("ContactModule applies contactsImported")
+	r.Log().Debug("ContactModule applies contactsImported")
 
 	_ = repo.Users.SaveContact(domain.GetTeamID(e), x.ContactUsers...)
 	_ = repo.Users.Save(x.Users...)
@@ -39,10 +38,10 @@ func (r *contact) contactsImported(e *rony.MessageEnvelope) {
 func (r *contact) contactsMany(e *rony.MessageEnvelope) {
 	x := new(msg.ContactsMany)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("ContactModule couldn't unmarshal ContactsMany", zap.Error(err))
+		r.Log().Error("ContactModule couldn't unmarshal ContactsMany", zap.Error(err))
 		return
 	}
-	logs.Debug("ContactModule applies contactsMany",
+	r.Log().Debug("ContactModule applies contactsMany",
 		zap.Int("Users", len(x.Users)),
 		zap.Int("Contacts", len(x.Contacts)),
 	)
@@ -68,7 +67,7 @@ func (r *contact) contactsMany(e *rony.MessageEnvelope) {
 		crc32Hash := crc32.ChecksumIEEE(buff.Bytes())
 		err := repo.System.SaveInt(domain.GetContactsGetHashKey(domain.GetTeamID(e)), uint64(crc32Hash))
 		if err != nil {
-			logs.Error("ContactModule couldn't save ContactsHash in to the db", zap.Error(err))
+			r.Log().Error("ContactModule couldn't save ContactsHash in to the db", zap.Error(err))
 		}
 		uiexec.ExecDataSynced(false, true, false)
 	}
@@ -78,16 +77,16 @@ func (r *contact) contactsTopPeers(e *rony.MessageEnvelope) {
 	u := &msg.ContactsTopPeers{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("ContactModule couldn't unmarshal ContactsTopPeers", zap.Error(err))
+		r.Log().Error("ContactModule couldn't unmarshal ContactsTopPeers", zap.Error(err))
 		return
 	}
 
-	logs.Debug("ContactModule applies ContactsTopPeers",
+	r.Log().Debug("ContactModule applies ContactsTopPeers",
 		zap.Int("L", len(u.Peers)),
 		zap.String("Cat", u.Category.String()),
 	)
 	err = repo.TopPeers.Save(u.Category, r.SDK().SyncCtrl().GetUserID(), domain.GetTeamID(e), u.Peers...)
 	if err != nil {
-		logs.Error("ContactModule got error on saving ContactsTopPeers", zap.Error(err))
+		r.Log().Error("ContactModule got error on saving ContactsTopPeers", zap.Error(err))
 	}
 }

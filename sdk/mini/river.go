@@ -23,8 +23,12 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func SetLogLevel(l int) {
-	logs.SetLogLevel(l)
+var (
+	logger *logs.Logger
+)
+
+func init() {
+	logger = logs.With("MiniRiver")
 }
 
 type RiverConfig struct {
@@ -114,12 +118,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	r.mainDelegate = conf.MainDelegate
 
 	// set log level
-	logs.SetLogLevel(conf.LogLevel)
-
-	// set log file path
-	if conf.LogDirectory != "" {
-		_ = logs.SetLogFilePath(conf.LogDirectory)
-	}
+	logger.SetLogLevel(conf.LogLevel)
 
 	// Initialize Network Controller
 	r.network = networkCtrl.New(
@@ -144,7 +143,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 
 	// Initialize River Connection
-	logs.Info("River SetConfig done!")
+	logger.Info("River SetConfig done!")
 
 	// Set current team
 	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
@@ -155,7 +154,7 @@ func (r *River) onNetworkConnect() (err error) {
 }
 
 func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
-	logs.Info("We received error (General)",
+	logger.Info("We received error (General)",
 		zap.Uint64("ReqID", requestID),
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),

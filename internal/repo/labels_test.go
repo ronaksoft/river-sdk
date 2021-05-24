@@ -36,7 +36,8 @@ func TestLabel(t *testing.T) {
 				},
 			)
 			c.So(err, ShouldBeNil)
-			labels := repo.Labels.GetAll(0)
+			labels, err := repo.Labels.GetAll(0)
+			c.So(err, ShouldBeNil)
 			c.So(labels, ShouldHaveLength, 2)
 		})
 		Convey("Add Label To Message", func(c C) {

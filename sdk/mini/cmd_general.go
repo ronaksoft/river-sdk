@@ -32,8 +32,8 @@ func (r *River) AppKill() {
 func (r *River) AppStart() error {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
-	logs.Info("MiniRiver Starting")
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
+	logger.Info("MiniRiver Starting")
 
 	minirepo.MustInit(r.dbPath)
 
@@ -45,11 +45,11 @@ func (r *River) AppStart() error {
 
 	domain.StartTime = time.Now()
 	domain.WindowLog = func(txt string) {}
-	logs.Info("MiniRiver Started")
+	logger.Info("MiniRiver Started")
 
 	err := r.syncServerTime()
 	if err != nil {
-		logs.Warn("MiniRiver got error on get server time", zap.Error(err))
+		logger.Warn("MiniRiver got error on get server time", zap.Error(err))
 	}
 
 	if r.getLastUpdateID() == 0 {
@@ -97,29 +97,29 @@ func (r *River) executeCommand(
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
-		executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytes, rda)
+		r.executeRemoteCommand(teamID, teamAccess, uint64(requestID), constructor, commandBytes, rda)
 		return
 	}
 
 	// If the constructor is a local command then
 	handler, ok := r.localCommands[constructor]
 	if ok {
-		executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytes, rda)
+		r.executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytes, rda)
 		return
 	}
 
 	// If we reached here, then execute the remote commands
-	executeRemoteCommand(teamID, teamAccess, r, uint64(requestID), constructor, commandBytes, rda)
+	r.executeRemoteCommand(teamID, teamAccess, uint64(requestID), constructor, commandBytes, rda)
 
 	return
 }
-func executeLocalCommand(
+func (r *River) executeLocalCommand(
 	teamID int64, teamAccess uint64,
 	handler domain.LocalHandler,
 	requestID uint64, constructor int64, commandBytes []byte,
 	da domain.Callback,
 ) {
-	logs.Debug("We execute local command",
+	logger.Debug("We execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
@@ -135,13 +135,12 @@ func executeLocalCommand(
 	}
 	handler(in, out, da)
 }
-func executeRemoteCommand(
+func (r *River) executeRemoteCommand(
 	teamID int64, teamAccess uint64,
-	r *River,
 	requestID uint64, constructor int64, commandBytes []byte,
 	da domain.Callback,
 ) {
-	logs.Debug("We execute remote command",
+	logger.Debug("We execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 	requestID = uint64(domain.SequentialUniqueID())

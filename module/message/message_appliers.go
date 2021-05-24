@@ -2,7 +2,6 @@ package message
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
@@ -22,10 +21,10 @@ import (
 func (r *message) messagesDialogs(e *rony.MessageEnvelope) {
 	x := new(msg.MessagesDialogs)
 	if err := x.Unmarshal(e.Message); err != nil {
-		logs.Error("MessageModule couldn't unmarshal MessagesDialogs", zap.Error(err))
+		r.Log().Error("MessageModule couldn't unmarshal MessagesDialogs", zap.Error(err))
 		return
 	}
-	logs.Debug("MessageModule applies MessagesDialogs",
+	r.Log().Debug("MessageModule applies MessagesDialogs",
 		zap.Int("Dialogs", len(x.Dialogs)),
 		zap.Int64("GetUpdateID", x.UpdateID),
 		zap.Int32("Count", x.Count),
@@ -38,12 +37,12 @@ func (r *message) messagesDialogs(e *rony.MessageEnvelope) {
 	for _, dialog := range x.Dialogs {
 		topMessage, _ := mMessages[dialog.TopMessageID]
 		if topMessage == nil {
-			logs.Error("MessageModule got dialog with nil top message", zap.Int64("MessageID", dialog.TopMessageID))
+			r.Log().Error("MessageModule got dialog with nil top message", zap.Int64("MessageID", dialog.TopMessageID))
 			err := repo.Dialogs.Save(dialog)
-			logs.WarnOnErr("MessageModule got error on save dialog", err)
+			r.Log().WarnOnErr("MessageModule got error on save dialog", err)
 		} else {
 			err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
-			logs.WarnOnErr("MessageModule got error on save new dialog", err)
+			r.Log().WarnOnErr("MessageModule got error on save new dialog", err)
 			messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, dialog.TopMessageID)
 		}
 	}
@@ -70,7 +69,7 @@ func (r *message) messagesMany(e *rony.MessageEnvelope) {
 	x := new(msg.MessagesMany)
 	err := x.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("MessageModule couldn't unmarshal MessagesMany", zap.Error(err))
+		r.Log().Error("MessageModule couldn't unmarshal MessagesMany", zap.Error(err))
 		return
 	}
 
@@ -92,7 +91,7 @@ func (r *message) messagesMany(e *rony.MessageEnvelope) {
 	waitGroup.Wait()
 	pools.ReleaseWaitGroup(waitGroup)
 
-	logs.Info("MessageModule applies MessagesMany",
+	r.Log().Info("MessageModule applies MessagesMany",
 		zap.Bool("Continues", x.Continuous),
 		zap.Int("Messages", len(x.Messages)),
 	)
@@ -102,7 +101,7 @@ func (r *message) reactionList(e *rony.MessageEnvelope) {
 	tm := &msg.MessagesReactionList{}
 	err := tm.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("MessageModule couldn't unmarshal MessagesReactionList", zap.Error(err))
+		r.Log().Error("MessageModule couldn't unmarshal MessagesReactionList", zap.Error(err))
 		return
 	}
 

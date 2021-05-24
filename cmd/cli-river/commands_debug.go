@@ -2,18 +2,16 @@ package main
 
 import (
 	"fmt"
-	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/internal/domain"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/abiosoft/ishell.v2"
 	"io/ioutil"
 	"mime"
 	"os"
 	"strings"
 	"sync"
 	"time"
-
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"gopkg.in/abiosoft/ishell.v2"
 )
 
 var Debug = &ishell.Cmd{
@@ -131,7 +129,7 @@ var DebugContactImportMany = &ishell.Cmd{
 var DebugLogoutLoop = &ishell.Cmd{
 	Name: "LogoutLoop",
 	Func: func(c *ishell.Context) {
-		logs.SetLogLevel(int(zapcore.WarnLevel))
+		_Log.SetLogLevel(int(zapcore.WarnLevel))
 		phone := fnGetPhone(c)
 		for {
 			if _SDK.ConnInfo.UserID == 0 {

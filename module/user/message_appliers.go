@@ -2,7 +2,6 @@ package user
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -21,10 +20,10 @@ func (r *user) usersMany(e *rony.MessageEnvelope) {
 	x := new(msg.UsersMany)
 	err := x.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("UserModule couldn't unmarshal UsersMany", zap.Error(err))
+		r.Log().Error("UserModule couldn't unmarshal UsersMany", zap.Error(err))
 		return
 	}
-	logs.Debug("UserModule applies usersMany",
+	r.Log().Debug("UserModule applies usersMany",
 		zap.Int("Users", len(x.Users)),
 	)
 	_ = repo.Users.Save(x.Users...)

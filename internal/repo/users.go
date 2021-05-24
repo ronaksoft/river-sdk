@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/dgraph-io/badger/v2"
 	"github.com/ronaksoft/rony/tools"
-	"go.uber.org/zap"
 	"strings"
 	"time"
 )
@@ -346,7 +344,7 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 	searchRequest := bleve.NewSearchRequest(bleve.NewConjunctionQuery(t1, t2))
 	searchResult, _ := r.peerSearch.Search(searchRequest)
 
-	err := badgerView(func(txn *badger.Txn) error {
+	_ = badgerView(func(txn *badger.Txn) error {
 		for _, hit := range searchResult.Hits {
 			user, err := getUserByKey(txn, tools.StrToByte(hit.ID))
 			if err == nil && user != nil {
@@ -355,9 +353,6 @@ func (r *repoUsers) SearchUsers(searchPhrase string) []*msg.User {
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoUser got error on search users", err,
-		zap.String("Phrase", searchPhrase),
-	)
 	return users
 }
 
@@ -484,7 +479,7 @@ func (r *repoUsers) SearchNonContacts(teamID int64, searchPhrase string) []*msg.
 }
 
 func (r *repoUsers) UpdateContactInfo(teamID int64, userID int64, firstName, lastName string) error {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		contact, err := getContactByKey(txn, getContactKey(teamID, userID))
 		if err != nil {
 			return err
@@ -493,8 +488,6 @@ func (r *repoUsers) UpdateContactInfo(teamID int64, userID int64, firstName, las
 		contact.LastName = lastName
 		return saveContact(txn, teamID, contact)
 	})
-	logs.ErrorOnErr("RepoUser got error on update contact info", err)
-	return err
 }
 
 func (r *repoUsers) SaveContact(teamID int64, contactUsers ...*msg.ContactUser) error {
@@ -560,8 +553,7 @@ func (r *repoUsers) GetPhoneContacts(limit int) ([]*msg.PhoneContact, error) {
 func (r *repoUsers) DeleteContact(teamID int64, contactIDs ...int64) error {
 	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, contactID := range contactIDs {
-			err := txn.Delete(getContactKey(teamID, contactID))
-			logs.ErrorOnErr("DeleteContact : error on delete contact", err, zap.Int64("ContactID", contactID))
+			_ = txn.Delete(getContactKey(teamID, contactID))
 		}
 		return nil
 	})
@@ -581,14 +573,11 @@ func (r *repoUsers) DeleteAllContacts(teamID int64) error {
 }
 
 func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) error {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		user, err := getUserByKey(txn, getUserKey(userID))
 		switch err {
 		case nil:
 		case badger.ErrKeyNotFound:
-			logs.Warn("We got error on update user's photo, but user does not exists",
-				zap.Int64("UserID", userID),
-			)
 			return nil
 		default:
 			return err
@@ -596,8 +585,6 @@ func (r *repoUsers) UpdatePhoto(userID int64, userPhoto *msg.UserPhoto) error {
 		user.Photo = userPhoto
 		return saveUser(txn, user)
 	})
-	logs.ErrorOnErr("RepoUser got error on update photo", err)
-	return err
 }
 
 func (r *repoUsers) SavePhotoGallery(userID int64, photos ...*msg.UserPhoto) error {

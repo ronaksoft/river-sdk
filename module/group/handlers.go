@@ -3,7 +3,6 @@ package group
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -68,7 +67,7 @@ func (r *group) groupDeleteUser(in, out *rony.MessageEnvelope, da domain.Callbac
 
 	err = repo.Groups.RemoveParticipant(req.GroupID, req.User.UserID)
 	if err != nil {
-		logs.Error("We got error on GroupDeleteUser local handler", zap.Error(err))
+		r.Log().Error("We got error on GroupDeleteUser local handler", zap.Error(err))
 	}
 
 	// send the request to server
@@ -100,7 +99,7 @@ func (r *group) groupsGetFull(in, out *rony.MessageEnvelope, da domain.Callback)
 	// Get Group PhotoGallery
 	res.PhotoGallery, err = repo.Groups.GetPhotoGallery(req.GroupID)
 	if err != nil {
-		logs.Error("We got error on GetPhotoGallery in local handler", zap.Error(err))
+		r.Log().Error("We got error on GetPhotoGallery in local handler", zap.Error(err))
 	}
 
 	// Users
@@ -145,7 +144,7 @@ func (r *group) groupToggleAdmin(in, out *rony.MessageEnvelope, da domain.Callba
 
 	err = repo.Groups.ToggleAdmins(req.GroupID, req.AdminEnabled)
 	if err != nil {
-		logs.Warn("We got error on local handler for GroupToggleAdmin", zap.Error(err))
+		r.Log().Warn("We got error on local handler for GroupToggleAdmin", zap.Error(err))
 	}
 
 	// send the request to server
@@ -159,7 +158,7 @@ func (r *group) groupRemovePhoto(in, out *rony.MessageEnvelope, da domain.Callba
 	req := new(msg.GroupsRemovePhoto)
 	err := req.Unmarshal(in.Message)
 	if err != nil {
-		logs.Error("groupRemovePhoto() failed to unmarshal", zap.Error(err))
+		r.Log().Error("groupRemovePhoto() failed to unmarshal", zap.Error(err))
 	}
 
 	group, _ := repo.Groups.Get(req.GroupID)

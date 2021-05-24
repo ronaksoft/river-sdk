@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/z"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
@@ -14,7 +13,6 @@ import (
 	"github.com/dgraph-io/badger/v2/pb"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
-	"go.uber.org/zap"
 	"sort"
 	"strings"
 	"sync"
@@ -115,10 +113,6 @@ func saveMessage(txn *badger.Txn, message *msg.UserMessage) error {
 		doc := &msg.MediaDocument{}
 		_ = doc.Unmarshal(message.Media)
 		if doc.Doc == nil {
-			logs.Error("RepoMessage got error on save message, Document is Nil",
-				zap.Int64("MessageID", message.ID),
-				zap.Int64("SenderID", message.SenderID),
-			)
 			return nil
 		}
 		for _, da := range doc.Doc.Attributes {
@@ -217,7 +211,7 @@ func (r *repoMessages) Get(messageID int64) (um *msg.UserMessage, err error) {
 	return
 }
 
-func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
+func (r *repoMessages) GetMany(messageIDs []int64) ([]*msg.UserMessage, error) {
 	userMessages := make([]*msg.UserMessage, 0, len(messageIDs))
 	err := badgerView(func(txn *badger.Txn) error {
 		for _, messageID := range messageIDs {
@@ -225,14 +219,7 @@ func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
 			if err != nil {
 				switch err {
 				case badger.ErrKeyNotFound:
-					logs.Warn("RepoMessage got error on get many (key not found)",
-						zap.Int64("MsgID", messageID),
-					)
 				default:
-					logs.Warn("RepoMessage got error on get many",
-						zap.Error(err),
-						zap.Int64("MsgID", messageID),
-					)
 				}
 			}
 			if err == nil {
@@ -241,10 +228,7 @@ func (r *repoMessages) GetMany(messageIDs []int64) []*msg.UserMessage {
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoMessage got error on get many", err,
-		zap.Int64s("MsgIDs", messageIDs),
-	)
-	return userMessages
+	return userMessages, err
 }
 
 func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
@@ -266,10 +250,6 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
 		switch err {
 		case nil:
 		case badger.ErrKeyNotFound:
-			logs.Info("We got new message but we don't have the dialog",
-				zap.Int64("TeamID", message.TeamID),
-				zap.Int64("MsgID", message.ID),
-			)
 			return nil
 		default:
 			return err
@@ -278,14 +258,7 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
 		if message.ID > dialog.TopMessageID {
 			dialog.TopMessageID = message.ID
 			if !dialog.Pinned {
-				err = updateDialogLastUpdate(message.TeamID, message.PeerID, message.PeerType, message.CreatedOn)
-				if err != nil {
-					logs.Info("We got error on update dialog last update",
-						zap.Int64("TeamID", message.TeamID),
-						zap.Int64("PeerID", message.PeerID),
-						zap.Int64("MsgID", message.ID),
-					)
-				}
+				_ = updateDialogLastUpdate(message.TeamID, message.PeerID, message.PeerType, message.CreatedOn)
 			}
 			// Update counters if necessary
 			if message.SenderID != userID {
@@ -300,7 +273,6 @@ func (r *repoMessages) SaveNew(message *msg.UserMessage, userID int64) error {
 		}
 		return saveDialog(txn, dialog)
 	})
-	logs.ErrorOnErr("RepoMessage got error on save new message", err)
 
 	return err
 }
@@ -349,25 +321,17 @@ func (r *repoMessages) GetMessageHistory(
 	case maxID == 0 && minID == 0:
 		dialog, err := Dialogs.Get(teamID, peerID, peerType)
 		if err != nil {
-			logs.Error("RepoMessage got error on GetHistory",
-				zap.Error(err),
-				zap.Int64("TeamID", teamID),
-				zap.Int64("PeerID", peerID),
-			)
 			return
 		}
 		maxID = dialog.TopMessageID
 		fallthrough
 	case maxID != 0 && minID == 0:
-		startTime := time.Now()
-		var stopWatch1, stopWatch2 time.Time
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
 			it.Seek(getMessageKey(teamID, peerID, peerType, maxID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
@@ -390,23 +354,15 @@ func (r *repoMessages) GetMessageHistory(
 				})
 			}
 			it.Close()
-			stopWatch2 = time.Now()
 			return nil
 		})
-		logs.Info("RepoMessage got history", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
-			zap.Duration("SP1", stopWatch1.Sub(startTime)),
-			zap.Duration("SP2", stopWatch2.Sub(startTime)),
-		)
 	case maxID == 0 && minID != 0:
-		startTime := time.Now()
-		var stopWatch1, stopWatch2, stopWatch3 time.Time
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
 			opts.Reverse = false
 			it := txn.NewIterator(opts)
 			it.Seek(getMessageKey(teamID, peerID, peerType, minID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
@@ -429,28 +385,19 @@ func (r *repoMessages) GetMessageHistory(
 				})
 			}
 			it.Close()
-			stopWatch2 = time.Now()
 			sort.Slice(userMessages, func(i, j int) bool {
 				return userMessages[i].ID > userMessages[j].ID
 			})
-			stopWatch3 = time.Now()
 			return nil
 		})
-		logs.Info("RepoMessage got history", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
-			zap.Duration("SP1", stopWatch1.Sub(startTime)),
-			zap.Duration("SP2", stopWatch2.Sub(startTime)),
-			zap.Duration("SP3", stopWatch3.Sub(startTime)),
-		)
 	default:
-		startTime := time.Now()
-		var stopWatch1, stopWatch2 time.Time
+
 		_ = badgerView(func(txn *badger.Txn) error {
 			opts := badger.DefaultIteratorOptions
 			opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
 			it.Seek(getMessageKey(teamID, peerID, peerType, maxID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
@@ -476,11 +423,6 @@ func (r *repoMessages) GetMessageHistory(
 				})
 			}
 			it.Close()
-			stopWatch2 = time.Now()
-			logs.Info("RepoMessage got history", zap.Int64("MinID", minID), zap.Int64("MaxID", maxID),
-				zap.Duration("SP1", stopWatch1.Sub(startTime)),
-				zap.Duration("SP2", stopWatch2.Sub(startTime)),
-			)
 			return nil
 		})
 
@@ -529,18 +471,10 @@ func (r *repoMessages) GetMediaMessageHistory(
 	teamID, peerID int64, peerType int32, minID, maxID int64, limit int32, cat msg.MediaCategory,
 ) (userMessages []*msg.UserMessage, users []*msg.User, groups []*msg.Group) {
 	userMessages = make([]*msg.UserMessage, 0, limit)
-	startTime := time.Now()
-	var stopWatch1, stopWatch2 time.Time
-
 	switch {
 	case maxID == 0 && minID == 0:
 		dialog, err := Dialogs.Get(teamID, peerID, peerType)
 		if err != nil {
-			logs.Error("RepoMessage got error on GetHistory",
-				zap.Error(err),
-				zap.Int64("TeamID", teamID),
-				zap.Int64("PeerID", peerID),
-			)
 			return
 		}
 		maxID = dialog.TopMessageID
@@ -552,7 +486,6 @@ func (r *repoMessages) GetMediaMessageHistory(
 			opts.Reverse = true
 			it := txn.NewIterator(opts)
 			it.Seek(getMessageKey(teamID, peerID, peerType, maxID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
@@ -574,7 +507,6 @@ func (r *repoMessages) GetMediaMessageHistory(
 				})
 			}
 			it.Close()
-			stopWatch2 = time.Now()
 			return nil
 		})
 	case minID > 0:
@@ -583,7 +515,6 @@ func (r *repoMessages) GetMediaMessageHistory(
 			opts.Prefix = getMessagePrefix(teamID, peerID, peerType)
 			it := txn.NewIterator(opts)
 			it.Seek(getMessageKey(teamID, peerID, peerType, minID))
-			stopWatch1 = time.Now()
 			for ; it.ValidForPrefix(opts.Prefix); it.Next() {
 				if limit--; limit < 0 {
 					break
@@ -605,19 +536,11 @@ func (r *repoMessages) GetMediaMessageHistory(
 				})
 			}
 			it.Close()
-			stopWatch2 = time.Now()
 			return nil
 		})
 	default:
 
 	}
-
-	logs.Info("RepoMessage got media history",
-		zap.Int64("MinID", minID),
-		zap.Int64("MaxID", maxID),
-		zap.Duration("SP1", stopWatch1.Sub(startTime)),
-		zap.Duration("SP2", stopWatch2.Sub(startTime)),
-	)
 
 	users, groups = extractMessages(userMessages...)
 	return
@@ -627,7 +550,7 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 	sort.Slice(msgIDs, func(i, j int) bool {
 		return msgIDs[i] < msgIDs[j]
 	})
-	err := badgerUpdate(func(txn *badger.Txn) error {
+	_ = badgerUpdate(func(txn *badger.Txn) error {
 		// Update the Dialog if necessary
 		dialog, err := getDialog(txn, teamID, peerID, peerType)
 		if err != nil {
@@ -684,15 +607,6 @@ func (r *repoMessages) Delete(userID int64, teamID, peerID int64, peerType int32
 		indexMessageRemove(tools.ByteToStr(getMessageKey(teamID, peerID, peerType, msgID)))
 		return nil
 	})
-	if err != nil {
-		logs.Warn("RepoMessage got error on delete",
-			zap.Error(err),
-			zap.Int64("UserID", userID),
-			zap.Int64("TeamID", teamID),
-			zap.Int64("PeerID", peerID),
-			zap.Int64s("MsgIDs", msgIDs),
-		)
-	}
 }
 
 func (r *repoMessages) ClearHistory(userID int64, teamID, peerID int64, peerType int32, maxID int64) error {
@@ -713,10 +627,7 @@ func (r *repoMessages) ClearHistory(userID int64, teamID, peerID int64, peerType
 						_ = decreaseLabelItemCount(txn, teamID, labelID)
 					}
 				}
-				err := txn.Delete(kv.Key)
-				if err != nil {
-					logs.Warn("RepoMessage got error on ClearHistory", zap.Error(err), zap.String("Key", tools.ByteToStr(kv.Key)))
-				}
+				_ = txn.Delete(kv.Key)
 			}
 			return nil
 		}
@@ -734,12 +645,11 @@ func (r *repoMessages) ClearHistory(userID int64, teamID, peerID int64, peerType
 		}
 		return saveDialog(txn, dialog)
 	})
-	logs.ErrorOnErr("RepoMessage got error on delete all", err)
 	return err
 }
 
-func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) {
-	err := badgerUpdate(func(txn *badger.Txn) error {
+func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs []int64) error {
+	return badgerUpdate(func(txn *badger.Txn) error {
 		for _, msgID := range messageIDs {
 			userMessage, err := getMessageByID(txn, msgID)
 			if err != nil {
@@ -753,8 +663,6 @@ func (r *repoMessages) SetContentRead(peerID int64, peerType int32, messageIDs [
 		}
 		return nil
 	})
-	logs.ErrorOnErr("RepoMessage got error on set content read", err)
-	return
 }
 
 func (r *repoMessages) GetTopMessageID(teamID, peerID int64, peerType int32) (int64, error) {

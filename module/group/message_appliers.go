@@ -2,7 +2,6 @@ package group
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -21,21 +20,21 @@ func (r *group) groupFull(e *rony.MessageEnvelope) {
 	u := new(msg.GroupFull)
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("GroupModule couldn't unmarshal GroupFull", zap.Error(err))
+		r.Log().Error("GroupModule couldn't unmarshal GroupFull", zap.Error(err))
 		return
 	}
-	logs.Debug("GroupModule applies GroupFull",
+	r.Log().Debug("GroupModule applies GroupFull",
 		zap.Int64("GroupID", u.Group.ID),
 	)
 
 	// save GroupSearch
 	err = repo.Groups.SaveFull(u)
 	if err != nil {
-		logs.Error("GroupModule couldn't save GroupFull", zap.Error(err))
+		r.Log().Error("GroupModule couldn't save GroupFull", zap.Error(err))
 	}
 	err = repo.Groups.Save(u.Group)
 	if err != nil {
-		logs.Error("GroupModule couldn't save GroupFull's Group", zap.Error(err))
+		r.Log().Error("GroupModule couldn't save GroupFull's Group", zap.Error(err))
 	}
 
 	// Save Users, and notify settings

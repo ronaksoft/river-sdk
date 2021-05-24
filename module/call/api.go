@@ -3,7 +3,6 @@ package call
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -52,7 +51,7 @@ func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -94,7 +93,7 @@ func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, p
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -133,7 +132,7 @@ func (c *call) apiAccept(peer *msg.InputPeer, callID int64, participants []*msg.
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -172,7 +171,7 @@ func (c *call) apiReject(peer *msg.InputPeer, callID int64, reason msg.DiscardRe
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -209,7 +208,7 @@ func (c *call) apiJoin(peer *msg.InputPeer, callID int64) (res *msg.PhonePartici
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -247,7 +246,7 @@ func (c *call) apiAddParticipant(peer *msg.InputPeer, callID int64, participants
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -286,7 +285,7 @@ func (c *call) apiRemoveParticipant(peer *msg.InputPeer, callID int64, participa
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -323,7 +322,7 @@ func (c *call) apiGetParticipant(peer *msg.InputPeer, callID int64) (res *msg.Ph
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -363,7 +362,7 @@ func (c *call) apiUpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -404,7 +403,7 @@ func (c *call) apiSendUpdate(peer *msg.InputPeer, callID int64, participants []*
 				res = xx
 			}
 		default:
-			logs.Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
+			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
 		}
 	}
@@ -425,7 +424,7 @@ func (c *call) executeRemoteCommand(
 	timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	instant bool, callID int64,
 ) {
-	logs.Debug("Execute command",
+	c.Log().Debug("Execute command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 

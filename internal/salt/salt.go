@@ -25,7 +25,12 @@ import (
 var (
 	salts   []domain.Slt
 	curSalt int64
+	logger  *logs.Logger
 )
+
+func init() {
+	logger = logs.With("SALT")
+}
 
 func Get() int64 {
 	return curSalt
@@ -43,9 +48,9 @@ func UpdateSalt() bool {
 	if err != nil {
 		switch err {
 		case badger.ErrKeyNotFound:
-			logs.Warn("UpdateSalt did not find salt key in the db")
+			logger.Warn("UpdateSalt did not find salt key in the db")
 		default:
-			logs.Warn("UpdateSalt got error on load salt from db", zap.Error(err))
+			logger.Warn("UpdateSalt got error on load salt from db", zap.Error(err))
 
 		}
 		return false
@@ -54,7 +59,7 @@ func UpdateSalt() bool {
 	var sysSalts []domain.Slt
 	err = json.Unmarshal([]byte(saltString), &sysSalts)
 	if err != nil {
-		logs.Warn("UpdateSalt got error on unmarshal salt from db", zap.Error(err))
+		logger.Warn("UpdateSalt got error on unmarshal salt from db", zap.Error(err))
 		return false
 	}
 
@@ -67,7 +72,7 @@ func UpdateSalt() bool {
 		for idx, s := range sysSalts {
 			validUntil := s.Timestamp + int64(time.Hour/time.Second) - domain.Now().Unix()
 			if validUntil <= 0 {
-				logs.Debug("did not match", zap.Any("salt timestamp", s.Timestamp))
+				logger.Debug("did not match", zap.Any("salt timestamp", s.Timestamp))
 				continue
 			}
 			curSalt = s.Value
@@ -75,7 +80,7 @@ func UpdateSalt() bool {
 			b, _ := json.Marshal(sysSalts[idx:])
 			err = repo.System.SaveString(domain.SkSystemSalts, string(b))
 			if err != nil {
-				logs.Warn("UpdateSalt got error on save salt to db",
+				logger.Warn("UpdateSalt got error on save salt to db",
 					zap.Error(err),
 					zap.String("Salts", tools.ByteToStr(b)),
 				)
@@ -84,12 +89,12 @@ func UpdateSalt() bool {
 			break
 		}
 		if !saltFound {
-			logs.Warn("UpdateSalt could not find salt")
+			logger.Warn("UpdateSalt could not find salt")
 			return false
 		}
 		return true
 	} else {
-		logs.Warn("UpdateSalt could not find salt (length is zero)")
+		logger.Warn("UpdateSalt could not find salt (length is zero)")
 		return false
 	}
 
@@ -106,7 +111,7 @@ func Set(s *msg.SystemSalts) {
 	b, _ := json.Marshal(saltArray)
 	err := repo.System.SaveString(domain.SkSystemSalts, string(b))
 	if err != nil {
-		logs.Error("River couldn't save SystemSalts in the db", zap.Error(err))
+		logger.Error("River couldn't save SystemSalts in the db", zap.Error(err))
 		return
 	}
 	UpdateSalt()

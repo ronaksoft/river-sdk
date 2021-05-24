@@ -5,7 +5,6 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/ctrl_file/executor"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -100,7 +99,7 @@ func (d *DownloadRequest) GetID() string {
 }
 
 func (d *DownloadRequest) Prepare() error {
-	logs.Info("FileCtrl prepare DownloadRequest", zap.String("ReqID", d.GetID()))
+	logger.Info("prepare DownloadRequest", zap.String("ReqID", d.GetID()))
 	// Check temp file stat and if it does not exists, we create it
 	_, err := os.Stat(d.TempPath)
 	if err != nil {
@@ -155,7 +154,7 @@ func (d *DownloadRequest) Prepare() error {
 		d.parts <- partIndex
 	}
 
-	logs.Debug("Download Prepared",
+	logger.Debug("Download Prepared",
 		zap.String("ID", d.GetID()),
 		zap.Int32("TotalParts", d.TotalParts),
 		zap.Int32s("Finished", d.FinishedParts),
@@ -166,7 +165,7 @@ func (d *DownloadRequest) Prepare() error {
 func (d *DownloadRequest) NextAction() executor.Action {
 	// If request is canceled then return nil
 	if _, err := repo.Files.GetFileRequest(d.GetID()); err != nil {
-		logs.Warn("FileCtrl did not find DownloadRequest, we cancel it", zap.Error(err))
+		logger.Warn("did not find DownloadRequest, we cancel it", zap.Error(err))
 		return nil
 	}
 
@@ -183,7 +182,7 @@ func (d *DownloadRequest) NextAction() executor.Action {
 }
 
 func (d *DownloadRequest) ActionDone(id int32) {
-	logs.Info("FileCtrl finished download part",
+	logger.Info("finished download part",
 		zap.String("ReqID", d.GetID()),
 		zap.Int32("PartID", id),
 		zap.Int("FinishedParts", len(d.FinishedParts)),
@@ -244,7 +243,7 @@ func (a *DownloadAction) Do(ctx context.Context) {
 		file := new(msg.File)
 		err = file.Unmarshal(res.Message)
 		if err != nil {
-			logs.Warn("Downloader couldn't unmarshal server response FileGet (File)",
+			logger.Warn("Downloader couldn't unmarshal server response FileGet (File)",
 				zap.Error(err),
 				zap.Int32("Offset", offset),
 				zap.Int("Byte", len(file.Bytes)),
@@ -254,7 +253,7 @@ func (a *DownloadAction) Do(ctx context.Context) {
 		}
 		_, err := a.req.file.WriteAt(file.Bytes, int64(offset))
 		if err != nil {
-			logs.Error("Downloader couldn't write to file, will retry...",
+			logger.Error("Downloader couldn't write to file, will retry...",
 				zap.Error(err),
 				zap.Int32("Offset", offset),
 				zap.Int("Byte", len(file.Bytes)),

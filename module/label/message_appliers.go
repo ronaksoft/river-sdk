@@ -3,7 +3,6 @@ package label
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -22,14 +21,14 @@ func (r *label) labelsMany(e *rony.MessageEnvelope) {
 	u := &msg.LabelsMany{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("LabelModule couldn't unmarshal LabelsMany", zap.Error(err))
+		r.Log().Error("LabelModule couldn't unmarshal LabelsMany", zap.Error(err))
 		return
 	}
 
-	logs.Debug("LabelModule applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
+	r.Log().Debug("LabelModule applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
 
 	err = repo.Labels.Save(domain.GetTeamID(e), u.Labels...)
-	logs.WarnOnErr("LabelModule got error on applying LabelsMany", err)
+	r.Log().WarnOnErr("LabelModule got error on applying LabelsMany", err)
 
 	return
 }
@@ -38,11 +37,11 @@ func (r *label) labelItems(e *rony.MessageEnvelope) {
 	u := &msg.LabelItems{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		logs.Error("LabelModule couldn't unmarshal LabelItems", zap.Error(err))
+		r.Log().Error("LabelModule couldn't unmarshal LabelItems", zap.Error(err))
 		return
 	}
 
-	logs.Debug("LabelModule applies LabelItems")
+	r.Log().Debug("LabelModule applies LabelItems")
 
 	_ = repo.Messages.Save(u.Messages...)
 	_ = repo.Users.Save(u.Users...)

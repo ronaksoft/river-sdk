@@ -5,7 +5,6 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
@@ -95,7 +94,7 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 	file, err := repo.Files.Get(clusterID, fileID, uint64(accessHash))
 
 	if err != nil {
-		logs.Warn("Error On GetDocumentHash (Files.Get)",
+		logger.Warn("Error On GetDocumentHash (Files.Get)",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),
@@ -105,7 +104,7 @@ func (r *River) GetDocumentHash(clusterID int32, fileID int64, accessHash int64)
 	}
 
 	if file.MessageID == 0 {
-		logs.Warn("Not a message document",
+		logger.Warn("Not a message document",
 			zap.Int32("ClusterID", clusterID),
 			zap.Int64("FileID", fileID),
 			zap.Int64("AccessHash", accessHash),
