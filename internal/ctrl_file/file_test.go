@@ -7,7 +7,6 @@ import (
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	networkCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_network"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony"
@@ -89,7 +88,7 @@ func init() {
 		},
 	})
 	_File.Start()
-	logs.SetLogLevel(0)
+	testenv.Log().SetLogLevel(0)
 
 	tcpConfig := new(tcplisten.Config)
 	s := httptest.NewUnstartedServer(server{

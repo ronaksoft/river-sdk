@@ -3,7 +3,6 @@ package executor
 import (
 	"context"
 	"encoding/json"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony/tools"
 	. "github.com/smartystreets/goconvey/convey"
@@ -96,7 +95,7 @@ func (d *dummyRequest) Next() Request {
 }
 
 func init() {
-	logs.SetLogLevel(-1)
+	testenv.Log().SetLogLevel(-1)
 }
 
 func TestNewExecutor(t *testing.T) {

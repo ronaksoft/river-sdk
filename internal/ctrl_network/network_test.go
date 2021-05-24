@@ -4,7 +4,6 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/ctrl_network"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
@@ -90,7 +89,7 @@ func getServerTime() *rony.MessageEnvelope {
 }
 
 func init() {
-	logs.SetLogLevel(0)
+	testenv.Log().SetLogLevel(0)
 	ctrl = networkCtrl.New(networkCtrl.Config{
 		SeedHosts:   []string{"edge.river.im", "edge.rivermsg.com"},
 		CountryCode: "IR",

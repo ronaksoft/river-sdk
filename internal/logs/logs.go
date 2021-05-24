@@ -153,10 +153,6 @@ func Directory() string {
 	return _LogDir
 }
 
-func SetLogLevel(l int) {
-	_LogLevel.SetLevel(zapcore.Level(l))
-}
-
 func PanicF(format string, args ...interface{}) {
 	panic(fmt.Sprintf(format, args...))
 }

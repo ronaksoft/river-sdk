@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony/tools"
@@ -26,7 +25,7 @@ import (
 
 func init() {
 	repo.MustInit("./_data", false)
-	logs.SetLogLevel(2)
+	testenv.Log().SetLogLevel(2)
 }
 
 func createMediaMessage(body string, filename string, labelIDs []int32) *msg.UserMessage {

@@ -192,6 +192,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// set log level
 	logger.SetLogLevel(conf.LogLevel)
+	if conf.LogDirectory != "" {
+		logger.WarnOnErr("Initializing log file", logs.SetFilePath(conf.LogDirectory))
+	}
 
 	// Initialize realtime requests
 	r.modules = map[string]module.Module{}
