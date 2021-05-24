@@ -162,9 +162,9 @@ var SdkDeleteAllPendingMessages = &ishell.Cmd{
 }
 
 var SdkRemoteLog = &ishell.Cmd{
-	Name: "",
+	Name: "LiveLog",
 	Func: func(c *ishell.Context) {
-		logs.SetRemoteLog("https://live")
+		logs.SetRemoteLog("https://livelog.ronaksoftware.com/cli")
 	},
 }
 
@@ -184,4 +184,5 @@ func init() {
 	SDK.AddCmd(SdkResetUsage)
 	SDK.AddCmd(SdkSetTeam)
 	SDK.AddCmd(SdkGetTeam)
+	SDK.AddCmd(SdkRemoteLog)
 }

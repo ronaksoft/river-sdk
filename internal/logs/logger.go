@@ -18,6 +18,7 @@ import (
 
 type Logger struct {
 	prefix string
+	parent *Logger
 	z      *zap.Logger
 }
 
@@ -25,14 +26,18 @@ func (l *Logger) SetLogLevel(lvl int) {
 	_LogLevel.SetLevel(zapcore.Level(lvl))
 }
 
-func (l *Logger) With(name string, fields ...Field) *Logger {
+func (l *Logger) With(name string) *Logger {
 	return &Logger{
 		prefix: name,
-		z:      l.z.With(fields...),
+		parent: l,
 	}
 }
 
 func (l *Logger) write(lvl zapcore.Level, msg string, fields ...zap.Field) {
+	if l.parent != nil {
+		l.parent.write(lvl, msg, fields...)
+		return
+	}
 	if l.prefix != "" {
 		msg = fmt.Sprintf("[%s]: %s", l.prefix, msg)
 	}

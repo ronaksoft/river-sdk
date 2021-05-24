@@ -102,14 +102,14 @@ func SetRemoteLog(url string) {
 				zapcore.NewCore(
 					zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
 						TimeKey:        "ts",
-						LevelKey:       "",
+						LevelKey:       "level",
 						NameKey:        "logger",
 						CallerKey:      "caller",
 						MessageKey:     "msg",
 						StacktraceKey:  "stacktrace",
 						LineEnding:     zapcore.DefaultLineEnding,
-						EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-						EncodeTime:     zapcore.ISO8601TimeEncoder,
+						EncodeLevel:    zapcore.CapitalLevelEncoder,
+						EncodeTime:     TimeEncoder,
 						EncodeDuration: zapcore.StringDurationEncoder,
 						EncodeCaller:   zapcore.ShortCallerEncoder,
 					}),
@@ -117,10 +117,7 @@ func SetRemoteLog(url string) {
 					_LogLevel,
 				),
 			)
-		}),
-		zap.AddCaller(),
-		zap.AddCallerSkip(1),
-	)
+		}))
 }
 
 func SetSentry(userID, authID int64, dsn string) {

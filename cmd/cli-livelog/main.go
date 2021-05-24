@@ -52,7 +52,7 @@ var RootCmd = &cobra.Command{
 
 		if viper.GetBool(ConfClient) {
 			// Run Client Mode
-			fmt.Println("Client is connecting to: ", viper.GetInt(ConfServerUrl))
+			fmt.Println("Client is connecting to: ", viper.GetString(ConfServerUrl))
 			runClient()
 
 		} else {
@@ -71,7 +71,7 @@ func runClient() {
 		fmt.Println(err)
 		return
 	}
-
+	fmt.Println("Connected.")
 	for {
 		data, err := wsutil.ReadServerText(conn)
 		if err != nil {
