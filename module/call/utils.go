@@ -68,6 +68,7 @@ type Info struct {
 	requestParticipantIds  []int64
 	requests               []*UpdatePhoneCall
 	iceServer              *msg.IceServer
+	requestMap             map[int64]struct{}
 	mu                     *sync.RWMutex
 }
 

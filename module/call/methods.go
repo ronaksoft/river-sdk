@@ -55,6 +55,11 @@ func (c *call) destroy(callID int64) {
 	c.mu.RUnlock()
 	c.mu.Lock()
 	c.peerConnections = make(map[int32]*Connection)
+	if info, ok := c.callInfo[callID]; ok {
+		for reqID := range info.requestMap {
+			c.SDK().QueueCtrl().CancelRequest(reqID)
+		}
+	}
 	delete(c.callInfo, callID)
 	c.activeCallID = 0
 	c.peer = nil
@@ -540,6 +545,7 @@ func (c *call) initCallParticipants(callID int64, participants []*msg.InputUser)
 		requestParticipantIds: nil,
 		requests:              nil,
 		iceServer:             nil,
+		requestMap:            make(map[int64]struct{}),
 		mu:                    &sync.RWMutex{},
 	}
 	c.mu.Unlock()
@@ -588,6 +594,7 @@ func (c *call) initParticipants(callID int64, participants []*msg.PhoneParticipa
 				requestParticipantIds: nil,
 				requests:              nil,
 				iceServer:             nil,
+				requestMap:            make(map[int64]struct{}),
 				mu:                    &sync.RWMutex{},
 			}
 			c.mu.Unlock()
@@ -670,6 +677,7 @@ func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequ
 		requestParticipantIds: []int64{in.UserID},
 		requests:              []*UpdatePhoneCall{in},
 		iceServer:             nil,
+		requestMap:            make(map[int64]struct{}),
 		mu:                    &sync.RWMutex{},
 	}
 	c.mu.Unlock()
@@ -2033,4 +2041,30 @@ func (c *call) checkCallTimeout(connId int32) {
 
 func (c *call) callUpdate(action msg.CallUpdate, b []byte) {
 	c.callback.OnUpdate(int32(action), b)
+}
+
+func (c *call) appendCallRequestID(callID, reqID int64) {
+	if callID == 0 {
+		return
+	}
+
+	info := c.getCallInfo(callID)
+	if info != nil {
+		info.mu.Lock()
+		info.requestMap[reqID] = struct{}{}
+		info.mu.Unlock()
+	}
+}
+
+func (c *call) removeCallRequestID(callID, reqID int64) {
+	if callID == 0 {
+		return
+	}
+
+	info := c.getCallInfo(callID)
+	if info != nil {
+		info.mu.Lock()
+		delete(info.requestMap, reqID)
+		info.mu.Unlock()
+	}
 }
