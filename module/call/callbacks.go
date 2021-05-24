@@ -3,7 +3,6 @@ package call
 import (
 	"errors"
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
 )
 
@@ -29,7 +28,7 @@ type Callback struct {
 
 func (c *call) CallbackInitConnection(connId int32, initData *msg.PhoneInit) int64 {
 	if c.callback.InitConnection == nil {
-		logs.Error("callbacks are not initialized")
+		c.Log().Error("callbacks are not initialized")
 		return -1
 	}
 
@@ -136,7 +135,7 @@ func (c *call) CallbackSetOfferGetAnswerSDP(connId int32, offerSdp *msg.PhoneAct
 
 func (c *call) CallbackSetAnswerSDP(connId int32, answerSdp *msg.PhoneActionSDPAnswer) bool {
 	if c.callback.SetAnswerSDP == nil {
-		logs.Error("callbacks are not initialized")
+		c.Log().Error("callbacks are not initialized")
 		return false
 	}
 
@@ -161,7 +160,7 @@ func (c *call) CallbackSetAnswerSDP(connId int32, answerSdp *msg.PhoneActionSDPA
 
 func (c *call) CallbackAddIceCandidate(connId int32, candidate *msg.CallRTCIceCandidate) bool {
 	if c.callback.AddIceCandidate == nil {
-		logs.Error("callbacks are not initialized")
+		c.Log().Error("callbacks are not initialized")
 		return false
 	}
 

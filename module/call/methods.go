@@ -40,7 +40,7 @@ func (c *call) tryReconnect(connId int32) (err error) {
 func (c *call) destroy(callID int64) {
 	closeFn := func(conn *Connection) {
 		if c.callback.CloseConnection == nil {
-			logs.Error("callbacks are not initialized")
+			c.Log().Error("callbacks are not initialized")
 			return
 		}
 		_ = c.callback.CloseConnection(conn.ConnId, true)
@@ -1851,7 +1851,7 @@ func (c *call) sdpAnswerUpdated(in *UpdatePhoneCall) {
 	}
 
 	if c.callback.SetAnswerSDP == nil {
-		logs.Error("callbacks are not initialized")
+		c.Log().Error("callbacks are not initialized")
 		return
 	}
 
@@ -2080,7 +2080,7 @@ func (c *call) checkCallTimeout(connId int32) {
 
 func (c *call) callUpdate(action msg.CallUpdate, b []byte) {
 	if c.callback.OnUpdate == nil {
-		logs.Error("callbacks are not initialized")
+		c.Log().Error("callbacks are not initialized")
 		return
 	}
 

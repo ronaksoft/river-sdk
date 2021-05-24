@@ -30,6 +30,14 @@ import (
 	"time"
 )
 
+var (
+	logger *logs.Logger
+)
+
+func init() {
+	logger = logs.With("NetCtrl")
+}
+
 // Config network controller config
 type Config struct {
 	SeedHosts   []string
@@ -41,7 +49,6 @@ type Config struct {
 
 // Controller websocket network controller
 type Controller struct {
-	logger *logs.Logger
 	// Authorization Keys
 	authID        int64
 	authKey       []byte
@@ -81,7 +88,6 @@ type Controller struct {
 // New constructs the network controller
 func New(config Config) *Controller {
 	ctrl := &Controller{
-		logger:           logs.With("NetCtrl"),
 		wsPings:          make(map[uint64]chan struct{}),
 		endPoints:        config.SeedHosts,
 		countryCode:      strings.ToUpper(config.CountryCode),
@@ -132,7 +138,7 @@ func (ctrl *Controller) createWebsocketDialer(timeout time.Duration) {
 			if err != nil {
 				return nil, err
 			}
-			ctrl.logger.Info("look up for DNS", zap.String("Addr", addr), zap.Any("IPs", ips))
+			logger.Info("look up for DNS", zap.String("Addr", addr), zap.Any("IPs", ips))
 
 			for _, ip := range ips {
 				if ip.To4() != nil {
@@ -178,7 +184,7 @@ func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntr
 		m := entries[0].Value().(*rony.MessageEnvelope)
 		err := ctrl.writeToWebsocket(m)
 		if err != nil {
-			ctrl.logger.Warn("got error on flushing outgoing messages",
+			logger.Warn("got error on flushing outgoing messages",
 				zap.Uint64("ReqID", m.RequestID),
 				zap.String("C", registry.ConstructorName(m.Constructor)),
 				zap.Error(err),
@@ -188,7 +194,7 @@ func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntr
 		messages := make([]*rony.MessageEnvelope, 0, itemsCount)
 		for idx := range entries {
 			m := entries[idx].Value().(*rony.MessageEnvelope)
-			ctrl.logger.Debug("Message",
+			logger.Debug("Message",
 				zap.Int("Idx", idx),
 				zap.String("TeamID", m.Get("TeamID", "0")),
 				zap.String("TeamAccess", m.Get("TeamAccess", "0")),
@@ -222,7 +228,7 @@ func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntr
 			messageEnvelope.RequestID = 0
 			err := ctrl.writeToWebsocket(messageEnvelope)
 			if err != nil {
-				ctrl.logger.Warn("got error on flushing outgoing messages",
+				logger.Warn("got error on flushing outgoing messages",
 					zap.Error(err),
 					zap.Int("Count", len(chunk)),
 				)
@@ -234,7 +240,7 @@ func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntr
 
 	}
 
-	ctrl.logger.Debug("flushed outgoing messages",
+	logger.Debug("flushed outgoing messages",
 		zap.Int("Count", itemsCount),
 	)
 }
@@ -254,7 +260,7 @@ func (ctrl *Controller) watchDog() {
 				go ctrl.Connect()
 			}
 		case <-ctrl.stopChannel:
-			ctrl.logger.Info("NetCtrl's watchdog stopped!")
+			logger.Info("NetCtrl's watchdog stopped!")
 			return
 		}
 	}
@@ -262,7 +268,7 @@ func (ctrl *Controller) watchDog() {
 
 // Ping the server to check connectivity
 func (ctrl *Controller) Ping(id uint64, timeout time.Duration) error {
-	ctrl.logger.Debug("pings server", zap.Uint64("ID", id))
+	logger.Debug("pings server", zap.Uint64("ID", id))
 	// Create a channel for pong
 	ch := make(chan struct{}, 1)
 	ctrl.wsPingsMtx.Lock()
@@ -299,7 +305,7 @@ func (ctrl *Controller) Ping(id uint64, timeout time.Duration) error {
 // This is the background routine listen for incoming websocket packets and _Decrypt
 // the received message, if necessary, and  pass the extracted envelopes to messageHandler.
 func (ctrl *Controller) receiver() {
-	defer ctrl.logger.RecoverPanic(
+	defer logger.RecoverPanic(
 		"NetworkController:: receiver",
 		domain.M{
 			"AuthID": ctrl.authID,
@@ -319,15 +325,15 @@ func (ctrl *Controller) receiver() {
 		_ = ctrl.wsConn.SetReadDeadline(time.Now().Add(domain.WebsocketIdleTimeout))
 		messages, err = wsutil.ReadServerMessage(ctrl.wsConn, messages)
 		if err != nil {
-			ctrl.logger.Warn("got error on reading server message", zap.Error(err))
+			logger.Warn("got error on reading server message", zap.Error(err))
 			// If we return then watchdog will re-connect
 			return
 		}
-		ctrl.logger.Debug("received message", zap.Int("L", len(messages)))
+		logger.Debug("received message", zap.Int("L", len(messages)))
 		for _, message := range messages {
 			switch message.OpCode {
 			case ws.OpPong:
-				ctrl.logger.Info("Pong Received", zap.Int("L", len(message.Payload)))
+				logger.Info("Pong Received", zap.Int("L", len(message.Payload)))
 				if len(message.Payload) == 8 {
 					pingID := binary.BigEndian.Uint64(message.Payload)
 					ctrl.wsPingsMtx.Lock()
@@ -342,7 +348,7 @@ func (ctrl *Controller) receiver() {
 				// If it is a BINARY message
 				err := res.Unmarshal(message.Payload)
 				if err != nil {
-					ctrl.logger.Error("couldn't unmarshal received BinaryMessage",
+					logger.Error("couldn't unmarshal received BinaryMessage",
 						zap.Error(err),
 						zap.String("Dump", string(message.Payload)),
 					)
@@ -353,10 +359,10 @@ func (ctrl *Controller) receiver() {
 					receivedEnvelope := new(rony.MessageEnvelope)
 					err = receivedEnvelope.Unmarshal(res.Payload)
 					if err != nil {
-						ctrl.logger.Error("couldn't unmarshal plain-text MessageEnvelope", zap.Error(err))
+						logger.Error("couldn't unmarshal plain-text MessageEnvelope", zap.Error(err))
 						continue
 					}
-					ctrl.logger.Debug("received plain-text message",
+					logger.Debug("received plain-text message",
 						zap.String("C", registry.ConstructorName(receivedEnvelope.Constructor)),
 						zap.Uint64("ReqID", receivedEnvelope.RequestID),
 					)
@@ -367,7 +373,7 @@ func (ctrl *Controller) receiver() {
 				// We received an encrypted message
 				decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
 				if err != nil {
-					ctrl.logger.Error("couldn't decrypt the received message",
+					logger.Error("couldn't decrypt the received message",
 						zap.String("Error", err.Error()),
 						zap.Int64("ctrl.authID", ctrl.authID),
 						zap.Int64("resp.AuthID", res.AuthID),
@@ -379,10 +385,10 @@ func (ctrl *Controller) receiver() {
 				err = receivedEncryptedPayload.Unmarshal(decryptedBytes)
 				pools.Bytes.Put(decryptedBytes)
 				if err != nil {
-					ctrl.logger.Error("couldn't unmarshal decrypted message", zap.Error(err))
+					logger.Error("couldn't unmarshal decrypted message", zap.Error(err))
 					continue
 				}
-				ctrl.logger.Debug("received encrypted message",
+				logger.Debug("received encrypted message",
 					zap.String("C", registry.ConstructorName(receivedEncryptedPayload.Envelope.Constructor)),
 					zap.Uint64("ReqID", receivedEncryptedPayload.Envelope.RequestID),
 				)
@@ -478,20 +484,20 @@ func (ctrl *Controller) Start() {
 
 // Stop sends stop signal to keepAlive and watchDog routines.
 func (ctrl *Controller) Stop() {
-	ctrl.logger.Info("is stopping")
+	logger.Info("is stopping")
 	ctrl.Disconnect()
 	select {
 	case ctrl.stopChannel <- true: // receiver may or may not be listening
 	default:
 	}
-	ctrl.logger.Info("stopped")
+	logger.Info("stopped")
 }
 
 // Connect dial websocket
 func (ctrl *Controller) Connect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkConnect", func() (i interface{}, e error) {
-		ctrl.logger.Info("is connecting")
-		defer ctrl.logger.RecoverPanic(
+		logger.Info("is connecting")
+		defer logger.RecoverPanic(
 			"NetCtrl::Connect",
 			domain.M{
 				"AuthID": ctrl.authID,
@@ -530,7 +536,7 @@ func (ctrl *Controller) Connect() {
 				attempts++
 				if attempts > 5 {
 					attempts = 0
-					ctrl.logger.Info("got error on Dial", zap.Error(err), zap.String("Endpoint", ctrl.curEndpoint))
+					logger.Info("got error on Dial", zap.Error(err), zap.String("Endpoint", ctrl.curEndpoint))
 					ctrl.createWebsocketDialer(domain.WebsocketDialTimeoutLong)
 				}
 				continue
@@ -543,7 +549,7 @@ func (ctrl *Controller) Connect() {
 			// it should be started here cuz we need receiver to get AuthRecall answer
 			// WebsocketSend Signal to start the 'receiver' and 'keepAlive' routines
 			ctrl.connectChannel <- true
-			ctrl.logger.Info("connected")
+			logger.Info("connected")
 			ctrl.updateNetworkStatus(domain.NetworkConnected)
 
 			// Call the OnConnect handler here b4 changing network status that trigger queue to start working
@@ -578,7 +584,7 @@ func (ctrl *Controller) UpdateEndpoint(country string) {
 	}
 
 	ctrl.curEndpoint = strings.Join(endpointParts, ".")
-	ctrl.logger.Info("endpoints updated",
+	logger.Info("endpoints updated",
 		zap.String("WS", ctrl.curEndpoint),
 		zap.String("Http", ctrl.curEndpoint),
 		zap.String("Country", ctrl.countryCode),
@@ -591,7 +597,7 @@ func (ctrl *Controller) Disconnect() {
 		ctrl.wsKeepConnection = false
 		if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.Close()
-			ctrl.logger.Info("disconnected")
+			logger.Info("disconnected")
 		}
 		return nil, nil
 	})
@@ -601,7 +607,7 @@ func (ctrl *Controller) Disconnect() {
 // If authID and authKey are defined then sending messages will be encrypted before
 // writing on the wire.
 func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
-	ctrl.logger.Info("set authorization info", zap.Int64("AuthID", authID))
+	logger.Info("set authorization info", zap.Int64("AuthID", authID))
 	ctrl.authKey = make([]byte, len(authKey))
 	ctrl.authID = authID
 	copy(ctrl.authKey, authKey)
@@ -613,7 +619,7 @@ func (ctrl *Controller) incMessageSeq() int64 {
 
 // WebsocketSend if 'direct' sends immediately otherwise it put it in flusher
 func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, flag domain.RequestDelegateFlag) error {
-	defer ctrl.logger.RecoverPanic(
+	defer logger.RecoverPanic(
 		"NetCtrl::WebsocketSend",
 		domain.M{
 			"AuthID": ctrl.authID,
@@ -645,7 +651,7 @@ func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, flag do
 	return nil
 }
 func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) error {
-	defer ctrl.logger.RecoverPanic(
+	defer logger.RecoverPanic(
 		"NetCtrl::writeToWebsocket",
 		domain.M{
 			"AuthID": ctrl.authID,
@@ -667,7 +673,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 		protoMessage.MessageKey = protoMessage.MessageKey[:32]
 	}
 
-	ctrl.logger.Debug("call writeToWebsocket",
+	logger.Debug("call writeToWebsocket",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("TeamID", msgEnvelope.Get("TeamID", "0")),
@@ -712,7 +718,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 		_ = ctrl.wsConn.Close()
 		return err
 	}
-	ctrl.logger.Debug("sent over websocket",
+	logger.Debug("sent over websocket",
 		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.Duration("Duration", time.Since(startTime)),
 	)
@@ -725,7 +731,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	isUICallback bool, flag domain.RequestDelegateFlag, timeout time.Duration,
 ) {
-	defer ctrl.logger.RecoverPanic(
+	defer logger.RecoverPanic(
 		"NetCtrl::WebsocketCommandWithTimeout",
 		domain.M{
 			"OS":  domain.ClientOS,
@@ -735,7 +741,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 		nil,
 	)
 
-	ctrl.logger.Debug("fires websocket command",
+	logger.Debug("fires websocket command",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
 	)
@@ -748,7 +754,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
 		err := ctrl.WebsocketSend(req, flag)
 		if err != nil {
-			ctrl.logger.Warn("got error from NetCtrl",
+			logger.Warn("got error from NetCtrl",
 				zap.String("Error", err.Error()),
 				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
@@ -761,7 +767,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 
 		select {
 		case <-time.After(reqCB.Timeout):
-			ctrl.logger.Debug("got timeout on websocket command",
+			logger.Debug("got timeout on websocket command",
 				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
 			)
@@ -775,7 +781,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 			}
 			return
 		case res := <-reqCB.ResponseChannel:
-			ctrl.logger.Debug("got response for websocket command",
+			logger.Debug("got response for websocket command",
 				zap.Uint64("ReqID", req.RequestID),
 				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
 				zap.String("ResC", registry.ConstructorName(res.Constructor)),
@@ -890,7 +896,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		return nil, err
 	}
 
-	ctrl.logger.Info("SendHttp",
+	logger.Info("SendHttp",
 		zap.String("URL", ctrl.curEndpoint),
 		zap.String("ReqC", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("ResC", registry.ConstructorName(receivedEncryptedPayload.Envelope.Constructor)),
@@ -950,14 +956,14 @@ func (ctrl *Controller) Reconnect() {
 func (ctrl *Controller) WaitForNetwork(waitForRecall bool) {
 	// Wait While Network is Disconnected or Connecting
 	for ctrl.GetQuality() != domain.NetworkConnected {
-		ctrl.logger.Debug("is waiting for Network",
+		logger.Debug("is waiting for Network",
 			zap.String("Quality", ctrl.GetQuality().ToString()),
 		)
 		time.Sleep(time.Second)
 	}
 	if waitForRecall {
 		for !ctrl.GetAuthRecalled() {
-			ctrl.logger.Debug("is waiting for AuthRecall")
+			logger.Debug("is waiting for AuthRecall")
 			time.Sleep(time.Second)
 		}
 	}

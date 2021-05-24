@@ -25,6 +25,13 @@ import (
    Auditor: Ehsan N. Moosa (E2)
    Copyright Ronak Software Group 2018
 */
+var (
+	logger *logs.Logger
+)
+
+func init() {
+	logger = logs.With("FileCtrl")
+}
 
 type Config struct {
 	Network              *networkCtrl.Controller
@@ -42,7 +49,6 @@ type Controller struct {
 	mtxDownloads sync.Mutex
 	downloader   *executor.Executor
 	uploader     *executor.Executor
-	logger       *logs.Logger
 
 	// Callbacks
 	onProgressChanged func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64)
@@ -59,7 +65,6 @@ func New(config Config) *Controller {
 	ctrl := &Controller{
 		network:           config.Network,
 		postUploadProcess: config.PostUploadProcessCB,
-		logger:            logs.With("FileCtrl"),
 	}
 
 	if config.CompletedCB == nil {
@@ -86,7 +91,7 @@ func New(config Config) *Controller {
 		return r
 	}, executor.WithConcurrency(config.MaxInflightDownloads))
 	if err != nil {
-		ctrl.logger.Fatal("got error on initializing uploader", zap.Error(err))
+		logger.Fatal("got error on initializing uploader", zap.Error(err))
 	}
 
 	ctrl.uploader, err = executor.NewExecutor(config.DbPath, "uploader", func(data []byte) executor.Request {
@@ -99,7 +104,7 @@ func New(config Config) *Controller {
 		return r
 	}, executor.WithConcurrency(config.MaxInflightUploads))
 	if err != nil {
-		ctrl.logger.Fatal("got error on initializing uploader", zap.Error(err))
+		logger.Fatal("got error on initializing uploader", zap.Error(err))
 	}
 
 	return ctrl
@@ -130,11 +135,11 @@ func (ctrl *Controller) GetRequest(clusterID int32, fileID int64, accessHash uin
 	return req
 }
 func (ctrl *Controller) CancelUploadRequest(fileID int64) {
-	ctrl.logger.Info("cancels UploadRequest", zap.Int64("FileID", fileID))
+	logger.Info("cancels UploadRequest", zap.Int64("FileID", fileID))
 	ctrl.CancelRequest(getRequestID(0, fileID, 0))
 }
 func (ctrl *Controller) CancelDownloadRequest(clusterID int32, fileID int64, accessHash uint64) {
-	ctrl.logger.Info("cancels DownloadRequest",
+	logger.Info("cancels DownloadRequest",
 		zap.Int32("ClusterID", clusterID),
 		zap.Int64("FileID", fileID),
 	)
@@ -145,7 +150,7 @@ func (ctrl *Controller) CancelRequest(reqID string) {
 }
 
 func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash uint64, skipDelegates bool) (reqID string, err error) {
-	defer ctrl.logger.RecoverPanic(
+	defer logger.RecoverPanic(
 		"FileCtrl::DownloadASync",
 		domain.M{
 			"OS":        domain.ClientOS,
@@ -175,7 +180,7 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 			PeerID:           clientFile.PeerID,
 		},
 	}, false)
-	ctrl.logger.WarnOnErr("Error On DownloadAsync", err,
+	logger.WarnOnErr("Error On DownloadAsync", err,
 		zap.Int32("ClusterID", clusterID),
 		zap.Int64("FileID", fileID),
 		zap.Uint64("AccessHash", accessHash),
@@ -184,7 +189,7 @@ func (ctrl *Controller) DownloadAsync(clusterID int32, fileID int64, accessHash 
 	return getRequestID(clusterID, fileID, accessHash), err
 }
 func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash uint64, skipDelegate bool) (filePath string, err error) {
-	defer ctrl.logger.RecoverPanic(
+	defer logger.RecoverPanic(
 		"FileCtrl::DownloadSync",
 		domain.M{
 			"OS":        domain.ClientOS,
@@ -452,7 +457,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 	return
 }
 func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
-	ctrl.logger.Info("received download request",
+	logger.Info("received download request",
 		zap.Bool("Blocking", blocking),
 		zap.Int64("FileID", req.FileID),
 		zap.Uint64("AccessHash", req.AccessHash),
@@ -506,7 +511,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 		FilePath:       filePath,
 		PeerID:         0,
 	})
-	ctrl.logger.WarnOnErr("Error On UploadUserPhoto", err)
+	logger.WarnOnErr("Error On UploadUserPhoto", err)
 	reqID = getRequestID(0, fileID, 0)
 	return
 }
@@ -524,14 +529,14 @@ func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID 
 		FilePath:       filePath,
 		PeerID:         groupID,
 	})
-	ctrl.logger.WarnOnErr("Error On UploadGroupPhoto", err)
+	logger.WarnOnErr("Error On UploadGroupPhoto", err)
 	reqID = getRequestID(0, fileID, 0)
 	return
 }
 func (ctrl *Controller) UploadMessageDocument(
 	messageID int64, filePath, thumbPath string, fileID, thumbID int64, fileSha256 []byte, peerID int64, checkSha256 bool,
 ) {
-	defer ctrl.logger.RecoverPanic(
+	defer logger.RecoverPanic(
 		"FileCtrl::UploadMessageDocument",
 		domain.M{
 			"OS":       domain.ClientOS,
@@ -542,13 +547,13 @@ func (ctrl *Controller) UploadMessageDocument(
 	)
 
 	if _, err := os.Stat(filePath); err != nil {
-		ctrl.logger.Warn("got error on upload message document (thumbnail)", zap.Error(err))
+		logger.Warn("got error on upload message document (thumbnail)", zap.Error(err))
 		return
 	}
 
 	if thumbPath != "" {
 		if _, err := os.Stat(thumbPath); err != nil {
-			ctrl.logger.Warn("got error on upload message document (thumbnail)", zap.Error(err))
+			logger.Warn("got error on upload message document (thumbnail)", zap.Error(err))
 			return
 		}
 	}
@@ -586,7 +591,7 @@ func (ctrl *Controller) UploadMessageDocument(
 
 	err := ctrl.upload(reqFile)
 	if err != nil {
-		ctrl.logger.WarnOnErr("Error On Upload Message Media", err, zap.Int64("FileID", reqFile.FileID))
+		logger.WarnOnErr("Error On Upload Message Media", err, zap.Int64("FileID", reqFile.FileID))
 	}
 }
 func (ctrl *Controller) upload(req *msg.ClientFileRequest) error {
