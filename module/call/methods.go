@@ -191,7 +191,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 	c.peer = peer
 	initRes, err := c.apiInit(peer, callID)
 	if err != nil {
-		c.Log().Warn("Init", zap.Error(err))
+		c.Log().WarnOnErr("Init", err)
 		return
 	}
 
@@ -218,7 +218,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 		c.initParticipants(c.activeCallID, joinRes.Participants, true)
 		_, err = c.initManyConnections(peer, c.activeCallID, false, nil)
 		if err != nil {
-			c.Log().Warn("initManyConnections", zap.Error(err))
+			c.Log().WarnOnErr("initManyConnections", err)
 			return
 		}
 	} else {
@@ -226,7 +226,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 		c.initCallParticipants(TempCallID, participants)
 		_, err = c.initManyConnections(peer, TempCallID, true, nil)
 		if err != nil {
-			c.Log().Warn("initManyConnections", zap.Error(err))
+			c.Log().WarnOnErr("initManyConnections", err)
 			return
 		}
 
@@ -293,7 +293,7 @@ func (c *call) accept(callID int64, video bool) (err error) {
 				defer wg.Done()
 				_, innerErr := c.initManyConnections(c.peer, callID, false, req)
 				if innerErr != nil {
-					c.Log().Warn("initManyConnections", zap.Error(err))
+					c.Log().WarnOnErr("initManyConnections", err)
 					return
 				}
 
@@ -809,7 +809,7 @@ func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator 
 							pc.mu.Unlock()
 							_, innerErr := c.callUserSingle(peer, participant, c.activeCallID)
 							if innerErr != nil {
-								c.Log().Warn("callUserSingle", zap.Error(innerErr))
+								c.Log().WarnOnErr("callUserSingle", innerErr)
 							}
 							if pc.Try >= RetryLimit {
 								if pc.connectTicker != nil {
@@ -826,7 +826,7 @@ func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator 
 		}
 		_, err = c.callUser(peer, initiator, callResults, c.activeCallID)
 		if err != nil {
-			c.Log().Warn("callUser", zap.Error(err))
+			c.Log().WarnOnErr("callUser", err)
 		}
 	}
 	return
