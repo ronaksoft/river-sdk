@@ -56,6 +56,5 @@ const (
 type RequestDelegate interface {
 	OnComplete(b []byte)
 	OnTimeout(err error)
-	OnProgress(percent int64)
 	Flags() RequestDelegateFlag
 }

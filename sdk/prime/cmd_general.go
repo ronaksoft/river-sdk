@@ -98,6 +98,7 @@ func (r *River) executeCommand(
 		r.delegateMutex.Unlock()
 	}
 
+	createTime := tools.NanoTime()
 	da := domain.DelegateAdapterFromRequest(
 		domain.NewRequestDelegate(
 			func(b []byte) {
@@ -108,6 +109,11 @@ func (r *River) executeCommand(
 				}
 			},
 			func(err error) {
+				logger.Info("Request timeout delegate called",
+					zap.Duration("D", time.Duration(tools.NanoTime()-createTime)),
+					zap.String("C", registry.ConstructorName(constructor)),
+					zap.Int64("ReqID", requestID),
+				)
 				delegate.OnTimeout(err)
 				releaseDelegate(r, uint64(requestID))
 				if blockingMode {
