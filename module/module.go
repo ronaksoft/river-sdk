@@ -8,7 +8,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"github.com/ronaksoft/rony"
-	"time"
 )
 
 /*
@@ -37,7 +36,7 @@ type SDK interface {
 	GetConnInfo() domain.RiverConfigurator
 	Module(name string) Module
 	Execute(constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag) (requestID int64, err error)
-	ExecuteWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag, timeout time.Duration) (requestID int64, err error)
+	ExecuteWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag) (requestID int64, err error)
 }
 
 type Module interface {

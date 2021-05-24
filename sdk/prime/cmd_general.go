@@ -39,7 +39,7 @@ func (r *River) Execute(constructor int64, commandBytes []byte, cb domain.Callba
 	)
 }
 
-func (r *River) ExecuteWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag, timeout time.Duration) (requestID int64, err error) {
+func (r *River) ExecuteWithTeam(teamID, accessHash, constructor int64, commandBytes []byte, cb domain.Callback, flags domain.RequestDelegateFlag) (requestID int64, err error) {
 	return r.ExecuteCommandWithTeam(
 		teamID, accessHash, constructor, commandBytes,
 		domain.NewRequestDelegate(
@@ -51,7 +51,7 @@ func (r *River) ExecuteWithTeam(teamID, accessHash, constructor int64, commandBy
 			func(err error) {
 				cb.OnTimeout()
 			}, flags),
-		timeout,
+		domain.DefaultTimeout,
 	)
 }
 
