@@ -86,7 +86,7 @@ func New(config Config) *Controller {
 		return r
 	}, executor.WithConcurrency(config.MaxInflightDownloads))
 	if err != nil {
-		ctrl.logger.Fatal("FileCtrl got error on initializing uploader", zap.Error(err))
+		ctrl.logger.Fatal("got error on initializing uploader", zap.Error(err))
 	}
 
 	ctrl.uploader, err = executor.NewExecutor(config.DbPath, "uploader", func(data []byte) executor.Request {
@@ -99,7 +99,7 @@ func New(config Config) *Controller {
 		return r
 	}, executor.WithConcurrency(config.MaxInflightUploads))
 	if err != nil {
-		ctrl.logger.Fatal("FileCtrl got error on initializing uploader", zap.Error(err))
+		ctrl.logger.Fatal("got error on initializing uploader", zap.Error(err))
 	}
 
 	return ctrl
@@ -130,11 +130,11 @@ func (ctrl *Controller) GetRequest(clusterID int32, fileID int64, accessHash uin
 	return req
 }
 func (ctrl *Controller) CancelUploadRequest(fileID int64) {
-	ctrl.logger.Info("FileCtrl cancels UploadRequest", zap.Int64("FileID", fileID))
+	ctrl.logger.Info("cancels UploadRequest", zap.Int64("FileID", fileID))
 	ctrl.CancelRequest(getRequestID(0, fileID, 0))
 }
 func (ctrl *Controller) CancelDownloadRequest(clusterID int32, fileID int64, accessHash uint64) {
-	ctrl.logger.Info("FileCtrl cancels DownloadRequest",
+	ctrl.logger.Info("cancels DownloadRequest",
 		zap.Int32("ClusterID", clusterID),
 		zap.Int64("FileID", fileID),
 	)
@@ -452,7 +452,7 @@ func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath 
 	return
 }
 func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
-	ctrl.logger.Info("FileCtrl received download request",
+	ctrl.logger.Info("received download request",
 		zap.Bool("Blocking", blocking),
 		zap.Int64("FileID", req.FileID),
 		zap.Uint64("AccessHash", req.AccessHash),
@@ -542,13 +542,13 @@ func (ctrl *Controller) UploadMessageDocument(
 	)
 
 	if _, err := os.Stat(filePath); err != nil {
-		ctrl.logger.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
+		ctrl.logger.Warn("got error on upload message document (thumbnail)", zap.Error(err))
 		return
 	}
 
 	if thumbPath != "" {
 		if _, err := os.Stat(thumbPath); err != nil {
-			ctrl.logger.Warn("FileCtrl got error on upload message document (thumbnail)", zap.Error(err))
+			ctrl.logger.Warn("got error on upload message document (thumbnail)", zap.Error(err))
 			return
 		}
 	}

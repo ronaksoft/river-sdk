@@ -89,13 +89,13 @@ func (ctrl *Controller) distributor() {
 		// Prepare
 		req := request{}
 		if err := json.Unmarshal(item.Value, &req); err != nil {
-			ctrl.logger.Error("QueueCtrl could not unmarshal popped request", zap.Error(err))
+			ctrl.logger.Error("could not unmarshal popped request", zap.Error(err))
 			continue
 		}
 
 		// If request is already canceled ignore it
 		if ctrl.IsRequestCancelled(int64(req.ID)) {
-			ctrl.logger.Info("QueueCtrl discarded a canceled request",
+			ctrl.logger.Info("discarded a canceled request",
 				zap.Uint64("ReqID", req.ID),
 				zap.String("C", registry.ConstructorName(req.MessageEnvelope.Constructor)),
 			)
@@ -150,7 +150,7 @@ func (ctrl *Controller) executor(req request) {
 
 	// Try to send it over wire, if error happened put it back into the queue
 	if err := ctrl.networkCtrl.WebsocketSend(req.MessageEnvelope, 0); err != nil {
-		ctrl.logger.Info("QueueCtrl re-push the request into the queue", zap.Error(err))
+		ctrl.logger.Info("re-push the request into the queue", zap.Error(err))
 		ctrl.addToWaitingList(&req)
 		return
 	}
@@ -220,7 +220,7 @@ func (ctrl *Controller) executor(req request) {
 				reqCB.SuccessCallback(res)
 			}
 		} else {
-			ctrl.logger.Debug("QueueCtrl received response but no callback exists!!!",
+			ctrl.logger.Debug("received response but no callback exists!!!",
 				zap.String("C", registry.ConstructorName(res.Constructor)),
 				zap.Uint64("ReqID", res.RequestID),
 			)
@@ -245,7 +245,7 @@ func (ctrl *Controller) EnqueueCommand(
 		nil,
 	)
 
-	ctrl.logger.Debug("QueueCtrl enqueues command",
+	ctrl.logger.Debug("enqueues command",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
 	)
@@ -265,7 +265,7 @@ func (ctrl *Controller) EnqueueCommand(
 
 // Start queue
 func (ctrl *Controller) Start(resetQueue bool) {
-	ctrl.logger.Info("QueueCtrl started")
+	ctrl.logger.Info("started")
 	if resetQueue {
 		_ = os.RemoveAll(ctrl.dataDir)
 	}
@@ -282,7 +282,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 		}
 		switch pmsg.MediaType {
 		case msg.InputMediaType_InputMediaTypeEmpty:
-			ctrl.logger.Info("QueueCtrl loads pending messages",
+			ctrl.logger.Info("loads pending messages",
 				zap.Int64("ID", pmsg.ID),
 				zap.Int64("FileID", pmsg.FileID),
 			)
@@ -332,7 +332,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 
 // Stop queue
 func (ctrl *Controller) Stop() {
-	ctrl.logger.Info("QueueCtrl stopped")
+	ctrl.logger.Info("stopped")
 	ctrl.DropQueue()
 
 }
@@ -361,7 +361,7 @@ func (ctrl *Controller) DropQueue() {
 		return ctrl.waitingList.Drop()
 	})
 	if err != nil {
-		ctrl.logger.Warn("QueueCtrl got error on dropping queue")
+		ctrl.logger.Warn("got error on dropping queue")
 	}
 }
 
@@ -371,7 +371,7 @@ func (ctrl *Controller) OpenQueue() (err error) {
 		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
 			err = os.RemoveAll(ctrl.dataDir)
 			if err != nil {
-				ctrl.logger.Warn("QueueCtrl we got error on removing queue directory", zap.Error(err))
+				ctrl.logger.Warn("we got error on removing queue directory", zap.Error(err))
 			}
 			return err
 		} else {

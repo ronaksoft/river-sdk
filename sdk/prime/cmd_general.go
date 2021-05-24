@@ -306,11 +306,11 @@ func getServerKeys(r *River) (sk *msg.SystemKeys, err error) {
 				sk = &msg.SystemKeys{}
 				err = sk.Unmarshal(res.Message)
 				if err != nil {
-					logs.Error("SyncCtrl couldn't unmarshal SystemKeys response", zap.Error(err))
+					logs.Error("couldn't unmarshal SystemKeys response", zap.Error(err))
 					return
 				}
 
-				logs.Debug("SyncCtrl received SystemKeys",
+				logs.Debug("received SystemKeys",
 					zap.Int("Keys", len(sk.RSAPublicKeys)),
 					zap.Int("DHGroups", len(sk.DHGroups)),
 				)

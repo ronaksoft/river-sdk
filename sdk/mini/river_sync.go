@@ -34,7 +34,7 @@ func (r *River) syncServerTime() (err error) {
 				x := &msg.SystemServerTime{}
 				err = x.Unmarshal(m.Message)
 				if err != nil {
-					r.logger.Error("SyncCtrl couldn't unmarshal SystemGetServerTime response", zap.Error(err))
+					r.logger.Error("couldn't unmarshal SystemGetServerTime response", zap.Error(err))
 					return
 				}
 				clientTime := time.Now().Unix()
