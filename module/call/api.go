@@ -473,6 +473,7 @@ func (c *call) executeRemoteCommand(
 				Constructor:  constructor,
 				CommandBytes: commandBytes,
 				Callback:     cb,
+				Timeout:      time.Duration(10) * time.Second,
 				Flags:        rdt,
 			},
 		)
