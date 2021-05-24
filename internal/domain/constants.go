@@ -85,7 +85,6 @@ func init() {
 
 // Global Parameters
 const (
-	DefaultWebsocketEndpoint    = "ws://edge.river.im"
 	WebsocketIdleTimeout        = 5 * time.Minute
 	WebsocketPingTimeout        = 2 * time.Second
 	WebsocketWriteTime          = 3 * time.Second
@@ -95,7 +94,6 @@ const (
 	WebsocketDialTimeoutLong    = 10 * time.Second
 	HttpRequestTimeout          = 30 * time.Second
 	SnapshotSyncThreshold       = 10000
-	DefaultTimeout              = time.Duration(-1)
 )
 
 // System Keys

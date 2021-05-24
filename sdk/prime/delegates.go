@@ -53,8 +53,4 @@ const (
 	RequestBatch
 )
 
-type RequestDelegate interface {
-	OnComplete(b []byte)
-	OnTimeout(err error)
-	Flags() RequestDelegateFlag
-}
+type RequestDelegate = domain.RequestDelegate

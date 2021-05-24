@@ -241,41 +241,17 @@ func (ctrl *Controller) EnqueueCommand(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	isUICallback bool,
 ) {
-	defer logger.RecoverPanic(
-		"SyncCtrl::EnqueueCommand",
-		domain.M{
-			"OS":  domain.ClientOS,
-			"Ver": domain.ClientVersion,
-			"C":   messageEnvelope.Constructor,
-		},
-		nil,
+	ctrl.EnqueueCommandWithTimeout(
+		messageEnvelope, timeoutCB, successCB, isUICallback, domain.WebsocketRequestTimeout,
 	)
-
-	logger.Debug("enqueues command",
-		zap.Uint64("ReqID", messageEnvelope.RequestID),
-		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
-	)
-
-	// Add the callback functions
-	_ = domain.AddRequestCallback(
-		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTimeout, timeoutCB, isUICallback,
-	)
-
-	// Add the request to the queue
-	ctrl.addToWaitingList(&request{
-		ID:              messageEnvelope.RequestID,
-		Timeout:         domain.WebsocketRequestTimeout,
-		MessageEnvelope: messageEnvelope,
-	})
 }
 
-// EnqueueCommand put request in queue and distributor will execute it later
-func (ctrl *Controller) EnqueueCommandWithTimout(
+func (ctrl *Controller) EnqueueCommandWithTimeout(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
 	isUICallback bool, timeout time.Duration,
 ) {
 	defer logger.RecoverPanic(
-		"SyncCtrl::EnqueueCommand",
+		"SyncCtrl::EnqueueCommandWithTimeout",
 		domain.M{
 			"OS":  domain.ClientOS,
 			"Ver": domain.ClientVersion,
@@ -294,15 +270,14 @@ func (ctrl *Controller) EnqueueCommandWithTimout(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTimeout, timeoutCB, isUICallback,
 	)
 
-	t := domain.WebsocketRequestTimeout
-	if timeout > 0 {
-		t = timeout
+	if timeout == 0 {
+		timeout = domain.WebsocketRequestTimeout
 	}
 
 	// Add the request to the queue
 	ctrl.addToWaitingList(&request{
 		ID:              messageEnvelope.RequestID,
-		Timeout:         t,
+		Timeout:         timeout,
 		MessageEnvelope: messageEnvelope,
 	})
 }
