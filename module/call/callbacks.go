@@ -19,7 +19,7 @@ type Callback struct {
 	OnUpdate             func(updateType int32, b []byte)
 	InitStream           func(audio, video bool) bool
 	InitConnection       func(connId int32, b []byte) int64
-	CloseConnection      func(connId int32, all bool) bool
+	CloseConnection      func(connId int32) bool
 	GetOfferSDP          func(connId int32) (out []byte)
 	SetOfferGetAnswerSDP func(connId int32, req []byte) (out []byte)
 	SetAnswerSDP         func(connId int32, b []byte) bool

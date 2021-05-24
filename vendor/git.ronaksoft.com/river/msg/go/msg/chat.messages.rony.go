@@ -1346,6 +1346,56 @@ func (x *MessagesTogglePin) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_MessagesTogglePin, x)
 }
 
+const C_MessagesReadReaction int64 = 2047257163
+
+type poolMessagesReadReaction struct {
+	pool sync.Pool
+}
+
+func (p *poolMessagesReadReaction) Get() *MessagesReadReaction {
+	x, ok := p.pool.Get().(*MessagesReadReaction)
+	if !ok {
+		x = &MessagesReadReaction{}
+	}
+	return x
+}
+
+func (p *poolMessagesReadReaction) Put(x *MessagesReadReaction) {
+	if x == nil {
+		return
+	}
+	PoolInputPeer.Put(x.Peer)
+	x.Peer = nil
+	x.MessageIDs = x.MessageIDs[:0]
+	p.pool.Put(x)
+}
+
+var PoolMessagesReadReaction = poolMessagesReadReaction{}
+
+func (x *MessagesReadReaction) DeepCopy(z *MessagesReadReaction) {
+	if x.Peer != nil {
+		if z.Peer == nil {
+			z.Peer = PoolInputPeer.Get()
+		}
+		x.Peer.DeepCopy(z.Peer)
+	} else {
+		z.Peer = nil
+	}
+	z.MessageIDs = append(z.MessageIDs[:0], x.MessageIDs...)
+}
+
+func (x *MessagesReadReaction) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *MessagesReadReaction) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *MessagesReadReaction) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_MessagesReadReaction, x)
+}
+
 const C_MessagesDialogs int64 = 3252610224
 
 type poolMessagesDialogs struct {
@@ -1683,6 +1733,7 @@ func init() {
 	registry.RegisterConstructor(1547991459, "MessagesDeleteReaction")
 	registry.RegisterConstructor(3097050126, "MessagesGetReactionList")
 	registry.RegisterConstructor(2824078244, "MessagesTogglePin")
+	registry.RegisterConstructor(2047257163, "MessagesReadReaction")
 	registry.RegisterConstructor(3252610224, "MessagesDialogs")
 	registry.RegisterConstructor(2942502835, "MessagesSent")
 	registry.RegisterConstructor(1713238910, "MessagesMany")

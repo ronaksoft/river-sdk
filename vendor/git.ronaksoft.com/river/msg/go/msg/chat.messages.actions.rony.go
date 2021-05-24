@@ -441,6 +441,7 @@ func (p *poolMessageActionCallEnded) Put(x *MessageActionCallEnded) {
 	}
 	x.CallID = 0
 	x.Reason = 0
+	x.Duration = 0
 	p.pool.Put(x)
 }
 
@@ -449,6 +450,7 @@ var PoolMessageActionCallEnded = poolMessageActionCallEnded{}
 func (x *MessageActionCallEnded) DeepCopy(z *MessageActionCallEnded) {
 	z.CallID = x.CallID
 	z.Reason = x.Reason
+	z.Duration = x.Duration
 }
 
 func (x *MessageActionCallEnded) Marshal() ([]byte, error) {

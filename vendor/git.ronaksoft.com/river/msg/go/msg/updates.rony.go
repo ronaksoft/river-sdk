@@ -1994,6 +1994,7 @@ func (p *poolUpdateBotCallbackQuery) Put(x *UpdateBotCallbackQuery) {
 	x.Peer = nil
 	x.MessageID = 0
 	x.Data = x.Data[:0]
+	x.TeamID = 0
 	p.pool.Put(x)
 }
 
@@ -2014,6 +2015,7 @@ func (x *UpdateBotCallbackQuery) DeepCopy(z *UpdateBotCallbackQuery) {
 	}
 	z.MessageID = x.MessageID
 	z.Data = append(z.Data[:0], x.Data...)
+	z.TeamID = x.TeamID
 }
 
 func (x *UpdateBotCallbackQuery) Marshal() ([]byte, error) {
@@ -2056,6 +2058,7 @@ func (p *poolUpdateBotInlineQuery) Put(x *UpdateBotInlineQuery) {
 	x.Offset = ""
 	PoolGeoLocation.Put(x.Geo)
 	x.Geo = nil
+	x.TeamID = 0
 	p.pool.Put(x)
 }
 
@@ -2084,6 +2087,7 @@ func (x *UpdateBotInlineQuery) DeepCopy(z *UpdateBotInlineQuery) {
 	} else {
 		z.Geo = nil
 	}
+	z.TeamID = x.TeamID
 }
 
 func (x *UpdateBotInlineQuery) Marshal() ([]byte, error) {

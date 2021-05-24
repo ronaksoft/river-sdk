@@ -43,7 +43,7 @@ func (c *call) destroy(callID int64) {
 			c.Log().Error("callbacks are not initialized")
 			return
 		}
-		_ = c.callback.CloseConnection(conn.ConnId, true)
+		_ = c.callback.CloseConnection(conn.ConnId)
 		if conn.connectTicker != nil {
 			conn.connectTicker.Stop()
 		}
@@ -64,6 +64,13 @@ func (c *call) destroy(callID int64) {
 		}
 	}
 	delete(c.callInfo, callID)
+
+	update := msg.CallUpdateDestroyed{}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_Destroyed, updateData)
+	}
+
 	c.activeCallID = 0
 	c.peer = nil
 	c.mu.Unlock()
@@ -209,17 +216,17 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 		}
 
 		c.initParticipants(c.activeCallID, joinRes.Participants, true)
-		_, err = c.initConnections(peer, c.activeCallID, false, nil)
+		_, err = c.initManyConnections(peer, c.activeCallID, false, nil)
 		if err != nil {
-			c.Log().Warn("initConnections", zap.Error(err))
+			c.Log().Warn("initManyConnections", zap.Error(err))
 			return
 		}
 	} else {
 		c.activeCallID = 0
 		c.initCallParticipants(TempCallID, participants)
-		_, err = c.initConnections(peer, TempCallID, true, nil)
+		_, err = c.initManyConnections(peer, TempCallID, true, nil)
 		if err != nil {
-			c.Log().Warn("initConnections", zap.Error(err))
+			c.Log().Warn("initManyConnections", zap.Error(err))
 			return
 		}
 
@@ -284,9 +291,9 @@ func (c *call) accept(callID int64, video bool) (err error) {
 			wg.Add(1)
 			go func(req *UpdatePhoneCall) {
 				defer wg.Done()
-				_, innerErr := c.initConnections(c.peer, callID, false, req)
+				_, innerErr := c.initManyConnections(c.peer, callID, false, req)
 				if innerErr != nil {
-					c.Log().Warn("initConnections", zap.Error(err))
+					c.Log().Warn("initManyConnections", zap.Error(err))
 					return
 				}
 
@@ -697,7 +704,7 @@ func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequ
 	return
 }
 
-func (c *call) initConnections(peer *msg.InputPeer, callID int64, initiator bool, request *UpdatePhoneCall) (res *msg.PhoneCall, err error) {
+func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator bool, request *UpdatePhoneCall) (res *msg.PhoneCall, err error) {
 	currentUserConnId, callInfo, valid := c.getConnId(callID, c.userID)
 	if !valid {
 		err = ErrInvalidCallId
@@ -1193,7 +1200,7 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 			return
 		}
 
-		ok := c.callback.CloseConnection(connId, false)
+		ok := c.callback.CloseConnection(connId)
 		if !ok {
 			err = ErrCannotCloseConnection
 			return
@@ -1505,7 +1512,7 @@ func (c *call) removeParticipant(userID int64, callID *int64) bool {
 			return false
 		}
 
-		_ = c.callback.CloseConnection(connId, false)
+		_ = c.callback.CloseConnection(connId)
 	}
 
 	info.mu.Lock()

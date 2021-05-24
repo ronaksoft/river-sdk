@@ -700,6 +700,8 @@ func (p *poolBotGetCallbackAnswer) Put(x *BotGetCallbackAnswer) {
 	x.Peer = nil
 	x.MessageID = 0
 	x.Data = x.Data[:0]
+	PoolInputUser.Put(x.Bot)
+	x.Bot = nil
 	p.pool.Put(x)
 }
 
@@ -716,6 +718,14 @@ func (x *BotGetCallbackAnswer) DeepCopy(z *BotGetCallbackAnswer) {
 	}
 	z.MessageID = x.MessageID
 	z.Data = append(z.Data[:0], x.Data...)
+	if x.Bot != nil {
+		if z.Bot == nil {
+			z.Bot = PoolInputUser.Get()
+		}
+		x.Bot.DeepCopy(z.Bot)
+	} else {
+		z.Bot = nil
+	}
 }
 
 func (x *BotGetCallbackAnswer) Marshal() ([]byte, error) {

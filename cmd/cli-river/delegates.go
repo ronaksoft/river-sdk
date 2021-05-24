@@ -172,8 +172,8 @@ func (c *CallDelegate) InitConnection(connId int32, b []byte) int64 {
 	return 1
 }
 
-func (c *CallDelegate) CloseConnection(connId int32, all bool) bool {
-	_Log.Info("CallDelegate On CloseConnection", zap.Int32("ConnID", connId), zap.Bool("All", all))
+func (c *CallDelegate) CloseConnection(connId int32) bool {
+	_Log.Info("CallDelegate On CloseConnection", zap.Int32("ConnID", connId))
 	return true
 }
 
