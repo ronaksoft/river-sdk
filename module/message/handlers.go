@@ -270,13 +270,15 @@ func (r *message) handleDebugActions(txt string) {
 		mon.ResetUsage()
 	case "//sdk_live_logger":
 		username := r.SDK().GetConnInfo().PickupUsername()
-		if username == "" {
-			if len(args) < 1 {
-				r.sendToSavedMessage("//sdk_live_logger <url>")
-				return
-			} else {
+
+
+		if len(args) < 1 {
+			if username == "" {
 				r.liveLogger(fmt.Sprintf("https://livelog.ronaksoftware.com/%s", username))
+			} else {
+				r.sendToSavedMessage("//sdk_live_logger <url>")
 			}
+			return
 		}
 
 		r.liveLogger(args[0])
