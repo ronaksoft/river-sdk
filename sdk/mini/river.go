@@ -170,11 +170,13 @@ func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 }
 func (r *River) messageReceiver() {
 	// NOP Loop to just clear the received messages
-	for range r.messageChan {}
+	for range r.messageChan {
+	}
 }
 func (r *River) updateReceiver() {
 	// NOP Loop to just clear the received updates
-	for range r.updateChan {}
+	for range r.updateChan {
+	}
 }
 
 func (r *River) registerCommandHandlers() {

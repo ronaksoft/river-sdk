@@ -38,5 +38,5 @@ func (r *River) NetworkChange(connection int) {
 }
 
 func (r *River) GetNetworkStatus() int32 {
-	return int32(r.networkCtrl.GetQuality())
+	return int32(r.networkCtrl.GetStatus())
 }

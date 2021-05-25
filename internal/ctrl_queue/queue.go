@@ -8,7 +8,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
-	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/beeker1121/goque"
 	"github.com/juju/ratelimit"
 	"github.com/ronaksoft/rony"
@@ -163,10 +162,6 @@ func (ctrl *Controller) executor(req request) {
 
 	select {
 	case <-time.After(req.Timeout):
-		reqCB := domain.GetRequestCallback(req.ID)
-		if reqCB == nil {
-			return
-		}
 		switch req.MessageEnvelope.Constructor {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
 			pmsg, err := repo.PendingMessages.GetByRandomID(int64(req.ID))
@@ -181,13 +176,7 @@ func (ctrl *Controller) executor(req request) {
 			ctrl.addToWaitingList(&req)
 			return
 		default:
-			if reqCB.TimeoutCallback != nil {
-				if reqCB.IsUICallback {
-					uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
-				} else {
-					reqCB.TimeoutCallback()
-				}
-			}
+			reqCB.OnTimeout()
 		}
 	case res := <-reqCB.ResponseChannel:
 		switch req.MessageEnvelope.Constructor {
@@ -219,18 +208,7 @@ func (ctrl *Controller) executor(req request) {
 				}
 			}
 		}
-		if reqCB.SuccessCallback != nil {
-			if reqCB.IsUICallback {
-				uiexec.ExecSuccessCB(reqCB.SuccessCallback, res)
-			} else {
-				reqCB.SuccessCallback(res)
-			}
-		} else {
-			logger.Debug("received response but no callback exists!!!",
-				zap.String("C", registry.ConstructorName(res.Constructor)),
-				zap.Uint64("ReqID", res.RequestID),
-			)
-		}
+		reqCB.OnSuccess(res)
 	}
 	domain.RemoveRequestCallback(req.ID)
 	return

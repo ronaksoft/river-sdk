@@ -98,7 +98,7 @@ var CallIceCandidate = &ishell.Cmd{
 	Func: func(c *ishell.Context) {
 		req := msg.ClientCallSendIceCandidate{}
 		req.ConnId = fnGetConnId(c)
-		req.Candidate  = &msg.CallRTCIceCandidate{
+		req.Candidate = &msg.CallRTCIceCandidate{
 			Candidate:        "",
 			SdpMLineIndex:    0,
 			SdpMid:           "",

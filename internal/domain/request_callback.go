@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
 	"sync"
@@ -8,7 +9,7 @@ import (
 )
 
 var (
-	mxCB             sync.Mutex
+	callbacksMtx     sync.Mutex
 	requestCallbacks map[uint64]*RequestCallback
 )
 
@@ -28,8 +29,30 @@ type RequestCallback struct {
 	Constructor     int64
 }
 
+func (rcb *RequestCallback) OnSuccess(m *rony.MessageEnvelope) {
+	if rcb.SuccessCallback == nil {
+		return
+	}
+	if rcb.IsUICallback {
+		uiexec.ExecSuccessCB(rcb.SuccessCallback, m)
+	} else {
+		rcb.SuccessCallback(m)
+	}
+}
+
+func (rcb *RequestCallback) OnTimeout() {
+	if rcb.TimeoutCallback == nil {
+		return
+	}
+	if rcb.IsUICallback {
+		uiexec.ExecTimeoutCB(rcb.TimeoutCallback)
+	} else {
+		rcb.TimeoutCallback()
+	}
+}
+
 func init() {
-	requestCallbacks = make(map[uint64]*RequestCallback, 0)
+	requestCallbacks = make(map[uint64]*RequestCallback, 100)
 }
 
 // AddRequestCallback in memory cache to save requests
@@ -45,24 +68,24 @@ func AddRequestCallback(reqID uint64, constructor int64, successCB MessageHandle
 		IsUICallback:    isUICallback,
 		Constructor:     constructor,
 	}
-	mxCB.Lock()
+	callbacksMtx.Lock()
 	requestCallbacks[reqID] = cb
-	mxCB.Unlock()
+	callbacksMtx.Unlock()
 	return cb
 }
 
 // RemoveRequestCallback remove from in memory cache
 func RemoveRequestCallback(reqID uint64) {
-	mxCB.Lock()
+	callbacksMtx.Lock()
 	delete(requestCallbacks, reqID)
-	mxCB.Unlock()
+	callbacksMtx.Unlock()
 }
 
 // GetRequestCallback fetch request
 func GetRequestCallback(reqID uint64) (cb *RequestCallback) {
-	mxCB.Lock()
+	callbacksMtx.Lock()
 	val, ok := requestCallbacks[reqID]
-	mxCB.Unlock()
+	callbacksMtx.Unlock()
 	if ok {
 		cb = val
 	}

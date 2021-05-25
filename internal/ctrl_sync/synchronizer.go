@@ -61,11 +61,12 @@ type Controller struct {
 
 // NewSyncController create new instance
 func NewSyncController(config Config) *Controller {
-	ctrl := new(Controller)
-	ctrl.connInfo = config.ConnInfo
-	ctrl.queueCtrl = config.QueueCtrl
-	ctrl.networkCtrl = config.NetworkCtrl
-	ctrl.fileCtrl = config.FileCtrl
+	ctrl := &Controller{
+		connInfo:    config.ConnInfo,
+		queueCtrl:   config.QueueCtrl,
+		networkCtrl: config.NetworkCtrl,
+		fileCtrl:    config.FileCtrl,
+	}
 
 	if config.SyncStatusChangeCB == nil {
 		config.SyncStatusChangeCB = func(newStatus domain.SyncStatus) {}
@@ -112,7 +113,7 @@ func (ctrl *Controller) watchDog() {
 		select {
 		case <-t.C:
 			// Skip if we are not connected to server
-			if ctrl.networkCtrl.GetQuality() != domain.NetworkConnected {
+			if !ctrl.networkCtrl.Connected() {
 				break
 			}
 

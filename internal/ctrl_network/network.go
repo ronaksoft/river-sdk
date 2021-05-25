@@ -10,7 +10,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/salt"
-	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/ronaksoft/rony"
@@ -186,7 +185,7 @@ func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntr
 		m := entries[0].Value().(*rony.MessageEnvelope)
 		err := ctrl.writeToWebsocket(m)
 		if err != nil {
-			logger.Warn("got error on flushing outgoing messages",
+			logger.Warn("got error on writing to websocket conn",
 				zap.Uint64("ReqID", m.RequestID),
 				zap.String("C", registry.ConstructorName(m.Constructor)),
 				zap.Error(err),
@@ -221,30 +220,26 @@ func (ctrl *Controller) sendFlushFunc(targetID string, entries []tools.FlushEntr
 			}
 			chunk := messages[startIdx:endIdx]
 
-			msgContainer := new(rony.MessageContainer)
-			msgContainer.Envelopes = chunk
-			msgContainer.Length = int32(len(chunk))
-			messageEnvelope := new(rony.MessageEnvelope)
-			messageEnvelope.Constructor = rony.C_MessageContainer
-			messageEnvelope.Message, _ = msgContainer.Marshal()
-			messageEnvelope.RequestID = 0
+			msgContainer := &rony.MessageContainer{
+				Envelopes: chunk,
+				Length:    int32(len(chunk)),
+			}
+			messageEnvelope := &rony.MessageEnvelope{}
+			messageEnvelope.Fill(0, rony.C_MessageContainer, msgContainer)
+
 			err := ctrl.writeToWebsocket(messageEnvelope)
 			if err != nil {
-				logger.Warn("got error on flushing outgoing messages",
-					zap.Error(err),
+				logger.Warn("got error on writing to websocket conn",
+					zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
 					zap.Int("Count", len(chunk)),
+					zap.Error(err),
 				)
 				return
 			}
 			startIdx = endIdx
 			endIdx += chunkSize
 		}
-
 	}
-
-	logger.Debug("flushed outgoing messages",
-		zap.Int("Count", itemsCount),
-	)
 }
 
 // watchDog
@@ -464,10 +459,10 @@ func extractMessages(ctrl *Controller, m *rony.MessageEnvelope) ([]*rony.Message
 // The average ping times will be calculated and this function will be called if
 // quality of service changed.
 func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
-	if ctrl.GetQuality() == newStatus {
+	if ctrl.GetStatus() == newStatus {
 		return
 	}
-	ctrl.SetQuality(newStatus)
+	ctrl.setStatus(newStatus)
 	if ctrl.OnNetworkStatusChange != nil {
 		ctrl.OnNetworkStatusChange(newStatus)
 	}
@@ -595,8 +590,8 @@ func (ctrl *Controller) Disconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkDisconnect", func() (i interface{}, e error) {
 		ctrl.wsKeepConnection = false
 		if ctrl.wsConn != nil {
-			_ = ctrl.wsConn.Close()
-			logger.Info("disconnected")
+			err := ctrl.wsConn.Close()
+			logger.Info("websocket conn closed", zap.Error(err))
 		}
 		return nil, nil
 	})
@@ -663,7 +658,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 		},
 	)
 
-	startTime := time.Now()
+	startTime := tools.NanoTime()
 	protoMessage := msg.PoolProtoMessage.Get()
 	defer msg.PoolProtoMessage.Put(protoMessage)
 	if cap(protoMessage.MessageKey) < 32 {
@@ -672,13 +667,12 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 		protoMessage.MessageKey = protoMessage.MessageKey[:32]
 	}
 
-	logger.Debug("call writeToWebsocket",
+	logger.Debug("writing to the websocket conn",
 		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("TeamID", msgEnvelope.Get("TeamID", "0")),
-		zap.String("TeamAccess", msgEnvelope.Get("TeamAccess", "0")),
-		zap.Bool("Plain", ctrl.unauthorizedRequests[msgEnvelope.Constructor]),
-		zap.Bool("NoAuth", ctrl.authID == 0),
+		zap.Bool("SendPlain", ctrl.unauthorizedRequests[msgEnvelope.Constructor]),
+		zap.Bool("Authorized", ctrl.authID != 0),
 	)
 	if ctrl.authID == 0 || ctrl.unauthorizedRequests[msgEnvelope.Constructor] {
 		protoMessage.AuthID = 0
@@ -690,8 +684,9 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 		encryptedPayload := &msg.ProtoEncryptedPayload{
 			ServerSalt: salt.Get(),
 			Envelope:   msgEnvelope,
+			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.incMessageSeq()),
 		}
-		encryptedPayload.MessageID = uint64(domain.Now().Unix()<<32 | ctrl.incMessageSeq())
+
 		mo := proto.MarshalOptions{UseCachedSize: true}
 		unencryptedBytes := pools.Bytes.GetCap(mo.Size(encryptedPayload))
 		unencryptedBytes, _ = mo.MarshalAppend(unencryptedBytes, encryptedPayload)
@@ -717,9 +712,11 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 		_ = ctrl.wsConn.Close()
 		return err
 	}
-	logger.Debug("sent over websocket",
+
+	logger.Debug("write to websocket completed.",
+		zap.Uint64("ReqID", msgEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(msgEnvelope.Constructor)),
-		zap.Duration("Duration", time.Since(startTime)),
+		zap.Duration("Duration", time.Duration(tools.NanoTime()-startTime)),
 	)
 
 	return nil
@@ -740,7 +737,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 		nil,
 	)
 
-	logger.Debug("fires websocket command",
+	logger.Debug("execute command over websocket",
 		zap.Uint64("ReqID", messageEnvelope.RequestID),
 		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
 	)
@@ -754,9 +751,9 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 		err := ctrl.WebsocketSend(req, flag)
 		if err != nil {
 			logger.Warn("got error from NetCtrl",
-				zap.String("Error", err.Error()),
-				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
+				zap.String("C", registry.ConstructorName(req.Constructor)),
+				zap.Error(err),
 			)
 			if timeoutCB != nil {
 				timeoutCB()
@@ -771,13 +768,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 				zap.Uint64("ReqID", req.RequestID),
 			)
 			domain.RemoveRequestCallback(reqID)
-			if reqCB.TimeoutCallback != nil {
-				if reqCB.IsUICallback {
-					uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
-				} else {
-					reqCB.TimeoutCallback()
-				}
-			}
+			reqCB.OnTimeout()
 			return
 		case res := <-reqCB.ResponseChannel:
 			logger.Debug("got response for websocket command",
@@ -785,13 +776,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
 				zap.String("ResC", registry.ConstructorName(res.Constructor)),
 			)
-			if reqCB.SuccessCallback != nil {
-				if reqCB.IsUICallback {
-					uiexec.ExecSuccessCB(reqCB.SuccessCallback, res)
-				} else {
-					reqCB.SuccessCallback(res)
-				}
-			}
+			reqCB.OnSuccess(res)
 		}
 		return
 	}
@@ -941,7 +926,7 @@ func (ctrl *Controller) HttpCommand(
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()
 func (ctrl *Controller) Reconnect() {
 	_, _, _ = domain.SingleFlight.Do("NetworkReconnect", func() (i interface{}, e error) {
-		if ctrl.GetQuality() == domain.NetworkDisconnected {
+		if ctrl.GetStatus() == domain.NetworkDisconnected {
 			ctrl.Connect()
 		} else if ctrl.wsConn != nil {
 			_ = ctrl.wsConn.Close()
@@ -954,9 +939,9 @@ func (ctrl *Controller) Reconnect() {
 // it also waits the initial AuthRecall request sent to the server.
 func (ctrl *Controller) WaitForNetwork(waitForRecall bool) {
 	// Wait While Network is Disconnected or Connecting
-	for ctrl.GetQuality() != domain.NetworkConnected {
+	for ctrl.GetStatus() != domain.NetworkConnected {
 		logger.Debug("is waiting for Network",
-			zap.String("Quality", ctrl.GetQuality().ToString()),
+			zap.String("Quality", ctrl.GetStatus().ToString()),
 		)
 		time.Sleep(time.Second)
 	}
@@ -970,16 +955,19 @@ func (ctrl *Controller) WaitForNetwork(waitForRecall bool) {
 
 // Connected return the connection status for the websocket connection
 func (ctrl *Controller) Connected() bool {
-	return ctrl.GetQuality() == domain.NetworkConnected
+	return ctrl.GetStatus() == domain.NetworkConnected
 }
 
-// GetQuality returns the network status
-func (ctrl *Controller) GetQuality() domain.NetworkStatus {
+func (ctrl *Controller) Disconnected() bool {
+	return ctrl.GetStatus() == domain.NetworkDisconnected
+}
+
+// GetStatus returns the network status
+func (ctrl *Controller) GetStatus() domain.NetworkStatus {
 	return domain.NetworkStatus(atomic.LoadInt32(&ctrl.wsQuality))
 }
 
-// SetQuality sets the network status
-func (ctrl *Controller) SetQuality(s domain.NetworkStatus) {
+func (ctrl *Controller) setStatus(s domain.NetworkStatus) {
 	atomic.StoreInt32(&ctrl.wsQuality, int32(s))
 }
 

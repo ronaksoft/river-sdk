@@ -89,7 +89,6 @@ func (ctrl *Controller) GetSystemConfig() {
 }
 
 func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
-
 	logger.Info("call AuthRecall", zap.String("Caller", caller))
 	req := msg.AuthRecall{
 		ClientID:   0,
@@ -131,7 +130,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 				updateID = x.UpdateID
 
 				// Update the time difference between client & server
-				clientTime := time.Now().Unix()
+				clientTime := tools.TimeUnix()
 				serverTime := x.Timestamp
 				domain.TimeDelta = time.Duration(serverTime-clientTime) * time.Second
 

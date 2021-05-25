@@ -12,7 +12,6 @@ import (
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/salt"
-	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/monnand/dhkx"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
@@ -195,14 +194,7 @@ func (r *River) executeRemoteCommand(
 					if reqCB == nil {
 						break
 					}
-
-					if reqCB.TimeoutCallback != nil {
-						if reqCB.IsUICallback {
-							uiexec.ExecTimeoutCB(reqCB.TimeoutCallback)
-						} else {
-							reqCB.TimeoutCallback()
-						}
-					}
+					reqCB.OnTimeout()
 					r.CancelRequest(int64(requestID))
 				}
 			}()
@@ -680,7 +672,7 @@ func (r *River) AppForeground(online bool) {
 	// Set the time we come to foreground
 	mon.SetForegroundTime()
 
-	if r.networkCtrl.GetQuality() == domain.NetworkConnected {
+	if r.networkCtrl.Connected() {
 		err := r.networkCtrl.Ping(domain.RandomUint64(), domain.WebsocketPingTimeout)
 		if err != nil {
 			logger.Info("AppForeground:: Ping failed, we reconnect", zap.Error(err))

@@ -56,7 +56,6 @@ func (r *River) AppStart() error {
 	go r.messageReceiver()
 	go r.updateReceiver()
 
-
 	if r.getLastUpdateID() == 0 {
 		// run in sync for the first time
 		wg := sync.WaitGroup{}

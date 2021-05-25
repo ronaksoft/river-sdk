@@ -38,7 +38,7 @@ func (r *repoNotifications) getKey(teamID int64, peer *msg.InputPeer) []byte {
 func (r *repoNotifications) SetNotificationDismissTime(teamID int64, peer *msg.InputPeer, ts int64) error {
 	err := badgerUpdate(func(txn *badger.Txn) error {
 		tsBytes := tools.StrToByte(tools.Int64ToStr(ts))
-		key := r.getKey(teamID,peer)
+		key := r.getKey(teamID, peer)
 
 		err := txn.SetEntry(badger.NewEntry(
 			key, tsBytes,
@@ -53,7 +53,7 @@ func (r *repoNotifications) SetNotificationDismissTime(teamID int64, peer *msg.I
 func (r *repoNotifications) GetNotificationDismissTime(teamID int64, peer *msg.InputPeer) (int64, error) {
 	var ts int64
 	err := badgerView(func(txn *badger.Txn) error {
-		item, err := txn.Get(r.getKey(teamID,peer))
+		item, err := txn.Get(r.getKey(teamID, peer))
 		if err != nil {
 			return err
 		}
@@ -64,5 +64,5 @@ func (r *repoNotifications) GetNotificationDismissTime(teamID int64, peer *msg.I
 		return err
 	})
 
-	return ts,err
+	return ts, err
 }

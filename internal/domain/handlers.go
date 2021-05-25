@@ -214,9 +214,3 @@ type MessageApplier func(envelope *rony.MessageEnvelope)
 
 // LocalHandler SDK commands that handle user request from client cache
 type LocalHandler func(in, out *rony.MessageEnvelope, da Callback)
-
-// ReceivedMessageHandler NetworkController pass all received response messages to this callback/delegate
-type ReceivedMessageHandler func(messages []*rony.MessageEnvelope)
-
-// ReceivedUpdateHandler NetworkController pass all received update messages to this callback/delegate
-type ReceivedUpdateHandler func(container *msg.UpdateContainer)
