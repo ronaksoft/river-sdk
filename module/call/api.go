@@ -426,6 +426,8 @@ func (c *call) executeRemoteCommand(
 ) {
 	c.Log().Debug("Execute command",
 		zap.String("C", registry.ConstructorName(constructor)),
+		zap.Bool("Instant", instant),
+		zap.Int64("CallID", callID),
 	)
 
 	rdt := domain.RequestRealtime
@@ -471,7 +473,7 @@ func (c *call) executeRemoteCommand(
 				Constructor:  constructor,
 				CommandBytes: commandBytes,
 				Callback:     cb,
-				Timeout:      time.Duration(10) * time.Second,
+				Timeout:      10 * time.Second,
 				Flags:        rdt,
 			},
 		)

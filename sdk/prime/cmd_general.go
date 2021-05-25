@@ -90,6 +90,7 @@ func (r *River) executeCommand(
 	)
 
 	logger.Debug("River executes command",
+		zap.Int64("ReqID", requestID),
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
@@ -119,6 +120,7 @@ func (r *River) executeCommand(
 					zap.Duration("D", time.Duration(tools.NanoTime()-createTime)),
 					zap.String("C", registry.ConstructorName(constructor)),
 					zap.Int64("ReqID", requestID),
+					zap.String("Flags", domain.RequestDelegateFlagToString(delegate.Flags())),
 				)
 				delegate.OnTimeout(err)
 				releaseDelegate(r, uint64(requestID))

@@ -4,9 +4,34 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
+	"strings"
 )
 
 type RequestDelegateFlag = int32
+
+func RequestDelegateFlagToString(rdf RequestDelegateFlag) string {
+	sb := strings.Builder{}
+	if rdf&RequestServerForced == RequestServerForced {
+		sb.WriteString("|ServerForced")
+	}
+	if rdf&RequestBlocking == RequestBlocking {
+		sb.WriteString("|Blocking")
+	}
+	if rdf&RequestSkipWaitForNetwork == RequestSkipWaitForNetwork {
+		sb.WriteString("|SkipWaitNetwork")
+	}
+	if rdf&RequestSkipFlusher == RequestSkipFlusher {
+		sb.WriteString("|SkipFlusher")
+	}
+	if rdf&RequestRealtime == RequestRealtime {
+		sb.WriteString("|Realtime")
+	}
+	if rdf&RequestBatch == RequestBatch {
+		sb.WriteString("|Batch")
+	}
+	sb.WriteRune('|')
+	return sb.String()
+}
 
 // Request Flags
 const (
