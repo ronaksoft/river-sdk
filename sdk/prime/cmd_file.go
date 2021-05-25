@@ -126,7 +126,7 @@ func (r *River) ResumeUpload(pendingMessageID int64) {
 	req := new(msg.ClientSendMessageMedia)
 	_ = req.Unmarshal(pendingMessage.Media)
 
-	logger.Info("River resumes upload", zap.Int64("MsgID", pendingMessageID))
+	logger.Info("resumes upload", zap.Int64("MsgID", pendingMessageID))
 	if uploadReq := r.fileCtrl.GetUploadRequest(pendingMessage.FileID); uploadReq == nil {
 		r.fileCtrl.UploadMessageDocument(
 			pendingMessageID, req.FilePath, req.ThumbFilePath, pendingMessage.FileID,

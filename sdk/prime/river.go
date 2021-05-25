@@ -305,7 +305,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 
 	// Initialize River Connection
-	logger.Info("River SetConfig done!")
+	logger.Info("SetConfig done!")
 }
 
 func (r *River) onNetworkConnect() (err error) {
@@ -465,7 +465,7 @@ func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
 
 	outOfSync := false
 	if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.GetUpdateID()+1 {
-		logger.Info("We are out of sync",
+		logger.Info("are out of sync",
 			zap.Int64("ContainerMinID", updateContainer.MinUpdateID),
 			zap.Int64("ClientUpdateID", r.syncCtrl.GetUpdateID()),
 		)
@@ -490,7 +490,7 @@ func (r *River) postUploadProcess(uploadRequest *msg.ClientFileRequest) bool {
 		nil,
 	)
 
-	logger.Info("River Post Upload Process",
+	logger.Info("Post Upload Process",
 		zap.Bool("IsProfile", uploadRequest.IsProfilePhoto),
 		zap.Int64("MessageID", uploadRequest.MessageID),
 		zap.Int64("FileID", uploadRequest.FileID),
@@ -596,7 +596,7 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 			success = false
 			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
-				logger.Error("We couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
+				logger.Error("couldn't unmarshal MessagesSendMedia (Error) response", zap.Error(err))
 			}
 			logger.Error("SDK received error on MessagesSendMedia response",
 				zap.String("Code", x.Code),
@@ -612,7 +612,7 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 	}
 	timeoutCB := func() {
 		success = false
-		logger.Debug("We got Timeout! on MessagesSendMedia response")
+		logger.Debug("got Timeout! on MessagesSendMedia response")
 		waitGroup.Done()
 	}
 	r.queueCtrl.EnqueueCommand(
@@ -650,15 +650,15 @@ func (r *River) uploadGroupPhoto(uploadRequest *msg.ClientFileRequest) (success 
 			success = false
 			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
-				logger.Error("We couldn't unmarshal GroupUploadPhoto (Error) response", zap.Error(err))
+				logger.Error("couldn't unmarshal GroupUploadPhoto (Error) response", zap.Error(err))
 			}
-			logger.Error("We received error on GroupUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			logger.Error("received error on GroupUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 		}
 		waitGroup.Done()
 	}
 	timeoutCB := func() {
 		success = false
-		logger.Debug("We got Timeout! on GroupUploadPhoto response")
+		logger.Debug("got Timeout! on GroupUploadPhoto response")
 		waitGroup.Done()
 	}
 	r.queueCtrl.EnqueueCommand(
@@ -693,9 +693,9 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 			success = false
 			x := &rony.Error{}
 			if err := x.Unmarshal(m.Message); err != nil {
-				logger.Error("We couldn't unmarshal AccountUploadPhoto (Error) response", zap.Error(err))
+				logger.Error("couldn't unmarshal AccountUploadPhoto (Error) response", zap.Error(err))
 			}
-			logger.Error("We received error on AccountUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
+			logger.Error("received error on AccountUploadPhoto response", zap.String("Code", x.Code), zap.String("Item", x.Items))
 		}
 		waitGroup.Done()
 	}

@@ -46,7 +46,7 @@ func init() {
 			select {
 			case <-doneChan:
 			case <-ctx.Done():
-				logger.Error("We timeout waiting for UI-Exec to return",
+				logger.Error("timeout waiting for UI-Exec to return",
 					zap.String("C", registry.ConstructorName(it.constructor)),
 					zap.String("Kind", it.kind),
 				)

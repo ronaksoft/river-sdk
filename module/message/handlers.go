@@ -55,7 +55,7 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 		out.Constructor = msg.C_MessagesDialogs
 		buff, err := res.Marshal()
 		if err != nil {
-			r.Log().Error("River got error on marshal MessagesDialogs", zap.Error(err))
+			r.Log().Error("got error on marshal MessagesDialogs", zap.Error(err))
 		}
 
 		out.Message = buff
@@ -119,7 +119,7 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 	}
 	res.Groups, _ = repo.Groups.GetMany(mGroups.ToArray())
 	if len(res.Groups) != len(mGroups) {
-		r.Log().Warn("River found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
+		r.Log().Warn("found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
 		for groupID := range mGroups {
 			found := false
 			for _, g := range res.Groups {
@@ -135,7 +135,7 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 	}
 	res.Users, _ = repo.Users.GetMany(mUsers.ToArray())
 	if len(res.Users) != len(mUsers) {
-		r.Log().Warn("River found unmatched dialog users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
+		r.Log().Warn("found unmatched dialog users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
 		for userID := range mUsers {
 			found := false
 			for _, g := range res.Users {
@@ -153,7 +153,7 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 	out.Constructor = msg.C_MessagesDialogs
 	buff, err := res.Marshal()
 	if err != nil {
-		r.Log().Error("River got error on marshal MessagesDialogs", zap.Error(err))
+		r.Log().Error("got error on marshal MessagesDialogs", zap.Error(err))
 	}
 
 	out.Message = buff
@@ -173,7 +173,7 @@ func (r *message) messagesGetDialog(in, out *rony.MessageEnvelope, da domain.Cal
 
 	// if the localDB had no data send the request to server
 	if err != nil {
-		r.Log().Warn("We got error on repo GetDialog", zap.Error(err), zap.Int64("PeerID", req.Peer.ID))
+		r.Log().Warn("got error on repo GetDialog", zap.Error(err), zap.Int64("PeerID", req.Peer.ID))
 		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 		return
 	}
@@ -463,13 +463,13 @@ func (r *message) heapProfile() (filePath string) {
 	buf := new(bytes.Buffer)
 	err := pprof.WriteHeapProfile(buf)
 	if err != nil {
-		r.Log().Error("We got error on getting heap profile", zap.Error(err))
+		r.Log().Error("got error on getting heap profile", zap.Error(err))
 		return ""
 	}
 	now := time.Now()
 	filePath = path.Join(repo.DirCache, fmt.Sprintf("MemHeap-%04d-%02d-%02d.out", now.Year(), now.Month(), now.Day()))
 	if err := ioutil.WriteFile(filePath, buf.Bytes(), os.ModePerm); err != nil {
-		r.Log().Warn("We got error on creating memory heap file", zap.Error(err))
+		r.Log().Warn("got error on creating memory heap file", zap.Error(err))
 		return ""
 	}
 	return
@@ -615,7 +615,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da domain.Ca
 	case req.MinID == 0 && req.MaxID != 0:
 		b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID)
 		if !b {
-			r.Log().Info("River detected hole (With MaxID Only)",
+			r.Log().Info("detected hole (With MaxID Only)",
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
@@ -629,7 +629,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da domain.Ca
 	case req.MinID != 0 && req.MaxID == 0:
 		b, bar := messageHole.GetUpperFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID)
 		if !b {
-			r.Log().Info("River detected hole (With MinID Only)",
+			r.Log().Info("detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
@@ -643,7 +643,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da domain.Ca
 	default:
 		b := messageHole.IsHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID, req.MaxID)
 		if b {
-			r.Log().Info("River detected hole (With Min & Max)",
+			r.Log().Info("detected hole (With Min & Max)",
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("PeerID", req.Peer.ID),
@@ -749,7 +749,7 @@ func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, da doma
 
 	b, bar := messageHole.GetLowerFilled(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.Cat, req.MaxID)
 	if !b {
-		r.Log().Info("River detected hole (With MaxID Only)",
+		r.Log().Info("detected hole (With MaxID Only)",
 			zap.Int64("MaxID", req.MaxID),
 			zap.Int64("PeerID", req.Peer.ID),
 			zap.String("PeerType", req.Peer.Type.String()),
@@ -903,14 +903,14 @@ func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, da domain.
 	}
 
 	err := repo.Messages.ClearHistory(r.SDK().GetConnInfo().PickupUserID(), domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
-	r.Log().WarnOnErr("We got error on clear history", err,
+	r.Log().WarnOnErr("got error on clear history", err,
 		zap.Int64("PeerID", req.Peer.ID),
 		zap.Int64("TeamID", domain.GetTeamID(in)),
 	)
 
 	if req.Delete {
 		err = repo.Dialogs.Delete(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
-		r.Log().WarnOnErr("We got error on deleting dialogs", err,
+		r.Log().WarnOnErr("got error on deleting dialogs", err,
 			zap.Int64("PeerID", req.Peer.ID),
 			zap.Int64("TeamID", domain.GetTeamID(in)),
 		)

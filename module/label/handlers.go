@@ -34,7 +34,7 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
 		return labels[i].Count > labels[j].Count
 	})
 	if len(labels) != 0 {
-		r.Log().Debug("We found labels locally", zap.Int("L", len(labels)))
+		r.Log().Debug("found labels locally", zap.Int("L", len(labels)))
 		res := &msg.LabelsMany{}
 		res.Labels = labels
 
@@ -75,7 +75,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 
 	// Offline mode
 	if !r.SDK().NetCtrl().Connected() {
-		r.Log().Debug("We are offline then load from local db",
+		r.Log().Debug("are offline then load from local db",
 			zap.Int32("LabelID", req.LabelID),
 			zap.Int64("MinID", req.MinID),
 			zap.Int64("MaxID", req.MaxID),
@@ -140,7 +140,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 	case req.MinID != 0 && req.MaxID == 0:
 		b, _ := repo.Labels.GetUpperFilled(domain.GetTeamID(in), req.LabelID, req.MinID)
 		if !b {
-			r.Log().Info("River detected label hole (With MinID Only)",
+			r.Log().Info("detected label hole (With MinID Only)",
 				zap.Int32("LabelID", req.LabelID),
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("MaxID", req.MaxID),

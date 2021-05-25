@@ -89,7 +89,7 @@ func (r *River) executeCommand(
 		serverForce  = delegate.Flags()&domain.RequestServerForced != 0
 	)
 
-	logger.Debug("River executes command",
+	logger.Debug("executes command",
 		zap.Int64("ReqID", requestID),
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
@@ -149,7 +149,7 @@ func (r *River) executeLocalCommand(
 	requestID uint64, constructor int64, commandBytes []byte,
 	cb domain.Callback,
 ) {
-	logger.Debug("We execute local command",
+	logger.Debug("execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
@@ -171,7 +171,7 @@ func (r *River) executeRemoteCommand(
 	cb domain.Callback,
 	timeout time.Duration,
 ) {
-	logger.Debug("We execute remote command",
+	logger.Debug("execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
@@ -247,7 +247,7 @@ func deepCopy(commandBytes []byte) []byte {
 	return buff
 }
 func releaseDelegate(r *River, requestID uint64) {
-	logger.Debug("River releases delegate",
+	logger.Debug("releases delegate",
 		zap.Uint64("ReqID", requestID),
 	)
 	r.delegateMutex.Lock()
@@ -272,23 +272,23 @@ func (r *River) CreateAuthKey() (err error) {
 
 	sk, err := r.getServerKeys()
 	if err != nil {
-		logger.Warn("River got error on SystemGetServers")
+		logger.Warn("got error on SystemGetServers")
 		return
 	}
 
 	err, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ := r.initConnect()
 	if err != nil {
-		logger.Warn("River got error on InitConnect", zap.Error(err))
+		logger.Warn("got error on InitConnect", zap.Error(err))
 		return
 	}
-	logger.Info("River passed the 1st step of CreateAuthKey",
+	logger.Info("passed the 1st step of CreateAuthKey",
 		zap.Uint64("ServerNonce", serverNonce),
 		zap.Uint64("ServerPubFP", serverPubFP),
 		zap.Uint64("ServerPQ", serverPQ),
 	)
 
 	err = r.initCompleteAuth(sk, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ)
-	logger.Info("River passed the 2nd step of CreateAuthKey")
+	logger.Info("passed the 2nd step of CreateAuthKey")
 
 	// double set AuthID
 	r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
@@ -615,12 +615,12 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 			waitGroup.Add(1)
 			r.syncCtrl.Logout(waitGroup, 3)
 			waitGroup.Wait()
-			logger.Info("We sent a AuthLogout request to server, received response")
+			logger.Info("sent a AuthLogout request to server, received response")
 		}
 
 		if r.mainDelegate != nil {
 			r.mainDelegate.OnSessionClosed(reason)
-			logger.Info("We called SessionClosed delegate")
+			logger.Info("called SessionClosed delegate")
 		}
 
 		// Stop Controllers
@@ -628,10 +628,10 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		r.queueCtrl.Stop()
 		r.fileCtrl.Stop()
 		r.networkCtrl.Stop()
-		logger.Info("We stopped all the controllers")
+		logger.Info("stopped all the controllers")
 
 		repo.DropAll()
-		logger.Info("We reset our database")
+		logger.Info("reset our database")
 
 		r.ConnInfo.FirstName = ""
 		r.ConnInfo.LastName = ""
@@ -640,16 +640,16 @@ func (r *River) Logout(notifyServer bool, reason int) error {
 		r.ConnInfo.Username = ""
 		r.ConnInfo.Bio = ""
 		r.ConnInfo.Save()
-		logger.Info("We reset our connection info")
+		logger.Info("reset our connection info")
 
 		err := r.AppStart()
 		if err != nil {
 			return nil, err
 		}
-		logger.Info("We started the app again")
+		logger.Info("started the app again")
 
 		r.networkCtrl.Connect()
-		logger.Info("We start connecting to server")
+		logger.Info("start connecting to server")
 		return nil, err
 	})
 	return err
@@ -720,7 +720,7 @@ func (r *River) AppStart() error {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
-	logger.Info("River Starting")
+	logger.Info("Starting")
 
 	// Initialize MessageHole
 	messageHole.Init()
@@ -738,7 +738,7 @@ func (r *River) AppStart() error {
 		domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
 		err := domain.SysConfig.Unmarshal(confBytes)
 		if err != nil {
-			logger.Warn("We could not unmarshal SysConfig", zap.Error(err))
+			logger.Warn("could not unmarshal SysConfig", zap.Error(err))
 		}
 	}
 
@@ -773,7 +773,7 @@ func (r *River) AppStart() error {
 	domain.WindowLog = func(txt string) {
 		r.mainDelegate.AddLog(txt)
 	}
-	logger.Info("River Started")
+	logger.Info("Started")
 
 	// Try to keep the user's status online
 	go r.updateStatusJob()

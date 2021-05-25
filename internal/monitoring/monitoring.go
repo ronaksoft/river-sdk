@@ -172,7 +172,7 @@ func SaveUsage() {
 	if err == nil {
 		err = repo.System.SaveBytes("ClientUsage", b)
 		if err != nil {
-			logger.Warn("We got error on saving ClientUsage into the db", zap.Error(err))
+			logger.Warn("got error on saving ClientUsage into the db", zap.Error(err))
 		}
 	}
 }

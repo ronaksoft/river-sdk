@@ -143,7 +143,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 
 	// Initialize River Connection
-	logger.Info("River SetConfig done!")
+	logger.Info("SetConfig done!")
 
 	// Set current team
 	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
@@ -154,7 +154,7 @@ func (r *River) onNetworkConnect() (err error) {
 }
 
 func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
-	logger.Info("We received error (General)",
+	logger.Info("received error (General)",
 		zap.Uint64("ReqID", requestID),
 		zap.String("Code", e.Code),
 		zap.String("Item", e.Items),

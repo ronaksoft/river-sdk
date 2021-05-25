@@ -111,7 +111,7 @@ func Set(s *msg.SystemSalts) {
 	b, _ := json.Marshal(saltArray)
 	err := repo.System.SaveString(domain.SkSystemSalts, string(b))
 	if err != nil {
-		logger.Error("River couldn't save SystemSalts in the db", zap.Error(err))
+		logger.Error("couldn't save SystemSalts in the db", zap.Error(err))
 		return
 	}
 	UpdateSalt()

@@ -38,7 +38,7 @@ func (r *contact) contactsGet(in, out *rony.MessageEnvelope, da domain.Callback)
 	out.Constructor = msg.C_ContactsMany
 	out.Message, _ = res.Marshal()
 
-	r.Log().Info("We returned data locally, ContactsGet",
+	r.Log().Info("returned data locally, ContactsGet",
 		zap.Int("Users", len(res.Users)),
 		zap.Int("Contacts", len(res.Contacts)),
 	)
@@ -105,11 +105,11 @@ func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da domain.Callba
 
 	oldHash, err := repo.System.LoadInt(domain.SkContactsImportHash)
 	if err != nil {
-		r.Log().Warn("We got error on loading ContactsImportHash", zap.Error(err))
+		r.Log().Warn("got error on loading ContactsImportHash", zap.Error(err))
 	}
 	// calculate ContactsImportHash and compare with oldHash
 	newHash := domain.CalculateContactsImportHash(req)
-	r.Log().Info("We returned data locally, ContactsImport",
+	r.Log().Info("returned data locally, ContactsImport",
 		zap.Uint64("Old", oldHash),
 		zap.Uint64("New", newHash),
 	)
@@ -127,7 +127,7 @@ func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da domain.Callba
 	// not equal save it to DB
 	err = repo.System.SaveInt(domain.SkContactsImportHash, newHash)
 	if err != nil {
-		r.Log().Error("We got error on saving ContactsImportHash", zap.Error(err))
+		r.Log().Error("got error on saving ContactsImportHash", zap.Error(err))
 	}
 
 	// extract differences between existing contacts and new contacts
@@ -136,7 +136,7 @@ func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da domain.Callba
 
 	err = repo.Users.SavePhoneContact(diffContacts...)
 	if err != nil {
-		r.Log().Error("We got error on saving phone contacts in to the db", zap.Error(err))
+		r.Log().Error("got error on saving phone contacts in to the db", zap.Error(err))
 	}
 
 	if len(diffContacts) <= 250 {
@@ -215,7 +215,7 @@ func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, da domain.C
 	}
 	res.Groups, _ = repo.Groups.GetMany(mGroups.ToArray())
 	if len(res.Groups) != len(mGroups) {
-		r.Log().Warn("River found unmatched top peers groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
+		r.Log().Warn("found unmatched top peers groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
 		for groupID := range mGroups {
 			found := false
 			for _, g := range res.Groups {
@@ -232,7 +232,7 @@ func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, da domain.C
 
 	res.Users, _ = repo.Users.GetMany(mUsers.ToArray())
 	if len(res.Users) != len(mUsers) {
-		r.Log().Warn("River found unmatched top peers users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
+		r.Log().Warn("found unmatched top peers users", zap.Int("Got", len(res.Users)), zap.Int("Need", len(mUsers)))
 		for userID := range mUsers {
 			found := false
 			for _, g := range res.Users {
@@ -249,7 +249,7 @@ func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, da domain.C
 
 	out.Constructor = msg.C_ContactsTopPeers
 	buff, err := res.Marshal()
-	r.Log().ErrorOnErr("River got error on marshal ContactsTopPeers", err)
+	r.Log().ErrorOnErr("got error on marshal ContactsTopPeers", err)
 	out.Message = buff
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }

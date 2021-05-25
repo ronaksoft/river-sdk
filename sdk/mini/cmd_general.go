@@ -119,7 +119,7 @@ func (r *River) executeLocalCommand(
 	requestID uint64, constructor int64, commandBytes []byte,
 	da domain.Callback,
 ) {
-	logger.Debug("We execute local command",
+	logger.Debug("execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 
@@ -140,7 +140,7 @@ func (r *River) executeRemoteCommand(
 	requestID uint64, constructor int64, commandBytes []byte,
 	da domain.Callback,
 ) {
-	logger.Debug("We execute remote command",
+	logger.Debug("execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),
 	)
 	requestID = uint64(domain.SequentialUniqueID())

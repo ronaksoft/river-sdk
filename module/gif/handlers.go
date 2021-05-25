@@ -32,7 +32,7 @@ func (r *gif) gifSave(in, out *rony.MessageEnvelope, da domain.Callback) {
 		return
 	}
 
-	r.Log().Info("We are saving GIF",
+	r.Log().Info("are saving GIF",
 		zap.Int64("FileID", cf.FileID),
 		zap.Uint64("AccessHash", cf.AccessHash),
 		zap.Int32("ClusterID", cf.ClusterID),
@@ -73,7 +73,7 @@ func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
 
 	err := repo.Gifs.Delete(req.Doc.ClusterID, req.Doc.ID)
 	if err != nil {
-		r.Log().Warn("We got error on deleting GIF document", zap.Error(err))
+		r.Log().Warn("got error on deleting GIF document", zap.Error(err))
 	}
 
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())

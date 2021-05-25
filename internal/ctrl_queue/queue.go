@@ -117,11 +117,11 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 	req.InsertTime = time.Now()
 	jsonRequest, err := json.Marshal(req)
 	if err != nil {
-		logger.Warn("QueueController couldn't marshal the request", zap.Error(err))
+		logger.Warn("couldn't marshal the request", zap.Error(err))
 		return
 	}
 	if _, err := ctrl.waitingList.Enqueue(jsonRequest); err != nil {
-		logger.Warn("QueueController couldn't enqueue the request", zap.Error(err))
+		logger.Warn("couldn't enqueue the request", zap.Error(err))
 		return
 	}
 	ctrl.distributorLock.Lock()
@@ -290,7 +290,7 @@ func (ctrl *Controller) Start(resetQueue bool) {
 	}
 	err := ctrl.OpenQueue()
 	if err != nil {
-		logger.Fatal("We couldn't initialize the queue", zap.Error(err))
+		logger.Fatal("couldn't initialize the queue", zap.Error(err))
 	}
 
 	// Try to resend unsent messages
@@ -390,7 +390,7 @@ func (ctrl *Controller) OpenQueue() (err error) {
 		if q, err := goque.OpenQueue(ctrl.dataDir); err != nil {
 			err = os.RemoveAll(ctrl.dataDir)
 			if err != nil {
-				logger.Warn("we got error on removing queue directory", zap.Error(err))
+				logger.Warn("got error on removing queue directory", zap.Error(err))
 			}
 			return err
 		} else {

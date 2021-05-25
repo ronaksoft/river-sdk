@@ -67,7 +67,7 @@ func (r *group) groupDeleteUser(in, out *rony.MessageEnvelope, da domain.Callbac
 
 	err = repo.Groups.RemoveParticipant(req.GroupID, req.User.UserID)
 	if err != nil {
-		r.Log().Error("We got error on GroupDeleteUser local handler", zap.Error(err))
+		r.Log().Error("got error on GroupDeleteUser local handler", zap.Error(err))
 	}
 
 	// send the request to server
@@ -99,7 +99,7 @@ func (r *group) groupsGetFull(in, out *rony.MessageEnvelope, da domain.Callback)
 	// Get Group PhotoGallery
 	res.PhotoGallery, err = repo.Groups.GetPhotoGallery(req.GroupID)
 	if err != nil {
-		r.Log().Error("We got error on GetPhotoGallery in local handler", zap.Error(err))
+		r.Log().Error("got error on GetPhotoGallery in local handler", zap.Error(err))
 	}
 
 	// Users
@@ -144,7 +144,7 @@ func (r *group) groupToggleAdmin(in, out *rony.MessageEnvelope, da domain.Callba
 
 	err = repo.Groups.ToggleAdmins(req.GroupID, req.AdminEnabled)
 	if err != nil {
-		r.Log().Warn("We got error on local handler for GroupToggleAdmin", zap.Error(err))
+		r.Log().Warn("got error on local handler for GroupToggleAdmin", zap.Error(err))
 	}
 
 	// send the request to server

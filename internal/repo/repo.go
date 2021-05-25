@@ -351,7 +351,7 @@ var msgIndexer = tools.NewFlusherPool(10, 1000, func(targetID string, entries []
 	}
 	err := r.msgSearch.Batch(b)
 	if err != nil {
-		logger.Warn("MessageIndexer got error", zap.Error(err))
+		logger.Warn("got error MessageIndexer", zap.Error(err))
 	}
 })
 
