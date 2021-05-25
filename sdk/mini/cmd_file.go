@@ -6,6 +6,7 @@ import (
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
@@ -21,7 +22,7 @@ func (r *River) GetFilePath(clusterID int32, fileID int64, accessHash int64) str
 
 func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) []byte {
 	fileStatus := &msg.ClientFileStatus{
-		Status:   int32(domain.RequestStatusNone),
+		Status:   int32(request.StatusNone),
 		Progress: 0,
 		FilePath: "",
 	}
@@ -31,7 +32,7 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 	} else {
 		fileStatus.FilePath = filePath
 		fileStatus.Progress = 100
-		fileStatus.Status = int32(domain.RequestStatusCompleted)
+		fileStatus.Status = int32(request.StatusCompleted)
 	}
 
 	buf, _ := fileStatus.Marshal()

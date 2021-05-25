@@ -3,6 +3,7 @@ package account
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/module"
 )
 
@@ -22,7 +23,7 @@ type account struct {
 func New() *account {
 	r := &account{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalHandler{
+		map[int64]request.LocalHandler{
 			msg.C_AccountGetTeams:          r.accountsGetTeams,
 			msg.C_AccountRegisterDevice:    r.accountRegisterDevice,
 			msg.C_AccountRemovePhoto:       r.accountRemovePhoto,

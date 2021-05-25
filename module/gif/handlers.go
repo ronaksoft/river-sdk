@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 )
@@ -17,7 +18,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *gif) gifSave(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *gif) gifSave(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.GifSave{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -63,7 +64,7 @@ func (r *gif) gifSave(in, out *rony.MessageEnvelope, da domain.Callback) {
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.GifDelete{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -79,7 +80,7 @@ func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.GifGetSaved{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -19,7 +20,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.UsersGetFull{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		r.Log().Error("UserModule::usersGetFull()-> Unmarshal()", zap.Error(err))
@@ -64,7 +65,7 @@ func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da domain.Callback) {
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *user) usersGet(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *user) usersGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.UsersGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

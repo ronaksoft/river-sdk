@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/abiosoft/ishell.v2"
 	"io/ioutil"
@@ -156,7 +157,7 @@ func sendCode(c *ishell.Context, phone string) {
 	}
 	reqBytes, _ := req.Marshal()
 	reqDelegate := new(RequestDelegate)
-	reqDelegate.FlagsVal = domain.RequestBlocking
+	reqDelegate.FlagsVal = request.Blocking
 	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthSendCode, reqBytes, reqDelegate); err != nil {
 		c.Println("Command Failed:", err)
 	} else {
@@ -184,7 +185,7 @@ func login(c *ishell.Context, phone string) {
 	}
 	reqBytes, _ := req.Marshal()
 	reqDelegate := new(RequestDelegate)
-	reqDelegate.FlagsVal = domain.RequestBlocking
+	reqDelegate.FlagsVal = request.Blocking
 	os.Remove("./_phone")
 	os.Remove("./_phoneCodeHash")
 	if reqID, err := _SDK.ExecuteCommand(msg.C_AuthLogin, reqBytes, reqDelegate); err != nil {

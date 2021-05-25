@@ -3,6 +3,7 @@ package system
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/module"
 )
 
@@ -22,7 +23,7 @@ type system struct {
 func New() *system {
 	r := &system{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalHandler{
+		map[int64]request.LocalHandler{
 			msg.C_SystemGetConfig: r.systemGetConfig,
 		},
 	)

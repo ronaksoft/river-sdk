@@ -2,8 +2,8 @@ package team
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 )
@@ -17,7 +17,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *team) teamEdit(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *team) teamEdit(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.TeamEdit{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -35,7 +35,7 @@ func (r *team) teamEdit(in, out *rony.MessageEnvelope, da domain.Callback) {
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientGetTeamCounters{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

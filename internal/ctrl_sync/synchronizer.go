@@ -9,6 +9,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
@@ -270,7 +271,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 
 			},
 			false,
-			domain.RequestSkipFlusher,
+			request.SkipFlusher,
 			domain.WebsocketRequestTimeoutLong,
 		)
 		waitGroup.Wait()

@@ -8,6 +8,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
@@ -81,7 +82,7 @@ type River struct {
 	sentryDSN string
 
 	// localCommands can be satisfied by client cache
-	localCommands map[int64]domain.LocalHandler
+	localCommands map[int64]request.LocalHandler
 	messageChan   chan []*rony.MessageEnvelope
 	updateChan    chan *msg.UpdateContainer
 
@@ -180,7 +181,7 @@ func (r *River) updateReceiver() {
 }
 
 func (r *River) registerCommandHandlers() {
-	r.localCommands = map[int64]domain.LocalHandler{
+	r.localCommands = map[int64]request.LocalHandler{
 		msg.C_ClientSendMessageMedia: r.clientSendMessageMedia,
 		msg.C_ClientGlobalSearch:     r.clientGlobalSearch,
 		msg.C_MessagesSendMedia:      r.messagesSendMedia,

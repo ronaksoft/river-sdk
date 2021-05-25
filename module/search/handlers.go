@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"strings"
@@ -19,7 +20,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *search) clientGlobalSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *search) clientGlobalSearch(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientGlobalSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -95,7 +96,7 @@ func (r *search) clientGlobalSearch(in, out *rony.MessageEnvelope, da domain.Cal
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *search) clientGetRecentSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *search) clientGetRecentSearch(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientGetRecentSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -129,7 +130,7 @@ func (r *search) clientGetRecentSearch(in, out *rony.MessageEnvelope, da domain.
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *search) clientPutRecentSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *search) clientPutRecentSearch(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientPutRecentSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -163,7 +164,7 @@ func (r *search) clientPutRecentSearch(in, out *rony.MessageEnvelope, da domain.
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *search) clientRemoveAllRecentSearches(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *search) clientRemoveAllRecentSearches(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientRemoveAllRecentSearches{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -186,7 +187,7 @@ func (r *search) clientRemoveAllRecentSearches(in, out *rony.MessageEnvelope, da
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *search) clientRemoveRecentSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *search) clientRemoveRecentSearch(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientRemoveRecentSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

@@ -2,7 +2,7 @@ package search
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/module"
 )
 
@@ -22,7 +22,7 @@ type search struct {
 func New() *search {
 	r := &search{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalHandler{
+		map[int64]request.LocalHandler{
 			msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
 			msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
 			msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,

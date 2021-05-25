@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/registry"
@@ -96,8 +97,8 @@ func (r *River) executeCommand(
 		return 0, domain.ErrInvalidConstructor
 	}
 
-	serverForce := delegate.Flags()&domain.RequestServerForced != 0
-	rda := domain.DelegateAdapterFromRequest(delegate, true)
+	serverForce := delegate.Flags()&request.ServerForced != 0
+	rda := request.DelegateAdapter(delegate, true)
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
@@ -119,9 +120,9 @@ func (r *River) executeCommand(
 }
 func (r *River) executeLocalCommand(
 	teamID int64, teamAccess uint64,
-	handler domain.LocalHandler,
+	handler request.LocalHandler,
 	requestID uint64, constructor int64, commandBytes []byte,
-	da domain.Callback,
+	da request.Callback,
 ) {
 	logger.Debug("execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -142,7 +143,7 @@ func (r *River) executeLocalCommand(
 func (r *River) executeRemoteCommand(
 	teamID int64, teamAccess uint64,
 	requestID uint64, constructor int64, commandBytes []byte,
-	da domain.Callback,
+	da request.Callback,
 ) {
 	logger.Debug("execute remote command",
 		zap.String("C", registry.ConstructorName(constructor)),

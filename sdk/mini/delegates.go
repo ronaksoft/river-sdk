@@ -1,7 +1,7 @@
 package mini
 
 import (
-	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 )
 
 // MainDelegate external (UI) handler will listen to this function to receive data from SDK
@@ -18,8 +18,8 @@ type MainDelegate interface {
 }
 
 type (
-	RequestDelegateFlag = domain.RequestDelegateFlag
-	RequestDelegate     = domain.RequestDelegate
+	RequestDelegateFlag = request.DelegateFlag
+	RequestDelegate     = request.Delegate
 )
 
 // Request Flags

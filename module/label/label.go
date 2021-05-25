@@ -3,6 +3,7 @@ package label
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/module"
 )
 
@@ -22,7 +23,7 @@ type label struct {
 func New() *label {
 	r := &label{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalHandler{
+		map[int64]request.LocalHandler{
 			msg.C_LabelsAddToMessage:      r.labelAddToMessage,
 			msg.C_LabelsDelete:            r.labelsDelete,
 			msg.C_LabelsGet:               r.labelsGet,

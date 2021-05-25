@@ -2,7 +2,7 @@ package main
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -102,7 +102,7 @@ var TeamGetDialogs = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := NewCustomDelegate()
 		reqDelegate.FlagsFunc = func() riversdk.RequestDelegateFlag {
-			return domain.RequestServerForced
+			return request.ServerForced
 		}
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, reqDelegate); err != nil {
@@ -125,7 +125,7 @@ var TeamEdit = &ishell.Cmd{
 		reqBytes, _ := req.Marshal()
 		reqDelegate := NewCustomDelegate()
 		reqDelegate.FlagsFunc = func() riversdk.RequestDelegateFlag {
-			return domain.RequestServerForced
+			return request.ServerForced
 		}
 
 		if reqID, err := _SDK.ExecuteCommand(msg.C_TeamEdit, reqBytes, reqDelegate); err != nil {

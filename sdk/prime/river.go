@@ -8,6 +8,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"git.ronaksoft.com/river/sdk/module"
@@ -113,7 +114,7 @@ type River struct {
 	// modules hold reference to registered modules
 	modules map[string]module.Module
 	// localCommands can be satisfied by client cache
-	localCommands map[int64]domain.LocalHandler
+	localCommands map[int64]request.LocalHandler
 	// realTimeCommands should not passed to queue to send they should directly pass to networkController
 	realTimeCommands map[int64]bool
 	messageChan      chan []*rony.MessageEnvelope
@@ -204,7 +205,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 
 	// Initialize realtime requests
 	r.modules = map[string]module.Module{}
-	r.localCommands = map[int64]domain.LocalHandler{}
+	r.localCommands = map[int64]request.LocalHandler{}
 	r.realTimeCommands = map[int64]bool{
 		msg.C_MessagesSetTyping:   true,
 		msg.C_InitConnect:         true,
@@ -434,7 +435,7 @@ func (r *River) messageReceiver() {
 
 		// check requestCallbacks and call callbacks
 		for idx := range msgs {
-			reqCB := domain.GetRequestCallback(msgs[idx].RequestID)
+			reqCB := request.GetRequestCallback(msgs[idx].RequestID)
 			if reqCB == nil {
 				continue
 			}
@@ -452,7 +453,7 @@ func (r *River) messageReceiver() {
 					zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 				)
 			}
-			domain.RemoveRequestCallback(msgs[idx].RequestID)
+			request.RemoveRequestCallback(msgs[idx].RequestID)
 		}
 	}
 }

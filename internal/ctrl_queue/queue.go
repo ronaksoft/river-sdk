@@ -8,6 +8,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/beeker1121/goque"
 	"github.com/juju/ratelimit"
 	"github.com/ronaksoft/rony"
@@ -29,7 +30,7 @@ func init() {
 }
 
 // request
-type request struct {
+type queuedRequest struct {
 	ID              uint64                `json:"id"`
 	Timeout         time.Duration         `json:"timeout"`
 	MessageEnvelope *rony.MessageEnvelope `json:"message_envelope"`
@@ -92,7 +93,7 @@ func (ctrl *Controller) distributor() {
 		}
 
 		// Prepare
-		req := request{}
+		req := queuedRequest{}
 		if err := json.Unmarshal(item.Value, &req); err != nil {
 			logger.Error("could not unmarshal popped request", zap.Error(err))
 			continue
@@ -112,7 +113,7 @@ func (ctrl *Controller) distributor() {
 }
 
 // addToWaitingList
-func (ctrl *Controller) addToWaitingList(req *request) {
+func (ctrl *Controller) addToWaitingList(req *queuedRequest) {
 	req.InsertTime = time.Now()
 	jsonRequest, err := json.Marshal(req)
 	if err != nil {
@@ -134,7 +135,7 @@ func (ctrl *Controller) addToWaitingList(req *request) {
 // executor
 // Sends the message to the networkController and waits for the response. If time is up then it call the
 // TimeoutCallback otherwise if response arrived in time, SuccessCallback will be called.
-func (ctrl *Controller) executor(req request) {
+func (ctrl *Controller) executor(req queuedRequest) {
 	defer logger.RecoverPanic(
 		"SyncCtrl::executor",
 		domain.M{
@@ -145,9 +146,9 @@ func (ctrl *Controller) executor(req request) {
 		nil,
 	)
 
-	reqCB := domain.GetRequestCallback(req.ID)
+	reqCB := request.GetRequestCallback(req.ID)
 	if reqCB == nil {
-		reqCB = domain.AddRequestCallback(
+		reqCB = request.AddRequestCallback(
 			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTimeout, nil, false,
 		)
 	}
@@ -210,7 +211,7 @@ func (ctrl *Controller) executor(req request) {
 		}
 		reqCB.OnSuccess(res)
 	}
-	domain.RemoveRequestCallback(req.ID)
+	request.RemoveRequestCallback(req.ID)
 	return
 }
 
@@ -244,7 +245,7 @@ func (ctrl *Controller) EnqueueCommandWithTimeout(
 	)
 
 	// Add the callback functions
-	_ = domain.AddRequestCallback(
+	_ = request.AddRequestCallback(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTimeout, timeoutCB, isUICallback,
 	)
 
@@ -253,7 +254,7 @@ func (ctrl *Controller) EnqueueCommandWithTimeout(
 	}
 
 	// Add the request to the queue
-	ctrl.addToWaitingList(&request{
+	ctrl.addToWaitingList(&queuedRequest{
 		ID:              messageEnvelope.RequestID,
 		Timeout:         timeout,
 		MessageEnvelope: messageEnvelope,

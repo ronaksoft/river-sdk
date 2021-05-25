@@ -3,6 +3,7 @@ package call
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/module"
 	"sync"
 )
@@ -80,7 +81,7 @@ func New(config *Config) *call {
 		C_ClientCallAccept
 	*/
 	c.RegisterHandlers(
-		map[int64]domain.LocalHandler{
+		map[int64]request.LocalHandler{
 			msg.C_ClientCallToggleVideo:             c.toggleVideoHandler,
 			msg.C_ClientCallToggleAudio:             c.toggleAudioHandler,
 			msg.C_ClientCallTryReconnect:            c.tryReconnectHandler,

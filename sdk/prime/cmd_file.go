@@ -2,8 +2,8 @@ package riversdk
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/dgraph-io/badger/v2"
 	"go.uber.org/zap"
 	"os"
@@ -19,16 +19,16 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 			if uploadRequest.TotalParts > 0 {
 				fileStatus.Progress = int64(float64(len(uploadRequest.FinishedParts)) / float64(uploadRequest.TotalParts) * 100)
 			}
-			fileStatus.Status = int32(domain.RequestStatusInProgress)
+			fileStatus.Status = int32(request.StatusInProgress)
 		} else {
-			fileStatus.Status = int32(domain.RequestStatusNone)
+			fileStatus.Status = int32(request.StatusNone)
 			fileStatus.Progress = 0
 		}
 	} else {
 		downloadRequest := r.fileCtrl.GetDownloadRequest(clusterID, fileID, uint64(accessHash))
 		if downloadRequest != nil {
 			fileStatus.FilePath = downloadRequest.FilePath
-			fileStatus.Status = int32(domain.RequestStatusInProgress)
+			fileStatus.Status = int32(request.StatusInProgress)
 			if downloadRequest.TotalParts > 0 {
 				fileStatus.Progress = int64(float64(len(downloadRequest.FinishedParts)) / float64(downloadRequest.TotalParts) * 100)
 			}
@@ -41,7 +41,7 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 				} else {
 					fileStatus.FilePath = filePath
 					fileStatus.Progress = 100
-					fileStatus.Status = int32(domain.RequestStatusCompleted)
+					fileStatus.Status = int32(request.StatusCompleted)
 				}
 			}
 		}

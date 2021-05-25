@@ -1,4 +1,4 @@
-package domain
+package request
 
 import (
 	"time"
@@ -13,7 +13,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-type ExecuteContext struct {
+type Context struct {
 	RequestID    int64
 	TeamID       int64
 	TeamAccess   uint64
@@ -21,5 +21,5 @@ type ExecuteContext struct {
 	CommandBytes []byte
 	Callback     Callback
 	Timeout      time.Duration
-	Flags        RequestDelegateFlag
+	Flags        DelegateFlag
 }

@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/ctrl_network"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/testenv"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
@@ -113,7 +114,7 @@ func TestNewController(t *testing.T) {
 	ctrl.Connect()
 	go func() {
 		for {
-			err := ctrl.WebsocketSend(getServerTime(), domain.RequestSkipFlusher)
+			err := ctrl.WebsocketSend(getServerTime(), request.SkipFlusher)
 			if err != nil {
 				t.Error(err)
 			}
@@ -134,7 +135,7 @@ func TestStartStop(t *testing.T) {
 	ctrl.Start()
 	go func() {
 		for {
-			err := ctrl.WebsocketSend(getServerTime(), domain.RequestSkipFlusher)
+			err := ctrl.WebsocketSend(getServerTime(), request.SkipFlusher)
 			if err != nil {
 				t.Error(err)
 			}

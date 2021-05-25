@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"git.ronaksoft.com/river/sdk/module"
 	"github.com/ronaksoft/rony"
@@ -23,7 +24,7 @@ type notification struct {
 func New() *notification {
 	r := &notification{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalHandler{
+		map[int64]request.LocalHandler{
 			msg.C_ClientDismissNotification:        r.clientDismissNotification,
 			msg.C_ClientGetNotificationDismissTime: r.clientGetNotificationDismissTime,
 		},
@@ -35,7 +36,7 @@ func (r *notification) Name() string {
 	return module.Notification
 }
 
-func (r *notification) clientDismissNotification(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *notification) clientDismissNotification(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientDismissNotification{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -49,7 +50,7 @@ func (r *notification) clientDismissNotification(in, out *rony.MessageEnvelope, 
 	}
 }
 
-func (r *notification) clientGetNotificationDismissTime(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *notification) clientGetNotificationDismissTime(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientDismissNotification{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

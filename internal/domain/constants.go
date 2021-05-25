@@ -154,33 +154,6 @@ func (ss SyncStatus) ToString() string {
 	return ""
 }
 
-// RequestStatus state of file download/upload request
-type RequestStatus int32
-
-const (
-	RequestStatusNone       RequestStatus = 0 // RequestStatusNone no request invoked
-	RequestStatusInProgress RequestStatus = 1 // RequestStatusInProgress downloading/uploading
-	RequestStatusCompleted  RequestStatus = 2 // RequestStatusCompleted already file is downloaded/uploaded
-	RequestStatusCanceled   RequestStatus = 4 // RequestStatusCanceled canceled by user
-	RequestStatusError      RequestStatus = 5 // RequestStatusError encountered error
-)
-
-func (rs RequestStatus) ToString() string {
-	switch rs {
-	case RequestStatusNone:
-		return "None"
-	case RequestStatusInProgress:
-		return "InProgress"
-	case RequestStatusCompleted:
-		return "Completed"
-	case RequestStatusCanceled:
-		return "Canceled"
-	case RequestStatusError:
-		return "Error"
-	}
-	return ""
-}
-
 // UserStatus Times
 const (
 	Minute = 60

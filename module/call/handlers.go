@@ -2,7 +2,7 @@ package call
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 )
 
@@ -15,7 +15,7 @@ import (
    Copyright Ronak Software Group 2021
 */
 
-func (c *call) toggleVideoHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) toggleVideoHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallToggleVideo{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -34,7 +34,7 @@ func (c *call) toggleVideoHandler(in, out *rony.MessageEnvelope, da domain.Callb
 	da.OnComplete(out)
 }
 
-func (c *call) toggleAudioHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) toggleAudioHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallToggleAudio{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -53,7 +53,7 @@ func (c *call) toggleAudioHandler(in, out *rony.MessageEnvelope, da domain.Callb
 	da.OnComplete(out)
 }
 
-func (c *call) tryReconnectHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) tryReconnectHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallTryReconnect{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -72,7 +72,7 @@ func (c *call) tryReconnectHandler(in, out *rony.MessageEnvelope, da domain.Call
 	da.OnComplete(out)
 }
 
-func (c *call) destroyHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) destroyHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallDestroy{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -86,7 +86,7 @@ func (c *call) destroyHandler(in, out *rony.MessageEnvelope, da domain.Callback)
 	da.OnComplete(out)
 }
 
-func (c *call) areAllAudioHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) areAllAudioHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallDestroy{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -105,7 +105,7 @@ func (c *call) areAllAudioHandler(in, out *rony.MessageEnvelope, da domain.Callb
 	da.OnComplete(out)
 }
 
-func (c *call) iceCandidateHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) iceCandidateHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallSendIceCandidate{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -124,7 +124,7 @@ func (c *call) iceCandidateHandler(in, out *rony.MessageEnvelope, da domain.Call
 	da.OnComplete(out)
 }
 
-func (c *call) iceConnectionStatusChangeHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) iceConnectionStatusChangeHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallSendIceConnectionStatus{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -143,7 +143,7 @@ func (c *call) iceConnectionStatusChangeHandler(in, out *rony.MessageEnvelope, d
 	da.OnComplete(out)
 }
 
-func (c *call) trackUpdateHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) trackUpdateHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallSendTrack{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -162,7 +162,7 @@ func (c *call) trackUpdateHandler(in, out *rony.MessageEnvelope, da domain.Callb
 	da.OnComplete(out)
 }
 
-func (c *call) mediaSettingsChangeHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) mediaSettingsChangeHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallSendMediaSettings{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -181,7 +181,7 @@ func (c *call) mediaSettingsChangeHandler(in, out *rony.MessageEnvelope, da doma
 	da.OnComplete(out)
 }
 
-func (c *call) startHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) startHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallStart{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -200,7 +200,7 @@ func (c *call) startHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 	da.OnComplete(out)
 }
 
-func (c *call) joinHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) joinHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallJoin{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -219,7 +219,7 @@ func (c *call) joinHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
 	da.OnComplete(out)
 }
 
-func (c *call) acceptHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) acceptHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallAccept{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -238,7 +238,7 @@ func (c *call) acceptHandler(in, out *rony.MessageEnvelope, da domain.Callback) 
 	da.OnComplete(out)
 }
 
-func (c *call) rejectHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) rejectHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallReject{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -257,7 +257,7 @@ func (c *call) rejectHandler(in, out *rony.MessageEnvelope, da domain.Callback) 
 	da.OnComplete(out)
 }
 
-func (c *call) getParticipantByUserIDHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) getParticipantByUserIDHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallGetParticipantByUserID{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -276,7 +276,7 @@ func (c *call) getParticipantByUserIDHandler(in, out *rony.MessageEnvelope, da d
 	da.OnComplete(out)
 }
 
-func (c *call) getParticipantByConnIdHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) getParticipantByConnIdHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallGetParticipantByConnId{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -295,7 +295,7 @@ func (c *call) getParticipantByConnIdHandler(in, out *rony.MessageEnvelope, da d
 	da.OnComplete(out)
 }
 
-func (c *call) getParticipantListHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) getParticipantListHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallGetParticipantList{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -316,7 +316,7 @@ func (c *call) getParticipantListHandler(in, out *rony.MessageEnvelope, da domai
 	da.OnComplete(out)
 }
 
-func (c *call) muteParticipantHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) muteParticipantHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallMuteParticipant{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -335,7 +335,7 @@ func (c *call) muteParticipantHandler(in, out *rony.MessageEnvelope, da domain.C
 	da.OnComplete(out)
 }
 
-func (c *call) groupAddParticipantHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) groupAddParticipantHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallGroupAddParticipant{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -354,7 +354,7 @@ func (c *call) groupAddParticipantHandler(in, out *rony.MessageEnvelope, da doma
 	da.OnComplete(out)
 }
 
-func (c *call) groupRemoveParticipantHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) groupRemoveParticipantHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallGroupRemoveParticipant{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -373,7 +373,7 @@ func (c *call) groupRemoveParticipantHandler(in, out *rony.MessageEnvelope, da d
 	da.OnComplete(out)
 }
 
-func (c *call) groupUpdateAdminHandler(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (c *call) groupUpdateAdminHandler(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientCallGroupUpdateAdmin{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

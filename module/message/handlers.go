@@ -10,6 +10,7 @@ import (
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/dustin/go-humanize"
@@ -38,7 +39,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesGetDialogs{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -160,7 +161,7 @@ func (r *message) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Ca
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *message) messagesGetDialog(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesGetDialog(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesGetDialog{}
 	err := req.Unmarshal(in.Message)
 	if err != nil {
@@ -184,7 +185,7 @@ func (r *message) messagesGetDialog(in, out *rony.MessageEnvelope, da domain.Cal
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *message) messagesSend(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesSend(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesSend{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -328,7 +329,7 @@ func (r *message) sendToSavedMessage(body string, entities ...*msg.MessageEntity
 	in := &rony.MessageEnvelope{}
 	out := &rony.MessageEnvelope{}
 	in.Fill(domain.NextRequestID(), msg.C_MessagesSend, req)
-	r.messagesSend(in, out, domain.EmptyCallback())
+	r.messagesSend(in, out, request.EmptyCallback())
 }
 func (r *message) sendMediaToSaveMessage(filePath string, filename string) {
 	attrFile := msg.DocumentAttributeFile{Filename: filename}
@@ -361,7 +362,7 @@ func (r *message) sendMediaToSaveMessage(filePath string, filename string) {
 	in := &rony.MessageEnvelope{}
 	out := &rony.MessageEnvelope{}
 	in.Fill(domain.NextRequestID(), msg.C_MessagesSend, req)
-	r.clientSendMessageMedia(in, out, domain.EmptyCallback())
+	r.clientSendMessageMedia(in, out, request.EmptyCallback())
 }
 func (r *message) exportMessages(peerType int32, peerID int64) (filePath string) {
 	filePath = path.Join(repo.DirCache, fmt.Sprintf("Messages-%s-%d.txt", msg.PeerType(peerType).String(), peerID))
@@ -504,7 +505,7 @@ func (r *message) setUpdateState(updateID int64) {
 	go r.SDK().SyncCtrl().Sync()
 }
 
-func (r *message) messagesSendMedia(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesSendMedia(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesSendMedia{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -553,7 +554,7 @@ func (r *message) messagesSendMedia(in, out *rony.MessageEnvelope, da domain.Cal
 	)
 }
 
-func (r *message) messagesReadHistory(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesReadHistory(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesReadHistory{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -576,7 +577,7 @@ func (r *message) messagesReadHistory(in, out *rony.MessageEnvelope, da domain.C
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesGetHistory{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -715,7 +716,7 @@ func (r *message) genGetHistoryCB(
 	}
 }
 
-func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesGetMediaHistory{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -799,7 +800,7 @@ func (r *message) genGetMediaHistoryCB(
 	}
 }
 
-func (r *message) messagesDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesDelete(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesDelete{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -834,7 +835,7 @@ func (r *message) messagesDelete(in, out *rony.MessageEnvelope, da domain.Callba
 
 }
 
-func (r *message) messagesGet(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -884,7 +885,7 @@ func (r *message) messagesGet(in, out *rony.MessageEnvelope, da domain.Callback)
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesClearHistory{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -920,7 +921,7 @@ func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, da domain.
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesReadContents{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -934,7 +935,7 @@ func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, da domain.
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesSaveDraft{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -962,7 +963,7 @@ func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, da domain.Cal
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesClearDraft{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -980,7 +981,7 @@ func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, da domain.Ca
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesTogglePin{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -994,7 +995,7 @@ func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, da domain.Cal
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesSendReaction{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -1008,7 +1009,7 @@ func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, da domain.
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesDeleteReaction{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -1024,7 +1025,7 @@ func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, da domai
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesToggleDialogPin{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -1043,7 +1044,7 @@ func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, da doma
 
 }
 
-func (r *message) clientGetMediaHistory(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) clientGetMediaHistory(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientGetMediaHistory{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -1067,7 +1068,7 @@ func (r *message) clientGetMediaHistory(in, out *rony.MessageEnvelope, da domain
 	}
 }
 
-func (r *message) clientSendMessageMedia(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) clientSendMessageMedia(in, out *rony.MessageEnvelope, da request.Callback) {
 	reqMedia := &msg.ClientSendMessageMedia{}
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -1134,7 +1135,7 @@ func (r *message) clientSendMessageMedia(in, out *rony.MessageEnvelope, da domai
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *message) clientGetFrequentReactions(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) clientGetFrequentReactions(in, out *rony.MessageEnvelope, da request.Callback) {
 	reactions := domain.SysConfig.Reactions
 	r.Log().Info("Reactions", zap.Int("ReactionsCount", len(reactions)))
 
@@ -1156,7 +1157,7 @@ func (r *message) clientGetFrequentReactions(in, out *rony.MessageEnvelope, da d
 	da.OnComplete(out)
 }
 
-func (r *message) clientGetCachedMedia(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) clientGetCachedMedia(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientGetCachedMedia{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -1170,7 +1171,7 @@ func (r *message) clientGetCachedMedia(in, out *rony.MessageEnvelope, da domain.
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *message) clientClearCachedMedia(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) clientClearCachedMedia(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientClearCachedMedia{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -1193,7 +1194,7 @@ func (r *message) clientClearCachedMedia(in, out *rony.MessageEnvelope, da domai
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *message) clientGetLastBotKeyboard(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *message) clientGetLastBotKeyboard(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientGetLastBotKeyboard{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

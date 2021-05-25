@@ -7,6 +7,7 @@ import (
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
@@ -27,7 +28,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da request.Callback) {
 	reqMedia := &msg.ClientSendMessageMedia{}
 	if err := reqMedia.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -203,7 +204,7 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation,
 	}
 	return nil, domain.ErrServer
 }
-func (r *River) uploadFile(in *rony.MessageEnvelope, da domain.Callback, fileID int64, filePath string, peerID int64) error {
+func (r *River) uploadFile(in *rony.MessageEnvelope, da request.Callback, fileID int64, filePath string, peerID int64) error {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -293,7 +294,7 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 	return err
 }
 
-func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientGlobalSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

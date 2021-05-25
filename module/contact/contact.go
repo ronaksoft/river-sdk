@@ -3,6 +3,7 @@ package contact
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/module"
 )
 
@@ -22,7 +23,7 @@ type contact struct {
 func New() *contact {
 	r := &contact{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalHandler{
+		map[int64]request.LocalHandler{
 			msg.C_ContactsAdd:          r.contactsAdd,
 			msg.C_ContactsDelete:       r.contactsDelete,
 			msg.C_ContactsDeleteAll:    r.contactsDeleteAll,

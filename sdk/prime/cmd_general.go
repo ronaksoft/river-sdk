@@ -11,6 +11,7 @@ import (
 	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"github.com/monnand/dhkx"
 	"github.com/ronaksoft/rony"
@@ -23,13 +24,13 @@ import (
 	"time"
 )
 
-func (r *River) Execute(ctx *domain.ExecuteContext) (requestID int64, err error) {
+func (r *River) Execute(ctx *request.Context) (requestID int64, err error) {
 	if ctx.Timeout == 0 {
 		ctx.Timeout = domain.WebsocketRequestTimeout
 	}
 	return r.executeCommand(
 		ctx.TeamID, ctx.TeamAccess, ctx.Constructor, ctx.CommandBytes,
-		domain.NewRequestDelegate(
+		request.NewRequestDelegate(
 			func(b []byte) {
 				me := &rony.MessageEnvelope{}
 				_ = me.Unmarshal(b)
@@ -84,8 +85,8 @@ func (r *River) executeCommand(
 
 	var (
 		waitGroup    = &sync.WaitGroup{}
-		blockingMode = delegate.Flags()&domain.RequestBlocking != 0
-		serverForce  = delegate.Flags()&domain.RequestServerForced != 0
+		blockingMode = delegate.Flags()&request.Blocking != 0
+		serverForce  = delegate.Flags()&request.ServerForced != 0
 	)
 
 	logger.Debug("executes command",
@@ -105,8 +106,8 @@ func (r *River) executeCommand(
 	}
 
 	createTime := tools.NanoTime()
-	da := domain.DelegateAdapterFromRequest(
-		domain.NewRequestDelegate(
+	da := request.DelegateAdapter(
+		request.NewRequestDelegate(
 			func(b []byte) {
 				delegate.OnComplete(b)
 				releaseDelegate(r, uint64(requestID))
@@ -119,7 +120,7 @@ func (r *River) executeCommand(
 					zap.Duration("D", time.Duration(tools.NanoTime()-createTime)),
 					zap.String("C", registry.ConstructorName(constructor)),
 					zap.Int64("ReqID", requestID),
-					zap.String("Flags", domain.RequestDelegateFlagToString(delegate.Flags())),
+					zap.String("Flags", request.DelegateFlagToString(delegate.Flags())),
 				)
 				delegate.OnTimeout(err)
 				releaseDelegate(r, uint64(requestID))
@@ -144,9 +145,9 @@ func (r *River) executeCommand(
 }
 func (r *River) executeLocalCommand(
 	teamID int64, teamAccess uint64,
-	handler domain.LocalHandler,
+	handler request.LocalHandler,
 	requestID uint64, constructor int64, commandBytes []byte,
-	cb domain.Callback,
+	cb request.Callback,
 ) {
 	logger.Debug("execute local command",
 		zap.String("C", registry.ConstructorName(constructor)),
@@ -167,7 +168,7 @@ func (r *River) executeLocalCommand(
 func (r *River) executeRemoteCommand(
 	teamID int64, teamAccess uint64,
 	requestID uint64, constructor int64, commandBytes []byte,
-	cb domain.Callback,
+	cb request.Callback,
 	timeout time.Duration,
 ) {
 	logger.Debug("execute remote command",
@@ -183,14 +184,14 @@ func (r *River) executeRemoteCommand(
 	d, ok := getDelegate(r, requestID)
 	if ok {
 		flags = d.Flags()
-		if d.Flags()&domain.RequestSkipWaitForNetwork != 0 {
+		if d.Flags()&request.SkipWaitForNetwork != 0 {
 			waitForNetwork = false
 			directToNet = true
 
 			go func() {
 				select {
 				case <-time.After(timeout):
-					reqCB := domain.GetRequestCallback(requestID)
+					reqCB := request.GetRequestCallback(requestID)
 					if reqCB == nil {
 						break
 					}
@@ -199,7 +200,7 @@ func (r *River) executeRemoteCommand(
 				}
 			}()
 		}
-		if d.Flags()&domain.RequestRealtime != 0 {
+		if d.Flags()&request.Realtime != 0 {
 			directToNet = true
 		}
 	}
@@ -296,7 +297,7 @@ func (r *River) getServerKeys() (sk *msg.SystemKeys, err error) {
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 
-	cb := domain.NewCallback(
+	cb := request.NewCallback(
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
@@ -340,7 +341,7 @@ func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP,
 	req1Bytes, _ := req1.Marshal()
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	cb := domain.NewCallback(
+	cb := request.NewCallback(
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
@@ -433,7 +434,7 @@ func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, s
 
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
-	cb := domain.NewCallback(
+	cb := request.NewCallback(
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
@@ -536,7 +537,7 @@ func (r *River) CancelRequest(requestID int64) {
 	r.delegateMutex.Unlock()
 
 	// Remove Callback
-	domain.RemoveRequestCallback(uint64(requestID))
+	request.RemoveRequestCallback(uint64(requestID))
 
 	// Cancel Request
 	r.queueCtrl.CancelRequest(requestID)

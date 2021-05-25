@@ -3,6 +3,7 @@ package call
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -500,11 +501,11 @@ func (c *call) executeRemoteCommand(
 		zap.Int64("CallID", callID),
 	)
 
-	rdt := domain.RequestRealtime
+	rdt := request.Realtime
 	if instant {
-		rdt |= domain.RequestSkipFlusher
+		rdt |= request.SkipFlusher
 	} else {
-		rdt |= domain.RequestBatch
+		rdt |= request.Batch
 	}
 
 	wg := sync.WaitGroup{}
@@ -532,12 +533,12 @@ func (c *call) executeRemoteCommand(
 		wg.Done()
 	}
 
-	cb := domain.NewCallback(innerTimeoutCB, innerSuccessCB, nil, false)
+	cb := request.NewCallback(innerTimeoutCB, innerSuccessCB, nil, false)
 
 	executeFn = func() {
 		retry++
 		reqID, err := c.SDK().Execute(
-			&domain.ExecuteContext{
+			&request.Context{
 				TeamID:       c.teamInput.teamID,
 				TeamAccess:   c.teamInput.teamAccess,
 				Constructor:  constructor,

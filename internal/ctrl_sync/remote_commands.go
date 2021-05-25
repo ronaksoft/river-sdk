@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
@@ -51,7 +52,7 @@ func (ctrl *Controller) GetServerSalt() {
 			}
 		},
 		false,
-		domain.RequestSkipFlusher,
+		request.SkipFlusher,
 	)
 }
 
@@ -84,7 +85,7 @@ func (ctrl *Controller) GetSystemConfig() {
 			}
 		},
 		false,
-		domain.RequestSkipFlusher,
+		request.SkipFlusher,
 	)
 }
 
@@ -145,7 +146,7 @@ func (ctrl *Controller) AuthRecall(caller string) (updateID int64, err error) {
 			}
 		},
 		false,
-		domain.RequestSkipFlusher,
+		request.SkipFlusher,
 	)
 
 	// Set the flag for network controller
@@ -190,7 +191,7 @@ func (ctrl *Controller) GetServerTime() (err error) {
 			}
 		},
 		false,
-		domain.RequestSkipFlusher,
+		request.SkipFlusher,
 	)
 	return
 }
@@ -430,7 +431,7 @@ func (ctrl *Controller) Logout(waitGroup *sync.WaitGroup, retry int) {
 			}
 			// Controller applier will take care of this
 		},
-		false, domain.RequestSkipFlusher,
+		false, request.SkipFlusher,
 	)
 }
 

@@ -3,6 +3,7 @@ package user
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/module"
 )
 
@@ -22,7 +23,7 @@ type user struct {
 func New() *user {
 	r := &user{}
 	r.RegisterHandlers(
-		map[int64]domain.LocalHandler{
+		map[int64]request.LocalHandler{
 			msg.C_UsersGet:     r.usersGet,
 			msg.C_UsersGetFull: r.usersGetFull,
 		},

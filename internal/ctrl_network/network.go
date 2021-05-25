@@ -9,6 +9,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/salt"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -612,7 +613,7 @@ func (ctrl *Controller) incMessageSeq() int64 {
 }
 
 // WebsocketSend if 'direct' sends immediately otherwise it put it in flusher
-func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, flag domain.RequestDelegateFlag) error {
+func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, flag request.DelegateFlag) error {
 	defer logger.RecoverPanic(
 		"NetCtrl::WebsocketSend",
 		domain.M{
@@ -627,14 +628,14 @@ func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, flag do
 	)
 
 	_, unauthorized := ctrl.unauthorizedRequests[msgEnvelope.Constructor]
-	if flag&domain.RequestSkipFlusher != 0 || unauthorized {
+	if flag&request.SkipFlusher != 0 || unauthorized {
 		return ctrl.writeToWebsocket(msgEnvelope)
 	}
 	switch msgEnvelope.Constructor {
 	case msg.C_MessagesSend, msg.C_MessagesSendMedia, msg.C_MessagesForward:
 		ctrl.sendRoutines["Messages"].Enter("", tools.NewEntry(msgEnvelope))
 	default:
-		if flag&domain.RequestBatch != 0 {
+		if flag&request.Batch != 0 {
 			ctrl.sendRoutines["Batch"].Enter("", tools.NewEntry(msgEnvelope))
 		} else {
 			ctrl.sendRoutines["General"].Enter("", tools.NewEntry(msgEnvelope))
@@ -725,7 +726,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 // WebsocketCommandWithTimeout run request immediately in blocking or non-blocking mode
 func (ctrl *Controller) WebsocketCommandWithTimeout(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	isUICallback bool, flag domain.RequestDelegateFlag, timeout time.Duration,
+	isUICallback bool, flag request.DelegateFlag, timeout time.Duration,
 ) {
 	defer logger.RecoverPanic(
 		"NetCtrl::WebsocketCommandWithTimeout",
@@ -743,7 +744,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 	)
 
 	// Add the callback functions
-	reqCB := domain.AddRequestCallback(
+	reqCB := request.AddRequestCallback(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, timeout, timeoutCB, isUICallback,
 	)
 
@@ -767,7 +768,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
 			)
-			domain.RemoveRequestCallback(reqID)
+			request.RemoveRequestCallback(reqID)
 			reqCB.OnTimeout()
 			return
 		case res := <-reqCB.ResponseChannel:
@@ -786,7 +787,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 
 func (ctrl *Controller) WebsocketCommand(
 	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	isUICallback bool, flag domain.RequestDelegateFlag,
+	isUICallback bool, flag request.DelegateFlag,
 ) {
 	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, isUICallback, flag, domain.WebsocketRequestTimeout)
 }

@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 )
@@ -18,7 +19,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountUpdateUsername{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -33,7 +34,7 @@ func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, da domain
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountRegisterDevice{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -55,7 +56,7 @@ func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da domain
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountUnregisterDevice{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
@@ -78,7 +79,7 @@ func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da doma
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountSetNotifySettings{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -99,7 +100,7 @@ func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da dom
 
 }
 
-func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da request.Callback) {
 	x := &msg.AccountRemovePhoto{}
 	_ = x.Unmarshal(in.Message)
 
@@ -124,7 +125,7 @@ func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da domain.Ca
 	_ = repo.Users.RemovePhotoGallery(r.SDK().GetConnInfo().PickupUserID(), x.PhotoID)
 }
 
-func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountUpdateProfile{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -147,7 +148,7 @@ func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, da domain.
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountGetTeams{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
@@ -20,7 +21,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *label) labelsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *label) labelsGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.LabelsGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -48,7 +49,7 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.LabelsDelete{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -65,7 +66,7 @@ func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da domain.Callback) 
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.LabelsListItems{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -156,7 +157,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da domain.Callbac
 	}
 }
 
-func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.LabelsAddToMessage{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -187,7 +188,7 @@ func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da domain.Callb
 
 }
 
-func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.LabelsRemoveFromMessage{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

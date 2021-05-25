@@ -7,6 +7,7 @@ import (
 	syncCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_sync"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 )
 
@@ -35,16 +36,16 @@ type SDK interface {
 	FileCtrl() *fileCtrl.Controller
 	GetConnInfo() domain.RiverConfigurator
 	Module(name string) Module
-	Execute(ctx *domain.ExecuteContext) (requestID int64, err error)
+	Execute(ctx *request.Context) (requestID int64, err error)
 }
 
 type Module interface {
 	Name() string
 	Init(sdk SDK, logger *logs.Logger)
-	LocalHandlers() map[int64]domain.LocalHandler
+	LocalHandlers() map[int64]request.LocalHandler
 	UpdateAppliers() map[int64]domain.UpdateApplier
 	MessageAppliers() map[int64]domain.MessageApplier
-	Execute(in *rony.MessageEnvelope, da domain.Callback)
+	Execute(in *rony.MessageEnvelope, da request.Callback)
 }
 
 // Base provides the boilerplate code for every module. Hence developer only needs to write the module specific
@@ -55,7 +56,7 @@ type Base struct {
 	fileCtrl        *fileCtrl.Controller
 	syncCtrl        *syncCtrl.Controller
 	sdk             SDK
-	handlers        map[int64]domain.LocalHandler
+	handlers        map[int64]request.LocalHandler
 	updateAppliers  map[int64]domain.UpdateApplier
 	messageAppliers map[int64]domain.MessageApplier
 	logger          *logs.Logger
@@ -66,7 +67,7 @@ func (b *Base) Init(sdk SDK, logger *logs.Logger) {
 	b.logger = logger
 }
 
-func (b *Base) Execute(in *rony.MessageEnvelope, da domain.Callback) {
+func (b *Base) Execute(in *rony.MessageEnvelope, da request.Callback) {
 	out := &rony.MessageEnvelope{}
 	h := b.handlers[in.Constructor]
 	if h == nil {
@@ -94,11 +95,11 @@ func (b *Base) MessageAppliers() map[int64]domain.MessageApplier {
 	return b.messageAppliers
 }
 
-func (b *Base) RegisterHandlers(handlers map[int64]domain.LocalHandler) {
+func (b *Base) RegisterHandlers(handlers map[int64]request.LocalHandler) {
 	b.handlers = handlers
 }
 
-func (b *Base) LocalHandlers() map[int64]domain.LocalHandler {
+func (b *Base) LocalHandlers() map[int64]request.LocalHandler {
 	return b.handlers
 }
 

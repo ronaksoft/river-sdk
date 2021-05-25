@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/module"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
@@ -30,7 +31,7 @@ func (r *River) HandleDebugActions(txt string) {
 	}
 	in := &rony.MessageEnvelope{}
 	in.Fill(domain.NextRequestID(), msg.C_MessagesSend, req)
-	r.Module(module.Message).Execute(in, domain.EmptyCallback())
+	r.Module(module.Message).Execute(in, request.EmptyCallback())
 }
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {

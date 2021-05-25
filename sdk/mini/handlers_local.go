@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 )
@@ -17,7 +18,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesSendMedia{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -37,7 +38,7 @@ func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, da domain.Callb
 	)
 }
 
-func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.MessagesGetDialogs{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -106,7 +107,7 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da domain.Call
 	da.OnComplete(out)
 }
 
-func (r *River) contactsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *River) contactsGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ContactsGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})

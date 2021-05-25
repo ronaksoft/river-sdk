@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
@@ -19,7 +20,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *contact) contactsGet(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *contact) contactsGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ContactsGet{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -45,7 +46,7 @@ func (r *contact) contactsGet(in, out *rony.MessageEnvelope, da domain.Callback)
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *contact) contactsAdd(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *contact) contactsAdd(in, out *rony.MessageEnvelope, da request.Callback) {
 	if domain.GetTeamID(in) != 0 {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: "teams cannot add contact"})
 		da.OnComplete(out)
@@ -82,7 +83,7 @@ func (r *contact) contactsAdd(in, out *rony.MessageEnvelope, da domain.Callback)
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da request.Callback) {
 	if domain.GetTeamID(in) != 0 {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: "teams cannot import contact"})
 		da.OnComplete(out)
@@ -149,7 +150,7 @@ func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da domain.Callba
 	r.SDK().SyncCtrl().ContactsImport(req.Replace, da.OnComplete, out)
 }
 
-func (r *contact) contactsDelete(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *contact) contactsDelete(in, out *rony.MessageEnvelope, da request.Callback) {
 	if domain.GetTeamID(in) != 0 {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: "teams cannot delete contact"})
 		da.OnComplete(out)
@@ -170,7 +171,7 @@ func (r *contact) contactsDelete(in, out *rony.MessageEnvelope, da domain.Callba
 	return
 }
 
-func (r *contact) contactsDeleteAll(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *contact) contactsDeleteAll(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ContactsDeleteAll{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -185,7 +186,7 @@ func (r *contact) contactsDeleteAll(in, out *rony.MessageEnvelope, da domain.Cal
 	return
 }
 
-func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ContactsGetTopPeers{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
@@ -254,7 +255,7 @@ func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, da domain.C
 	uiexec.ExecSuccessCB(da.OnComplete, out)
 }
 
-func (r *contact) contactsResetTopPeer(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *contact) contactsResetTopPeer(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ContactsResetTopPeer{}
 	err := req.Unmarshal(in.Message)
 	if err != nil {
@@ -273,7 +274,7 @@ func (r *contact) contactsResetTopPeer(in, out *rony.MessageEnvelope, da domain.
 	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
 }
 
-func (r *contact) clientContactSearch(in, out *rony.MessageEnvelope, da domain.Callback) {
+func (r *contact) clientContactSearch(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientContactSearch{}
 	if err := req.Unmarshal(in.Message); err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
