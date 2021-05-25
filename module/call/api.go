@@ -54,12 +54,12 @@ func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneInitCall", zap.Error(err))
 			}
 			err = domain.ErrInvalidData
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneInitCall", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
@@ -103,12 +103,12 @@ func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, p
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneRequestCall", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			err = xx
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneRequestCall", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
@@ -149,12 +149,12 @@ func (c *call) apiAccept(peer *msg.InputPeer, callID int64, participants []*msg.
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneAcceptCall", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			err = xx
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneAcceptCall", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
@@ -195,12 +195,12 @@ func (c *call) apiReject(peer *msg.InputPeer, callID int64, reason msg.DiscardRe
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneDiscardCall", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			err = xx
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneDiscardCall", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
@@ -239,12 +239,12 @@ func (c *call) apiJoin(peer *msg.InputPeer, callID int64) (res *msg.PhonePartici
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneJoinCall", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			err = xx
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneJoinCall", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
@@ -284,12 +284,12 @@ func (c *call) apiAddParticipant(peer *msg.InputPeer, callID int64, participants
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneAddParticipant", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			err = xx
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneAddParticipant", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
@@ -330,12 +330,12 @@ func (c *call) apiRemoveParticipant(peer *msg.InputPeer, callID int64, participa
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneRemoveParticipant", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			err = xx
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneRemoveParticipants", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
@@ -374,12 +374,12 @@ func (c *call) apiGetParticipant(peer *msg.InputPeer, callID int64) (res *msg.Ph
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneGetParticipants", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			err = xx
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneGetParticipants", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
@@ -421,12 +421,12 @@ func (c *call) apiUpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneUpdateAdmin", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			err = xx
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneUpdateAdmin", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
@@ -469,12 +469,12 @@ func (c *call) apiSendUpdate(peer *msg.InputPeer, callID int64, participants []*
 			xx := &rony.Error{}
 			innerErr := xx.Unmarshal(x.Message)
 			if innerErr == nil {
-				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+				c.Log().Warn("got error on server request PhoneUpdateCall", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			err = xx
 		default:
-			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
-			err = domain.ErrRequestTimeout
+			c.Log().Warn("received unknown response for PhoneUpdateCall", zap.String("C", registry.ConstructorName(x.Constructor)))
+			err = domain.ErrInvalidData
 		}
 	}
 
