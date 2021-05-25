@@ -428,11 +428,6 @@ func (r *River) ResetAuthKey() {
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
-	// Remove delegate
-	r.delegateMutex.Lock()
-	delete(r.delegates, uint64(requestID))
-	r.delegateMutex.Unlock()
-
 	// Remove Callback
 	request.UnregisterCallback(uint64(requestID))
 

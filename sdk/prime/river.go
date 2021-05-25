@@ -127,8 +127,6 @@ type River struct {
 	fileCtrl    *fileCtrl.Controller
 
 	// Delegates
-	delegateMutex sync.Mutex
-	delegates     map[uint64]RequestDelegate
 	mainDelegate  MainDelegate
 	fileDelegate  FileDelegate
 	callDelegate  CallDelegate
@@ -192,7 +190,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 
-	r.delegates = make(map[uint64]RequestDelegate)
 	r.mainDelegate = conf.MainDelegate
 	r.fileDelegate = conf.FileDelegate
 	r.callDelegate = conf.CallDelegate
