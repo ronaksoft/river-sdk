@@ -50,6 +50,13 @@ func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -92,6 +99,13 @@ func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, p
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -131,6 +145,13 @@ func (c *call) apiAccept(peer *msg.InputPeer, callID int64, participants []*msg.
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -170,6 +191,13 @@ func (c *call) apiReject(peer *msg.InputPeer, callID int64, reason msg.DiscardRe
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -207,6 +235,13 @@ func (c *call) apiJoin(peer *msg.InputPeer, callID int64) (res *msg.PhonePartici
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -245,6 +280,13 @@ func (c *call) apiAddParticipant(peer *msg.InputPeer, callID int64, participants
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -284,6 +326,13 @@ func (c *call) apiRemoveParticipant(peer *msg.InputPeer, callID int64, participa
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -321,6 +370,13 @@ func (c *call) apiGetParticipant(peer *msg.InputPeer, callID int64) (res *msg.Ph
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -361,6 +417,13 @@ func (c *call) apiUpdateAdmin(peer *msg.InputPeer, callID int64, inputUser *msg.
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -402,6 +465,13 @@ func (c *call) apiSendUpdate(peer *msg.InputPeer, callID int64, participants []*
 			} else {
 				res = xx
 			}
+		case rony.C_Error:
+			xx := &rony.Error{}
+			innerErr := xx.Unmarshal(x.Message)
+			if innerErr == nil {
+				c.Log().Warn("error", zap.String("Code", xx.Code), zap.String("Item", xx.Items))
+			}
+			err = domain.ErrInvalidData
 		default:
 			c.Log().Debug("exception", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrRequestTimeout
@@ -445,7 +515,7 @@ func (c *call) executeRemoteCommand(
 	var executeFn func()
 
 	innerTimeoutCB = func() {
-		if retry < 3 {
+		if retry < 1 {
 			go func() {
 				time.Sleep(time.Duration(1) * time.Second)
 				executeFn()
