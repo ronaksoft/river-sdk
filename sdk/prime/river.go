@@ -20,6 +20,7 @@ import (
 	"git.ronaksoft.com/river/sdk/module/group"
 	"git.ronaksoft.com/river/sdk/module/label"
 	"git.ronaksoft.com/river/sdk/module/message"
+	"git.ronaksoft.com/river/sdk/module/notification"
 	"git.ronaksoft.com/river/sdk/module/search"
 	"git.ronaksoft.com/river/sdk/module/system"
 	"git.ronaksoft.com/river/sdk/module/team"
@@ -300,7 +301,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		account.New(), auth.New(), bot.New(), contact.New(),
 		gif.New(), group.New(), label.New(), message.New(),
 		search.New(), system.New(), team.New(), user.New(), wallpaper.New(),
-		callModule,
+		callModule,notification.New(),
 	)
 
 	// Initialize River Connection
