@@ -22,7 +22,7 @@ func (r *user) updateUsername(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, err
 		return nil, err
 	}
 
-	r.Log().Debug("UserModule applies UpdateUsername",
+	r.Log().Debug("applies UpdateUsername",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -52,7 +52,7 @@ func (r *user) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, er
 		return nil, err
 	}
 
-	r.Log().Debug("UserModule applies UpdateUserPhoto",
+	r.Log().Debug("applies UpdateUserPhoto",
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Any("PhotoID", x.PhotoID),
 	)
@@ -60,7 +60,7 @@ func (r *user) updateUserPhoto(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, er
 	if x.Photo != nil {
 		err = repo.Users.UpdatePhoto(x.UserID, x.Photo)
 		if err != nil {
-			r.Log().Warn("UserModule got error on updating user's profile photo",
+			r.Log().Warn("got error on updating user's profile photo",
 				zap.Int64("UserID", x.UserID),
 				zap.Any("Photo", x.Photo),
 			)
@@ -82,7 +82,7 @@ func (r *user) updateUserBlocked(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, 
 		return nil, err
 	}
 
-	r.Log().Debug("UserModule applies UpdateUserBlocked",
+	r.Log().Debug("applies UpdateUserBlocked",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 

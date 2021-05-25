@@ -20,28 +20,28 @@ func (r *team) teamsMany(e *rony.MessageEnvelope) {
 	tm := &msg.TeamsMany{}
 	err := tm.Unmarshal(e.Message)
 	if err != nil {
-		r.Log().Error("TeamModule couldn't unmarshal TeamsMany", zap.Error(err))
+		r.Log().Error("couldn't unmarshal TeamsMany", zap.Error(err))
 		return
 	}
 
 	err = repo.Users.Save(tm.Users...)
-	r.Log().ErrorOnErr("TeamModule couldn't save teamsMany users", err)
+	r.Log().ErrorOnErr("couldn't save teamsMany users", err)
 
 	err = repo.Teams.Clear()
-	r.Log().ErrorOnErr("TeamModule couldn't clear saved teams", err)
+	r.Log().ErrorOnErr("couldn't clear saved teams", err)
 
 	err = repo.Teams.Save(tm.Teams...)
-	r.Log().ErrorOnErr("TeamModule couldn't save teamsMany teams", err)
+	r.Log().ErrorOnErr("couldn't save teamsMany teams", err)
 }
 
 func (r *team) teamMembers(e *rony.MessageEnvelope) {
 	tm := &msg.TeamMembers{}
 	err := tm.Unmarshal(e.Message)
 	if err != nil {
-		r.Log().Error("TeamModule couldn't unmarshal TeamMembers", zap.Error(err))
+		r.Log().Error("couldn't unmarshal TeamMembers", zap.Error(err))
 		return
 	}
 
 	err = repo.Users.Save(tm.Users...)
-	r.Log().ErrorOnErr("TeamModule couldn't save teamMembers users", err)
+	r.Log().ErrorOnErr("couldn't save teamMembers users", err)
 }
