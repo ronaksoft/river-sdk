@@ -716,7 +716,7 @@ func (r *River) AppKill() {
 
 // AppStart must be called when app is started
 func (r *River) AppStart() error {
-	statusOnline = true
+	statusOnline = false
 	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
 	logs.SetSentry(r.ConnInfo.AuthID, r.ConnInfo.UserID, r.sentryDSN)
@@ -774,6 +774,10 @@ func (r *River) AppStart() error {
 		r.mainDelegate.AddLog(txt)
 	}
 	logger.Info("Started")
+
+	// Run update/message processors in background
+	go r.messageReceiver()
+	go r.updateReceiver()
 
 	// Try to keep the user's status online
 	go r.updateStatusJob()

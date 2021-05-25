@@ -71,11 +71,13 @@ type Controller struct {
 	httpClient *http.Client
 
 	// External Handlers
-	OnMessage             domain.ReceivedMessageHandler
-	OnUpdate              domain.ReceivedUpdateHandler
 	OnGeneralError        domain.ErrorHandler
 	OnWebsocketConnect    domain.OnConnectCallback
 	OnNetworkStatusChange domain.NetworkStatusChangeCallback
+
+	// External Processors
+	MessageChan chan []*rony.MessageEnvelope
+	UpdateChan  chan *msg.UpdateContainer
 
 	// internals
 	connectChannel       chan bool
@@ -401,25 +403,22 @@ func (ctrl *Controller) receiver() {
 func messageHandler(ctrl *Controller, message *rony.MessageEnvelope) {
 	// extract all updates/ messages
 	messages, updates := extractMessages(ctrl, message)
-	if ctrl.OnMessage != nil {
-		// sort messages by requestID
-		sort.Slice(messages, func(i, j int) bool {
-			return messages[i].RequestID < messages[j].RequestID
-		})
+	// sort messages by requestID
+	sort.Slice(messages, func(i, j int) bool {
+		return messages[i].RequestID < messages[j].RequestID
+	})
+	ctrl.MessageChan <- messages
 
-		ctrl.OnMessage(messages)
-	}
-	if ctrl.OnUpdate != nil {
-		sort.Slice(updates, func(i, j int) bool {
-			return updates[i].MinUpdateID < updates[j].MinUpdateID
+	sort.Slice(updates, func(i, j int) bool {
+		return updates[i].MinUpdateID < updates[j].MinUpdateID
+	})
+	for _, updateContainer := range updates {
+		sort.Slice(updateContainer.Updates, func(i, j int) bool {
+			return updateContainer.Updates[i].UpdateID < updateContainer.Updates[j].UpdateID
 		})
-		for _, updateContainer := range updates {
-			sort.Slice(updateContainer.Updates, func(i, j int) bool {
-				return updateContainer.Updates[i].UpdateID < updateContainer.Updates[j].UpdateID
-			})
-			ctrl.OnUpdate(updateContainer)
-		}
+		ctrl.UpdateChan <- updateContainer
 	}
+
 }
 func extractMessages(ctrl *Controller, m *rony.MessageEnvelope) ([]*rony.MessageEnvelope, []*msg.UpdateContainer) {
 	messages := make([]*rony.MessageEnvelope, 0)

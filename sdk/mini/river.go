@@ -82,6 +82,8 @@ type River struct {
 
 	// localCommands can be satisfied by client cache
 	localCommands map[int64]domain.LocalHandler
+	messageChan   chan []*rony.MessageEnvelope
+	updateChan    chan *msg.UpdateContainer
 
 	// Internal Controllers
 	network *networkCtrl.Controller
@@ -97,6 +99,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	domain.ClientOS = conf.ClientOs
 	domain.ClientVendor = conf.ClientVendor
 
+	r.messageChan = make(chan []*rony.MessageEnvelope, 100)
+	r.updateChan = make(chan *msg.UpdateContainer, 100)
 	r.sentryDSN = conf.SentryDSN
 	r.ConnInfo = conf.ConnInfo
 
@@ -129,8 +133,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	)
 	r.network.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {}
 	r.network.OnGeneralError = r.onGeneralError
-	r.network.OnMessage = r.onReceivedMessage
-	r.network.OnUpdate = r.onReceivedUpdate
+	r.network.UpdateChan = r.updateChan
+	r.network.MessageChan = r.messageChan
 	r.network.OnWebsocketConnect = r.onNetworkConnect
 
 	// Initialize FileController
@@ -152,7 +156,6 @@ func (r *River) SetConfig(conf *RiverConfig) {
 func (r *River) onNetworkConnect() (err error) {
 	return nil
 }
-
 func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 	logger.Info("received error (General)",
 		zap.Uint64("ReqID", requestID),
@@ -165,10 +168,14 @@ func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 		r.mainDelegate.OnGeneralError(buff)
 	}
 }
-
-func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {}
-
-func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {}
+func (r *River) messageReceiver() {
+	// NOP Loop to just clear the received messages
+	for range r.messageChan {}
+}
+func (r *River) updateReceiver() {
+	// NOP Loop to just clear the received updates
+	for range r.updateChan {}
+}
 
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]domain.LocalHandler{

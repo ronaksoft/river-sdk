@@ -110,12 +110,14 @@ type RiverConfig struct {
 type River struct {
 	// Connection Info
 	ConnInfo *RiverConnection
-
+	// modules hold reference to registered modules
 	modules map[string]module.Module
 	// localCommands can be satisfied by client cache
 	localCommands map[int64]domain.LocalHandler
 	// realTimeCommands should not passed to queue to send they should directly pass to networkController
 	realTimeCommands map[int64]bool
+	messageChan      chan []*rony.MessageEnvelope
+	updateChan       chan *msg.UpdateContainer
 
 	// Internal Controllers
 	networkCtrl *networkCtrl.Controller
@@ -130,6 +132,7 @@ type River struct {
 	fileDelegate  FileDelegate
 	callDelegate  CallDelegate
 
+	// Internal Misc. Configs
 	dbPath               string
 	optimizeForLowMemory bool
 	resetQueueOnStartup  bool
@@ -167,6 +170,8 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	domain.ClientOS = conf.ClientOs
 	domain.ClientVendor = conf.ClientVendor
 
+	r.messageChan = make(chan []*rony.MessageEnvelope, 100)
+	r.updateChan = make(chan *msg.UpdateContainer, 100)
 	r.sentryDSN = conf.SentryDSN
 	r.optimizeForLowMemory = conf.OptimizeForLowMemory
 	r.resetQueueOnStartup = conf.ResetQueueOnStartup
@@ -230,9 +235,9 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		}
 	}
 	r.networkCtrl.OnGeneralError = r.onGeneralError
-	r.networkCtrl.OnMessage = r.onReceivedMessage
-	r.networkCtrl.OnUpdate = r.onReceivedUpdate
 	r.networkCtrl.OnWebsocketConnect = r.onNetworkConnect
+	r.networkCtrl.MessageChan = r.messageChan
+	r.networkCtrl.UpdateChan = r.updateChan
 
 	// Initialize FileController
 	repo.SetRootFolders(
@@ -301,7 +306,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 		account.New(), auth.New(), bot.New(), contact.New(),
 		gif.New(), group.New(), label.New(), message.New(),
 		search.New(), system.New(), team.New(), user.New(), wallpaper.New(),
-		callModule,notification.New(),
+		callModule, notification.New(),
 	)
 
 	// Initialize River Connection
@@ -390,7 +395,6 @@ func (r *River) onNetworkConnect() (err error) {
 	}()
 	return nil
 }
-
 func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 	logger.Info("SDK received error (General)",
 		zap.Uint64("ReqID", requestID),
@@ -414,68 +418,68 @@ func (r *River) onGeneralError(requestID uint64, e *rony.Error) {
 		r.mainDelegate.OnGeneralError(buff)
 	}
 }
-
-func (r *River) onReceivedMessage(msgs []*rony.MessageEnvelope) {
+func (r *River) messageReceiver() {
 	defer logger.RecoverPanic(
-		"onReceivedMessage",
+		"messageReceiver",
 		domain.M{
 			"OS":  domain.ClientOS,
 			"Ver": domain.ClientVersion,
 		},
-		nil,
+		r.messageReceiver,
 	)
 
-	// sync localDB with responses in the background
-	r.syncCtrl.MessageApplier(msgs)
+	for msgs := range r.messageChan {
+		// sync localDB with responses in the background
+		r.syncCtrl.MessageApplier(msgs)
 
-	// check requestCallbacks and call callbacks
-	for idx := range msgs {
-		reqCB := domain.GetRequestCallback(msgs[idx].RequestID)
-		if reqCB == nil {
-			continue
-		}
+		// check requestCallbacks and call callbacks
+		for idx := range msgs {
+			reqCB := domain.GetRequestCallback(msgs[idx].RequestID)
+			if reqCB == nil {
+				continue
+			}
 
-		mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.DepartureTime))
-		select {
-		case reqCB.ResponseChannel <- msgs[idx]:
-			logger.Debug("SDK received response",
-				zap.Uint64("ReqID", reqCB.RequestID),
-				zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
-			)
-		default:
-			logger.Error("SDK received response but no callback, we drop response",
-				zap.Uint64("ReqID", reqCB.RequestID),
-				zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
-			)
+			mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.DepartureTime))
+			select {
+			case reqCB.ResponseChannel <- msgs[idx]:
+				logger.Debug("SDK received response",
+					zap.Uint64("ReqID", reqCB.RequestID),
+					zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
+				)
+			default:
+				logger.Error("SDK received response but no callback, we drop response",
+					zap.Uint64("ReqID", reqCB.RequestID),
+					zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
+				)
+			}
+			domain.RemoveRequestCallback(msgs[idx].RequestID)
 		}
-		domain.RemoveRequestCallback(msgs[idx].RequestID)
 	}
 }
-
-func (r *River) onReceivedUpdate(updateContainer *msg.UpdateContainer) {
+func (r *River) updateReceiver() {
 	defer logger.RecoverPanic(
-		"onReceivedUpdate",
+		"updateReceiver",
 		domain.M{
-			"OS":              domain.ClientOS,
-			"Ver":             domain.ClientVersion,
-			"UpdateContainer": updateContainer,
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
 		},
-		nil,
+		r.updateReceiver,
 	)
+	for updateContainer := range r.updateChan {
+		outOfSync := false
+		if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.GetUpdateID()+1 {
+			logger.Info("are out of sync",
+				zap.Int64("ContainerMinID", updateContainer.MinUpdateID),
+				zap.Int64("ClientUpdateID", r.syncCtrl.GetUpdateID()),
+			)
+			outOfSync = true
+		}
 
-	outOfSync := false
-	if updateContainer.MinUpdateID != 0 && updateContainer.MinUpdateID > r.syncCtrl.GetUpdateID()+1 {
-		logger.Info("are out of sync",
-			zap.Int64("ContainerMinID", updateContainer.MinUpdateID),
-			zap.Int64("ClientUpdateID", r.syncCtrl.GetUpdateID()),
-		)
-		outOfSync = true
-	}
+		r.syncCtrl.UpdateApplier(updateContainer, outOfSync)
 
-	r.syncCtrl.UpdateApplier(updateContainer, outOfSync)
-
-	if outOfSync {
-		go r.syncCtrl.Sync()
+		if outOfSync {
+			go r.syncCtrl.Sync()
+		}
 	}
 }
 

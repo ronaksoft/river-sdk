@@ -25,28 +25,33 @@ import (
 */
 
 var (
-	requestID uint64
-	ctrl      *networkCtrl.Controller
+	requestID   uint64
+	ctrl        *networkCtrl.Controller
+	messageChan = make(chan []*rony.MessageEnvelope, 100)
+	updateChan  = make(chan *msg.UpdateContainer, 100)
 )
 
-func dummyMessageHandler(messages []*rony.MessageEnvelope) {
-	for _, m := range messages {
-		testenv.Log().Info("Message",
-			zap.String("C", registry.ConstructorName(m.Constructor)),
-			zap.Uint64("ReqID", m.RequestID),
-		)
+func dummyMessageReceiver() {
+	for msgs := range messageChan {
+		for _, m := range msgs {
+			testenv.Log().Info("Message",
+				zap.String("C", registry.ConstructorName(m.Constructor)),
+				zap.Uint64("ReqID", m.RequestID),
+			)
+		}
 	}
 }
 
-func dummyUpdateHandler(updateContainer *msg.UpdateContainer) {
-	testenv.Log().Info("Update Handler")
-	for _, u := range updateContainer.Updates {
-		testenv.Log().Info("Update",
-			zap.String("C", registry.ConstructorName(u.Constructor)),
-			zap.Int64("GetUpdateID", u.UpdateID),
-		)
+func dummyUpdateReceiver() {
+	for updateContainer := range updateChan {
+		testenv.Log().Info("Update Handler")
+		for _, u := range updateContainer.Updates {
+			testenv.Log().Info("Update",
+				zap.String("C", registry.ConstructorName(u.Constructor)),
+				zap.Int64("GetUpdateID", u.UpdateID),
+			)
+		}
 	}
-
 }
 
 func dummyOnConnectHandler() error {
@@ -94,11 +99,13 @@ func init() {
 		SeedHosts:   []string{"edge.river.im", "edge.rivermsg.com"},
 		CountryCode: "IR",
 	})
-	ctrl.OnMessage = dummyMessageHandler
+	go dummyMessageReceiver()
+	go dummyUpdateReceiver()
 	ctrl.OnGeneralError = dummyErrorHandler
-	ctrl.OnUpdate = dummyUpdateHandler
 	ctrl.OnNetworkStatusChange = dummyNetworkChangeHandler
 	ctrl.OnWebsocketConnect = dummyOnConnectHandler
+	ctrl.MessageChan = messageChan
+	ctrl.UpdateChan = updateChan
 }
 
 func TestNewController(t *testing.T) {
@@ -155,11 +162,12 @@ func TestReconnect(t *testing.T) {
 					SeedHosts:   []string{"edge.river.im"},
 					CountryCode: "IR",
 				})
-				ctrl.OnMessage = dummyMessageHandler
+
 				ctrl.OnGeneralError = dummyErrorHandler
-				ctrl.OnUpdate = dummyUpdateHandler
 				ctrl.OnNetworkStatusChange = dummyNetworkChangeHandler
 				ctrl.OnWebsocketConnect = dummyOnConnectHandler
+				ctrl.MessageChan = messageChan
+				ctrl.UpdateChan = updateChan
 				ctrl.Start()
 				for i := 0; i < 100; i++ {
 					ctrl.Reconnect()

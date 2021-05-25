@@ -52,6 +52,11 @@ func (r *River) AppStart() error {
 		logger.Warn("MiniRiver got error on get server time", zap.Error(err))
 	}
 
+	// Run update/message processors in background
+	go r.messageReceiver()
+	go r.updateReceiver()
+
+
 	if r.getLastUpdateID() == 0 {
 		// run in sync for the first time
 		wg := sync.WaitGroup{}
