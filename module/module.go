@@ -36,7 +36,7 @@ type SDK interface {
 	FileCtrl() *fileCtrl.Controller
 	GetConnInfo() domain.RiverConfigurator
 	Module(name string) Module
-	Execute(ctx *request.Context) (requestID int64, err error)
+	Execute(cb request.Callback) (err error)
 }
 
 type Module interface {

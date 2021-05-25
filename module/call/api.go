@@ -533,23 +533,21 @@ func (c *call) executeRemoteCommand(
 		wg.Done()
 	}
 
-	cb := request.NewCallback(domain.NextRequestID(), constructor, innerTimeoutCB, innerSuccessCB, nil, false)
+
 
 	executeFn = func() {
-		retry++
-		reqID, err := c.SDK().Execute(
-			&request.Context{
-				TeamID:       c.teamInput.teamID,
-				TeamAccess:   c.teamInput.teamAccess,
-				Constructor:  constructor,
-				CommandBytes: commandBytes,
-				Callback:     cb,
-				Timeout:      10 * time.Second,
-				Flags:        rdt,
-			},
+		reqID := domain.NextRequestID()
+		cb := request.NewCallbackFromBytes(
+			c.teamInput.teamID,
+			c.teamInput.teamAccess,
+			reqID, constructor, commandBytes, innerTimeoutCB, innerSuccessCB, nil, false,
+			rdt, 10*time.Second,
 		)
+
+		retry++
+		err := c.SDK().Execute(cb)
 		if err == nil {
-			c.appendCallRequestID(callID, reqID)
+			c.appendCallRequestID(callID, int64(reqID))
 		}
 	}
 

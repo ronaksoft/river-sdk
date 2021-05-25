@@ -19,8 +19,14 @@ type MainDelegate interface {
 
 type (
 	RequestDelegateFlag = request.DelegateFlag
-	RequestDelegate     = request.Delegate
 )
+
+type RequestDelegate interface {
+	OnComplete(b []byte)
+	OnTimeout(err error)
+	Flags() RequestDelegateFlag
+	OnProgress(int64)
+}
 
 // Request Flags
 const (

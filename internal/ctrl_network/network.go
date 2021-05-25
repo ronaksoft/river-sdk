@@ -763,7 +763,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 		}
 
 		select {
-		case <-time.After(reqCB.Timeout):
+		case <-time.After(reqCB.Timeout()):
 			logger.Debug("got timeout on websocket command",
 				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),

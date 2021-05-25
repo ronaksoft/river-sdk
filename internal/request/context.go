@@ -14,11 +14,6 @@ import (
 */
 
 type Context struct {
-	RequestID    int64
-	TeamID       int64
-	TeamAccess   uint64
-	Constructor  int64
-	CommandBytes []byte
 	Callback     Callback
 	Timeout      time.Duration
 	Flags        DelegateFlag

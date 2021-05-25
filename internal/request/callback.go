@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
+	"google.golang.org/protobuf/proto"
 	"sync"
 	"time"
 )
@@ -19,34 +20,51 @@ import (
 */
 
 type Callback interface {
-	RequestID() uint64
 	Constructor() int64
+	Flags() DelegateFlag
 	OnComplete(m *rony.MessageEnvelope)
-	OnTimeout()
 	OnProgress(percent int64)
+	OnTimeout()
+	RequestID() uint64
+	Envelope() *rony.MessageEnvelope
+	TeamAccess() uint64
+	TeamID() int64
+	Timeout() time.Duration
 	UI() bool
 }
 
 type callback struct {
-	reqID       uint64
-	constructor int64
-	onComplete  func(m *rony.MessageEnvelope)
-	onTimeout   func()
-	onProgress  func(percent int64)
-	ui          bool
+	envelope   *rony.MessageEnvelope
+	onComplete func(m *rony.MessageEnvelope)
+	onTimeout  func()
+	onProgress func(percent int64)
+	ui         bool
+	createdOn  int64
+	flags      DelegateFlag
+	timeout    time.Duration
 
 	ResponseChannel chan *rony.MessageEnvelope
-	CreatedOn       int64
 	DepartureTime   int64
-	Timeout         time.Duration
+}
+
+func (c *callback) Flags() DelegateFlag {
+	return c.flags
+}
+
+func (c *callback) TeamID() int64 {
+	return domain.GetTeamID(c.envelope)
+}
+
+func (c *callback) TeamAccess() uint64 {
+	return domain.GetTeamAccess(c.envelope)
 }
 
 func (c *callback) RequestID() uint64 {
-	return c.reqID
+	return c.envelope.RequestID
 }
 
 func (c *callback) Constructor() int64 {
-	return c.constructor
+	return c.envelope.Constructor
 }
 
 func (c *callback) OnComplete(m *rony.MessageEnvelope) {
@@ -83,26 +101,70 @@ func (c *callback) UI() bool {
 	return c.ui
 }
 
+func (c *callback) Timeout() time.Duration {
+	if c.timeout == 0 {
+		return domain.WebsocketRequestTimeout
+	}
+	return c.timeout
+}
+
+func (c *callback) Envelope() *rony.MessageEnvelope {
+	return c.envelope
+}
+
 func NewCallback(
-	reqID uint64, constructor int64,
+	teamID int64, teamAccess uint64,
+	reqID uint64, constructor int64, req proto.Message,
 	onTimeout domain.TimeoutCallback, onComplete domain.MessageHandler, onProgress func(int64),
-	ui bool,
+	ui bool, flags DelegateFlag, timeout time.Duration,
 ) *callback {
-	return &callback{
-		reqID:           reqID,
-		constructor:     constructor,
+	cb := &callback{
+		envelope:   &rony.MessageEnvelope{},
+		onComplete: onComplete,
+		onTimeout:  onTimeout,
+		onProgress: onProgress,
+		ui:         ui,
+		createdOn:  tools.NanoTime(),
+		flags:      flags,
+		timeout:    timeout,
+
+		DepartureTime:   tools.NanoTime(),
+		ResponseChannel: make(chan *rony.MessageEnvelope),
+	}
+	cb.envelope.Fill(reqID, constructor, req, domain.TeamHeader(teamID, teamAccess)...)
+	return cb
+}
+
+func NewCallbackFromBytes(
+	teamID int64, teamAccess uint64,
+	reqID uint64, constructor int64, reqBytes []byte,
+	onTimeout domain.TimeoutCallback, onComplete domain.MessageHandler, onProgress func(int64),
+	ui bool, flags DelegateFlag, timeout time.Duration,
+) *callback {
+	cb := &callback{
+		envelope: &rony.MessageEnvelope{
+			RequestID:   reqID,
+			Constructor: constructor,
+		},
 		onComplete:      onComplete,
 		onTimeout:       onTimeout,
 		onProgress:      onProgress,
 		ui:              ui,
-		CreatedOn:       tools.NanoTime(),
+		createdOn:       tools.NanoTime(),
+		flags:           flags,
+		timeout:         timeout,
 		DepartureTime:   tools.NanoTime(),
 		ResponseChannel: make(chan *rony.MessageEnvelope),
 	}
+	cb.envelope.Message = append(cb.envelope.Message, reqBytes...)
+	cb.envelope.Header = domain.TeamHeader(teamID, teamAccess)
+	return cb
 }
 
 func EmptyCallback() *callback {
-	return &callback{}
+	return &callback{
+		envelope: &rony.MessageEnvelope{},
+	}
 }
 
 var (
@@ -118,15 +180,17 @@ func RegisterCallback(
 	reqID uint64, constructor int64, completeCB domain.MessageHandler, timeOut time.Duration, timeoutCB domain.TimeoutCallback, isUICallback bool,
 ) *callback {
 	cb := &callback{
+		envelope: &rony.MessageEnvelope{
+			Constructor: constructor,
+			RequestID:   reqID,
+		},
 		onComplete:      completeCB,
 		onTimeout:       timeoutCB,
 		ui:              isUICallback,
-		reqID:           reqID,
-		constructor:     constructor,
-		ResponseChannel: make(chan *rony.MessageEnvelope),
-		CreatedOn:       tools.NanoTime(),
+		ResponseChannel: make(chan *rony.MessageEnvelope, 1),
+		createdOn:       tools.NanoTime(),
 		DepartureTime:   tools.NanoTime(),
-		Timeout:         timeOut,
+		timeout:         timeOut,
 	}
 	callbacksMtx.Lock()
 	requestCallbacks[reqID] = cb

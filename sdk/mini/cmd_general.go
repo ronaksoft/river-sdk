@@ -99,7 +99,7 @@ func (r *River) executeCommand(
 
 	requestID = int64(domain.NextRequestID())
 	serverForce := delegate.Flags()&request.ServerForced != 0
-	rda := request.DelegateAdapter(uint64(requestID), constructor, delegate, true)
+	rda := request.DelegateAdapter(teamID, teamAccess, uint64(requestID), constructor, commandBytes, delegate, delegate.OnProgress)
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {

@@ -55,59 +55,35 @@ const (
 type Delegate interface {
 	OnComplete(b []byte)
 	OnTimeout(err error)
-	OnProgress(percent int64)
 	Flags() DelegateFlag
 }
 
-type delegateAdapter struct {
-	reqID       uint64
-	constructor int64
-	d           Delegate
-	ui          bool
-}
-
-func DelegateAdapter(reqID uint64, constructor int64, d Delegate, ui bool) *delegateAdapter {
-	return &delegateAdapter{
-		reqID:       reqID,
-		constructor: constructor,
-		d:           d,
-		ui:          ui,
+func DelegateAdapter(
+	teamID int64, teamAccess uint64, reqID uint64, constructor int64, reqBytes []byte, d Delegate, progressFunc func(int64),
+) *callback {
+	onTimeout := func() {}
+	onComplete := func(m *rony.MessageEnvelope) {}
+	onProgress := func(progress int64) {}
+	flags := DelegateFlag(0)
+	if d != nil {
+		onTimeout = func() {
+			d.OnTimeout(domain.ErrRequestTimeout)
+		}
+		onComplete = func(m *rony.MessageEnvelope) {
+			buf := pools.Buffer.FromProto(m)
+			d.OnComplete(*buf.Bytes())
+			pools.Buffer.Put(buf)
+		}
+		flags = d.Flags()
 	}
-}
-
-func (rda *delegateAdapter) RequestID() uint64 {
-	return rda.reqID
-}
-
-func (rda *delegateAdapter) Constructor() int64 {
-	return rda.constructor
-}
-
-func (rda *delegateAdapter) OnComplete(m *rony.MessageEnvelope) {
-	if rda.d == nil {
-		return
+	if progressFunc != nil {
+		onProgress = progressFunc
 	}
-	buf := pools.Buffer.FromProto(m)
-	rda.d.OnComplete(*buf.Bytes())
-	pools.Buffer.Put(buf)
-}
-
-func (rda *delegateAdapter) OnTimeout() {
-	if rda.d == nil {
-		return
-	}
-	rda.d.OnTimeout(domain.ErrRequestTimeout)
-}
-
-func (rda *delegateAdapter) OnProgress(percent int64) {
-	if rda.d == nil {
-		return
-	}
-	rda.d.OnProgress(percent)
-}
-
-func (rda *delegateAdapter) UI() bool {
-	return rda.ui
+	return NewCallbackFromBytes(
+		teamID, teamAccess, reqID, constructor, reqBytes,
+		onTimeout, onComplete, onProgress, true, flags,
+		domain.WebsocketRequestTimeout,
+	)
 }
 
 type delegate struct {
