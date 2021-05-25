@@ -146,9 +146,9 @@ func (ctrl *Controller) executor(req queuedRequest) {
 		nil,
 	)
 
-	reqCB := request.GetRequestCallback(req.ID)
+	reqCB := request.GetCallback(req.ID)
 	if reqCB == nil {
-		reqCB = request.AddRequestCallback(
+		reqCB = request.RegisterCallback(
 			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTimeout, nil, false,
 		)
 	}
@@ -209,9 +209,9 @@ func (ctrl *Controller) executor(req queuedRequest) {
 				}
 			}
 		}
-		reqCB.OnSuccess(res)
+		reqCB.OnComplete(res)
 	}
-	request.RemoveRequestCallback(req.ID)
+	request.UnregisterCallback(req.ID)
 	return
 }
 
@@ -245,7 +245,7 @@ func (ctrl *Controller) EnqueueCommandWithTimeout(
 	)
 
 	// Add the callback functions
-	_ = request.AddRequestCallback(
+	_ = request.RegisterCallback(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTimeout, timeoutCB, isUICallback,
 	)
 

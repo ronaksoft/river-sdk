@@ -97,62 +97,62 @@ func (r *River) executeCommand(
 		return 0, domain.ErrInvalidConstructor
 	}
 
+	requestID = int64(domain.NextRequestID())
 	serverForce := delegate.Flags()&request.ServerForced != 0
-	rda := request.DelegateAdapter(delegate, true)
+	rda := request.DelegateAdapter(uint64(requestID), constructor, delegate, true)
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
-		r.executeRemoteCommand(teamID, teamAccess, uint64(requestID), constructor, commandBytes, rda)
+		r.executeRemoteCommand(teamID, teamAccess,  commandBytes, rda)
 		return
 	}
 
 	// If the constructor is a local command then
 	handler, ok := r.localCommands[constructor]
 	if ok {
-		r.executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytes, rda)
+		r.executeLocalCommand(teamID, teamAccess, handler, commandBytes, rda)
 		return
 	}
 
 	// If we reached here, then execute the remote commands
-	r.executeRemoteCommand(teamID, teamAccess, uint64(requestID), constructor, commandBytes, rda)
+	r.executeRemoteCommand(teamID, teamAccess, commandBytes, rda)
 
 	return
 }
 func (r *River) executeLocalCommand(
 	teamID int64, teamAccess uint64,
 	handler request.LocalHandler,
-	requestID uint64, constructor int64, commandBytes []byte,
+	commandBytes []byte,
 	da request.Callback,
 ) {
 	logger.Debug("execute local command",
-		zap.String("C", registry.ConstructorName(constructor)),
+		zap.String("C", registry.ConstructorName(da.Constructor())),
 	)
 
 	in := &rony.MessageEnvelope{
 		Header:      domain.TeamHeader(teamID, teamAccess),
-		Constructor: constructor,
+		Constructor: da.Constructor(),
 		Message:     commandBytes,
-		RequestID:   requestID,
+		RequestID:   da.RequestID(),
 	}
 	out := &rony.MessageEnvelope{
 		Header:    domain.TeamHeader(teamID, teamAccess),
-		RequestID: requestID,
+		RequestID: da.RequestID(),
 	}
 	handler(in, out, da)
 }
 func (r *River) executeRemoteCommand(
-	teamID int64, teamAccess uint64,
-	requestID uint64, constructor int64, commandBytes []byte,
+	teamID int64, teamAccess uint64, commandBytes []byte,
 	da request.Callback,
 ) {
 	logger.Debug("execute remote command",
-		zap.String("C", registry.ConstructorName(constructor)),
+		zap.String("C", registry.ConstructorName(da.Constructor())),
 	)
-	requestID = uint64(domain.SequentialUniqueID())
+
 	req := &rony.MessageEnvelope{
 		Header:      domain.TeamHeader(teamID, teamAccess),
-		Constructor: constructor,
-		RequestID:   requestID,
+		Constructor: da.Constructor(),
+		RequestID:   da.RequestID(),
 		Message:     commandBytes,
 		Auth:        nil,
 	}

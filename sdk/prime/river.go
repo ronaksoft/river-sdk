@@ -435,25 +435,25 @@ func (r *River) messageReceiver() {
 
 		// check requestCallbacks and call callbacks
 		for idx := range msgs {
-			reqCB := request.GetRequestCallback(msgs[idx].RequestID)
+			reqCB := request.GetCallback(msgs[idx].RequestID)
 			if reqCB == nil {
 				continue
 			}
 
-			mon.ServerResponseTime(reqCB.Constructor, msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.DepartureTime))
+			mon.ServerResponseTime(reqCB.Constructor(), msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.DepartureTime))
 			select {
 			case reqCB.ResponseChannel <- msgs[idx]:
 				logger.Debug("SDK received response",
-					zap.Uint64("ReqID", reqCB.RequestID),
+					zap.Uint64("ReqID", reqCB.RequestID()),
 					zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 				)
 			default:
 				logger.Error("SDK received response but no callback, we drop response",
-					zap.Uint64("ReqID", reqCB.RequestID),
+					zap.Uint64("ReqID", reqCB.RequestID()),
 					zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 				)
 			}
-			request.RemoveRequestCallback(msgs[idx].RequestID)
+			request.UnregisterCallback(msgs[idx].RequestID)
 		}
 	}
 }

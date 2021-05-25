@@ -107,6 +107,8 @@ func (r *River) executeCommand(
 
 	createTime := tools.NanoTime()
 	da := request.DelegateAdapter(
+		uint64(requestID),
+		constructor,
 		request.NewRequestDelegate(
 			func(b []byte) {
 				delegate.OnComplete(b)
@@ -136,52 +138,51 @@ func (r *River) executeCommand(
 	// If the constructor is a local command then
 	handler, ok := r.localCommands[constructor]
 	if ok && !serverForce {
-		go r.executeLocalCommand(teamID, teamAccess, handler, uint64(requestID), constructor, commandBytes, da)
+		go r.executeLocalCommand(teamID, teamAccess, handler, commandBytes, da)
 		return
 	}
 
-	go r.executeRemoteCommand(teamID, teamAccess, uint64(requestID), constructor, commandBytes, da, timeout)
+	go r.executeRemoteCommand(teamID, teamAccess, commandBytes, da, timeout)
 	return
 }
 func (r *River) executeLocalCommand(
 	teamID int64, teamAccess uint64,
-	handler request.LocalHandler,
-	requestID uint64, constructor int64, commandBytes []byte,
+	handler request.LocalHandler, commandBytes []byte,
 	cb request.Callback,
 ) {
 	logger.Debug("execute local command",
-		zap.String("C", registry.ConstructorName(constructor)),
+		zap.String("C", registry.ConstructorName(cb.Constructor())),
 	)
 
 	in := &rony.MessageEnvelope{
 		Header:      domain.TeamHeader(teamID, teamAccess),
-		Constructor: constructor,
+		Constructor: cb.Constructor(),
 		Message:     commandBytes,
-		RequestID:   requestID,
+		RequestID:   cb.RequestID(),
 	}
 	out := &rony.MessageEnvelope{
 		Header:    domain.TeamHeader(teamID, teamAccess),
-		RequestID: requestID,
+		RequestID: cb.RequestID(),
 	}
 	handler(in, out, cb)
 }
 func (r *River) executeRemoteCommand(
 	teamID int64, teamAccess uint64,
-	requestID uint64, constructor int64, commandBytes []byte,
+	commandBytes []byte,
 	cb request.Callback,
 	timeout time.Duration,
 ) {
 	logger.Debug("execute remote command",
-		zap.String("C", registry.ConstructorName(constructor)),
+		zap.String("C", registry.ConstructorName(cb.Constructor())),
 	)
 
 	var (
-		directToNet    = r.realTimeCommands[constructor]
+		directToNet    = r.realTimeCommands[cb.Constructor()]
 		waitForNetwork = true
 		flags          int32
 	)
 
-	d, ok := getDelegate(r, requestID)
+	d, ok := getDelegate(r, cb.RequestID())
 	if ok {
 		flags = d.Flags()
 		if d.Flags()&request.SkipWaitForNetwork != 0 {
@@ -191,12 +192,12 @@ func (r *River) executeRemoteCommand(
 			go func() {
 				select {
 				case <-time.After(timeout):
-					reqCB := request.GetRequestCallback(requestID)
+					reqCB := request.GetCallback(cb.RequestID())
 					if reqCB == nil {
 						break
 					}
 					reqCB.OnTimeout()
-					r.CancelRequest(int64(requestID))
+					r.CancelRequest(int64(cb.RequestID()))
 				}
 			}()
 		}
@@ -214,8 +215,8 @@ func (r *River) executeRemoteCommand(
 		r.networkCtrl.WebsocketCommandWithTimeout(
 			&rony.MessageEnvelope{
 				Header:      domain.TeamHeader(teamID, teamAccess),
-				Constructor: constructor,
-				RequestID:   requestID,
+				Constructor: cb.Constructor(),
+				RequestID:   cb.RequestID(),
 				Message:     commandBytes,
 			},
 			cb.OnTimeout, cb.OnComplete, cb.UI(), flags, timeout,
@@ -224,8 +225,8 @@ func (r *River) executeRemoteCommand(
 		r.queueCtrl.EnqueueCommandWithTimeout(
 			&rony.MessageEnvelope{
 				Header:      domain.TeamHeader(teamID, teamAccess),
-				Constructor: constructor,
-				RequestID:   requestID,
+				Constructor: cb.Constructor(),
+				RequestID:   cb.RequestID(),
 				Message:     commandBytes,
 			},
 			cb.OnTimeout, cb.OnComplete, cb.UI(), timeout,
@@ -298,6 +299,8 @@ func (r *River) getServerKeys() (sk *msg.SystemKeys, err error) {
 	waitGroup.Add(1)
 
 	cb := request.NewCallback(
+		domain.NextRequestID(),
+		msg.C_SystemGetServerKeys,
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
@@ -328,7 +331,7 @@ func (r *River) getServerKeys() (sk *msg.SystemKeys, err error) {
 		false,
 	)
 	r.executeRemoteCommand(
-		0, 0, uint64(domain.SequentialUniqueID()), msg.C_SystemGetServerKeys, reqBytes, cb, domain.WebsocketRequestTimeout,
+		0, 0, reqBytes, cb, domain.WebsocketRequestTimeout,
 	)
 	waitGroup.Wait()
 	return
@@ -342,6 +345,8 @@ func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP,
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 	cb := request.NewCallback(
+		domain.NextRequestID(),
+		msg.C_InitConnect,
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
@@ -377,7 +382,7 @@ func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP,
 		false,
 	)
 	r.executeRemoteCommand(
-		0, 0, uint64(domain.SequentialUniqueID()), msg.C_InitConnect, req1Bytes, cb, domain.WebsocketRequestTimeout,
+		0, 0, req1Bytes, cb, domain.WebsocketRequestTimeout,
 	)
 	waitGroup.Wait()
 	return
@@ -435,6 +440,8 @@ func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, s
 	waitGroup := new(sync.WaitGroup)
 	waitGroup.Add(1)
 	cb := request.NewCallback(
+		domain.NextRequestID(),
+		msg.C_InitCompleteAuth,
 		func() {
 			defer waitGroup.Done()
 			err = domain.ErrRequestTimeout
@@ -492,7 +499,7 @@ func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, s
 		false,
 	)
 	r.executeRemoteCommand(
-		0, 0, uint64(domain.SequentialUniqueID()), msg.C_InitCompleteAuth, req2Bytes, cb, domain.WebsocketRequestTimeout,
+		0, 0, req2Bytes, cb, domain.WebsocketRequestTimeout,
 	)
 	waitGroup.Wait()
 	return
@@ -537,7 +544,7 @@ func (r *River) CancelRequest(requestID int64) {
 	r.delegateMutex.Unlock()
 
 	// Remove Callback
-	request.RemoveRequestCallback(uint64(requestID))
+	request.UnregisterCallback(uint64(requestID))
 
 	// Cancel Request
 	r.queueCtrl.CancelRequest(requestID)

@@ -60,15 +60,27 @@ type Delegate interface {
 }
 
 type delegateAdapter struct {
-	d  Delegate
-	ui bool
+	reqID       uint64
+	constructor int64
+	d           Delegate
+	ui          bool
 }
 
-func DelegateAdapter(d Delegate, ui bool) *delegateAdapter {
+func DelegateAdapter(reqID uint64, constructor int64, d Delegate, ui bool) *delegateAdapter {
 	return &delegateAdapter{
-		d:  d,
-		ui: ui,
+		reqID:       reqID,
+		constructor: constructor,
+		d:           d,
+		ui:          ui,
 	}
+}
+
+func (rda *delegateAdapter) RequestID() uint64 {
+	return rda.reqID
+}
+
+func (rda *delegateAdapter) Constructor() int64 {
+	return rda.constructor
 }
 
 func (rda *delegateAdapter) OnComplete(m *rony.MessageEnvelope) {

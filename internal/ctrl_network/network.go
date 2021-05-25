@@ -744,7 +744,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 	)
 
 	// Add the callback functions
-	reqCB := request.AddRequestCallback(
+	reqCB := request.RegisterCallback(
 		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, timeout, timeoutCB, isUICallback,
 	)
 
@@ -768,7 +768,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
 			)
-			request.RemoveRequestCallback(reqID)
+			request.UnregisterCallback(reqID)
 			reqCB.OnTimeout()
 			return
 		case res := <-reqCB.ResponseChannel:
@@ -777,7 +777,7 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
 				zap.String("ResC", registry.ConstructorName(res.Constructor)),
 			)
-			reqCB.OnSuccess(res)
+			reqCB.OnComplete(res)
 		}
 		return
 	}
