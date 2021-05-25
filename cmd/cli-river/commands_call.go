@@ -41,6 +41,83 @@ var CallStart = &ishell.Cmd{
 	},
 }
 
+var CallReject = &ishell.Cmd{
+	Name: "Reject",
+	Func: func(c *ishell.Context) {
+		req := msg.ClientCallReject{}
+		req.CallID = fnGetCallID(c)
+		req.Duration = 0
+		req.Reason = msg.DiscardReason_DiscardReasonHangup
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientCallReject, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
+var CallAccept = &ishell.Cmd{
+	Name: "Accept",
+	Func: func(c *ishell.Context) {
+		req := msg.ClientCallAccept{}
+		req.CallID = fnGetCallID(c)
+		req.Video = false
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientCallAccept, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
+var CallMediaSettings = &ishell.Cmd{
+	Name: "MediaSettings",
+	Func: func(c *ishell.Context) {
+		req := msg.ClientCallSendMediaSettings{}
+		req.MediaSettings = &msg.CallMediaSettings{
+			Audio:       true,
+			ScreenShare: false,
+			Video:       false,
+		}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientCallSendMediaSettings, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
+var CallIceCandidate = &ishell.Cmd{
+	Name: "IceCandidate",
+	Func: func(c *ishell.Context) {
+		req := msg.ClientCallSendIceCandidate{}
+		req.ConnId = fnGetConnId(c)
+		req.Candidate  = &msg.CallRTCIceCandidate{
+			Candidate:        "",
+			SdpMLineIndex:    0,
+			SdpMid:           "",
+			UsernameFragment: "",
+		}
+		reqBytes, _ := req.Marshal()
+		reqDelegate := new(RequestDelegate)
+		if reqID, err := _SDK.ExecuteCommand(msg.C_ClientCallSendIceCandidate, reqBytes, reqDelegate); err != nil {
+			c.Println("Command Failed:", err)
+		} else {
+			reqDelegate.RequestID = reqID
+		}
+	},
+}
+
 func init() {
 	Call.AddCmd(CallStart)
+	Call.AddCmd(CallReject)
+	Call.AddCmd(CallAccept)
+	Call.AddCmd(CallMediaSettings)
+	Call.AddCmd(CallIceCandidate)
 }

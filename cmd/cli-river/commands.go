@@ -92,6 +92,36 @@ func fnGetBotID(c *ishell.Context) int64 {
 	return botID
 }
 
+func fnGetCallID(c *ishell.Context) int64 {
+	var callID int64
+	for {
+		c.Print("Call ID: ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			callID = id
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return callID
+}
+
+func fnGetConnId(c *ishell.Context) int32 {
+	var connId int64
+	for {
+		c.Print("Conn Id: ")
+		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
+		if err == nil {
+			connId = id
+			break
+		} else {
+			c.Println(err.Error())
+		}
+	}
+	return int32(connId)
+}
+
 func fnGetPeerType(c *ishell.Context) msg.PeerType {
 	var peerType msg.PeerType
 

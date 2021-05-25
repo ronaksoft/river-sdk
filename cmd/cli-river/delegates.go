@@ -160,10 +160,19 @@ type CallDelegate struct{}
 
 func (c *CallDelegate) OnUpdate(action int32, b []byte) {
 	_Log.Info("CallDelegate On UpdateReceived", zap.String("C", msg.CallUpdate(action).String()))
+	a := msg.CallUpdate(action)
+	switch a {
+	case msg.CallUpdate_CallRequested:
+		x := msg.CallUpdateCallRequested{}
+		err := x.Unmarshal(b)
+		if err == nil {
+			_Log.Info("CallUpdateCallRequested", zap.Int64("CallID", x.CallID), zap.Any("Peer", x.Peer))
+		}
+	}
 }
 
 func (c *CallDelegate) InitStream(audio, video bool) bool {
-	_Log.Info("CallDelegate On InitStream", zap.Bool("Audio", audio), zap.Bool("Vide", video))
+	_Log.Info("CallDelegate On InitStream", zap.Bool("Audio", audio), zap.Bool("Video", video))
 	return true
 }
 

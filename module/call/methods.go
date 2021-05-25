@@ -1611,11 +1611,7 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 		c.mu.Unlock()
 
 		update := msg.CallUpdateCallRequested{
-			Peer: &msg.InputPeer{
-				ID:         in.PeerID,
-				Type:       msg.PeerType(in.PeerType),
-				AccessHash: in.AccessHash,
-			},
+			Peer:   c.peer,
 			CallID: in.CallID,
 		}
 		updateData, uErr := update.Marshal()
@@ -1713,6 +1709,7 @@ func (c *call) callDiscarded(in *UpdatePhoneCall) {
 		if uErr == nil {
 			c.callUpdate(msg.CallUpdate_CallRejected, updateData)
 		}
+		c.destroy(in.CallID)
 	} else {
 		if c.removeParticipant(in.UserID, &in.CallID) {
 			update := msg.CallUpdateCallRejected{
@@ -1723,6 +1720,7 @@ func (c *call) callDiscarded(in *UpdatePhoneCall) {
 			if uErr == nil {
 				c.callUpdate(msg.CallUpdate_CallRejected, updateData)
 			}
+			c.destroy(in.CallID)
 		} else {
 			c.checkAllConnected()
 			update := msg.CallUpdateParticipantLeft{
