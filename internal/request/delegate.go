@@ -44,12 +44,23 @@ func DelegateFlagToString(rdf DelegateFlag) string {
 
 // Request Flags
 const (
+	// ServerForced sends the request to the server even  if there is a local handler registered for it.
 	ServerForced DelegateFlag = 1 << iota
+	// Blocking blocks the caller until response arrived from the server
 	Blocking
+	// SkipWaitForNetwork starts the timeout timer right after submitting the request, and does not
+	// wait until network connection is established.
 	SkipWaitForNetwork
+	// SkipFlusher prevents sending the request in a container.
 	SkipFlusher
+	// Realtime sends the request directly to the network and skips the persistent queue. Such requests
+	// are forgotten after app restart.
 	Realtime
+	// Batch waits longer than usual. This is good for burst request. i.e. Call module uses this flag to prevent
+	// flooding server with individual updates.
 	Batch
+	// RetryUntilCanceled makes the request to be retried in case of timeout.
+	RetryUntilCanceled
 )
 
 type Delegate interface {
@@ -84,42 +95,4 @@ func DelegateAdapter(
 		onTimeout, onComplete, onProgress, true, flags,
 		domain.WebsocketRequestTimeout,
 	)
-}
-
-type delegate struct {
-	onComplete func(b []byte)
-	onTimeout  func(error)
-	onProgress func(int64)
-	flags      DelegateFlag
-}
-
-func (r *delegate) OnComplete(b []byte) {
-	if r.onComplete != nil {
-		r.onComplete(b)
-	}
-}
-
-func (r *delegate) OnTimeout(err error) {
-	if r.onTimeout != nil {
-		r.onTimeout(err)
-	}
-}
-
-func (r *delegate) Flags() DelegateFlag {
-	return r.flags
-}
-
-func (r *delegate) OnProgress(percent int64) {
-	if r.onProgress != nil {
-		r.onProgress(percent)
-	}
-}
-
-func NewRequestDelegate(onComplete func(b []byte), onTimeout func(err error), flags DelegateFlag) *delegate {
-	return &delegate{
-		onComplete: onComplete,
-		onTimeout:  onTimeout,
-		onProgress: nil,
-		flags:      flags,
-	}
 }

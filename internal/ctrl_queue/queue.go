@@ -147,8 +147,8 @@ func (ctrl *Controller) executor(reqCB request.Callback) {
 	case <-time.After(reqCB.Timeout()):
 		switch reqCB.Constructor() {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
-			pmsg, err := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
-			if err == nil && pmsg != nil {
+			pm, _ := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
+			if pm != nil {
 				ctrl.addToWaitingList(reqCB)
 				return
 			}
@@ -168,16 +168,16 @@ func (ctrl *Controller) executor(reqCB request.Callback) {
 			case rony.C_Error:
 				errMsg := &rony.Error{}
 				_ = errMsg.Unmarshal(res.Message)
-				if errMsg.Code == msg.ErrCodeAlreadyExists && errMsg.Items == msg.ErrItemRandomID {
+
+				switch {
+				case domain.CheckError(errMsg, msg.ErrCodeAlreadyExists, msg.ErrItemRandomID):
+					fallthrough
+				case domain.CheckError(errMsg, msg.ErrCodeAccess, "NON_TEAM_MEMBER"):
 					pm, _ := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
 					if pm != nil {
 						_ = repo.PendingMessages.Delete(pm.ID)
 					}
-				} else if errMsg.Code == msg.ErrCodeAccess && errMsg.Items == "NON_TEAM_MEMBER" {
-					pm, _ := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
-					if pm != nil {
-						_ = repo.PendingMessages.Delete(pm.ID)
-					}
+
 				}
 			}
 		default:
@@ -185,9 +185,9 @@ func (ctrl *Controller) executor(reqCB request.Callback) {
 			case rony.C_Error:
 				errMsg := &rony.Error{}
 				_ = errMsg.Unmarshal(res.Message)
-				if errMsg.Code == msg.ErrCodeInvalid && errMsg.Items == msg.ErrItemSalt {
+				switch {
+				case domain.CheckError(errMsg, msg.ErrCodeInvalid, msg.ErrItemSalt):
 					ctrl.addToWaitingList(reqCB)
-					return
 				}
 			}
 		}

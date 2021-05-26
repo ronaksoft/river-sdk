@@ -66,6 +66,7 @@ func (r *River) executeCommand(reqCB request.Callback) (err error) {
 	logger.Debug("executes command",
 		zap.Uint64("ReqID", reqCB.RequestID()),
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
+		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
 	)
 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
@@ -87,7 +88,9 @@ func (r *River) executeCommand(reqCB request.Callback) (err error) {
 }
 func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.Callback) {
 	logger.Debug("execute local command",
+		zap.Uint64("ReqID", reqCB.RequestID()),
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
+		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
 	)
 
 	out := &rony.MessageEnvelope{
@@ -99,7 +102,9 @@ func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.
 }
 func (r *River) executeRemoteCommand(reqCB request.Callback) {
 	logger.Debug("execute remote command",
+		zap.Uint64("ReqID", reqCB.RequestID()),
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
+		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
 	)
 
 	var (
