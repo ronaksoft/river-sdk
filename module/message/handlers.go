@@ -772,16 +772,15 @@ func (r *message) messagesDelete(da request.Callback) {
 	}
 	if len(pendingMessageIDs) > 0 {
 		for _, id := range pendingMessageIDs {
-			pmsg, _ := repo.PendingMessages.GetByID(id)
-			if pmsg == nil {
-				return
+			pm, _ := repo.PendingMessages.GetByID(id)
+			if pm == nil {
+				continue
 			}
-			if pmsg.FileID != 0 {
-				r.SDK().FileCtrl().CancelUploadRequest(pmsg.FileID)
+			if pm.FileID != 0 {
+				r.SDK().FileCtrl().CancelUploadRequest(pm.FileID)
 			}
 
 			_ = repo.PendingMessages.Delete(id)
-
 		}
 	}
 
@@ -875,7 +874,7 @@ func (r *message) messagesReadContents(da request.Callback) {
 		return
 	}
 
-	repo.Messages.SetContentRead(req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
+	_ = repo.Messages.SetContentRead(req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 
 	// send the request to server
 	r.SDK().QueueCtrl().EnqueueCommand(da)
@@ -889,18 +888,15 @@ func (r *message) messagesSaveDraft(da request.Callback) {
 
 	dialog, _ := repo.Dialogs.Get(da.TeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog != nil {
-		draftMessage := msg.DraftMessage{
+		dialog.Draft = &msg.DraftMessage{
 			Body:     req.Body,
 			Entities: req.Entities,
 			PeerID:   req.Peer.ID,
 			PeerType: int32(req.Peer.Type),
-			Date:     time.Now().Unix(),
+			Date:     tools.TimeUnix(),
 			ReplyTo:  req.ReplyTo,
 		}
-
-		dialog.Draft = &draftMessage
-
-		repo.Dialogs.Save(dialog)
+		_ = repo.Dialogs.Save(dialog)
 	}
 
 	// send the request to server
@@ -916,7 +912,7 @@ func (r *message) messagesClearDraft(da request.Callback) {
 	dialog, _ := repo.Dialogs.Get(da.TeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog != nil {
 		dialog.Draft = nil
-		repo.Dialogs.Save(dialog)
+		_ = repo.Dialogs.Save(dialog)
 	}
 
 	// send the request to server
@@ -930,7 +926,7 @@ func (r *message) messagesTogglePin(da request.Callback) {
 	}
 
 	err := repo.Dialogs.UpdatePinMessageID(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageID)
-	r.Log().ErrorOnErr("MessagesTogglePin", err)
+	r.Log().ErrorOnErr("go error on toggle pin dialog", err)
 
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
@@ -942,7 +938,7 @@ func (r *message) messagesSendReaction(da request.Callback) {
 	}
 
 	err := repo.Reactions.IncrementReactionUseCount(req.Reaction, 1)
-	r.Log().ErrorOnErr("messagesSendReaction", err)
+	r.Log().ErrorOnErr("got error on send message reaction", err)
 
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
@@ -955,7 +951,7 @@ func (r *message) messagesDeleteReaction(da request.Callback) {
 
 	for _, react := range req.Reactions {
 		err := repo.Reactions.IncrementReactionUseCount(react, -1)
-		r.Log().ErrorOnErr("messagesDeleteReaction", err)
+		r.Log().ErrorOnErr("got error on deleting message reaction", err)
 	}
 
 	r.SDK().QueueCtrl().EnqueueCommand(da)
@@ -986,13 +982,13 @@ func (r *message) clientGetMediaHistory(da request.Callback) {
 
 	messages, users, groups := repo.Messages.GetMediaMessageHistory(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit, req.Cat)
 	if len(messages) > 0 {
-		res := &msg.MessagesMany{
-			Messages: messages,
-			Users:    users,
-			Groups:   groups,
-		}
-
-		da.Response(msg.C_MessagesMany, res)
+		da.Response(msg.C_MessagesMany,
+			&msg.MessagesMany{
+				Messages: messages,
+				Users:    users,
+				Groups:   groups,
+			},
+		)
 		return
 	}
 }
@@ -1011,7 +1007,7 @@ func (r *message) clientSendMessageMedia(da request.Callback) {
 		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
 	}
 
-	// 1. insert into pending messages, id is negative nano timestamp and save RandomID too : Done
+	// insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 	fileID := domain.SequentialUniqueID()
 	msgID := -fileID
 	thumbID := int64(0)
@@ -1052,7 +1048,7 @@ func (r *message) clientSendMessageMedia(da request.Callback) {
 		return
 	}
 
-	// 4. Start the upload process
+	// start the upload process
 	r.SDK().FileCtrl().UploadMessageDocument(pendingMessage.ID, reqMedia.FilePath, reqMedia.ThumbFilePath, fileID, thumbID, h, pendingMessage.PeerID, checkSha256)
 
 	da.Response(msg.C_ClientPendingMessage, pendingMessage)
@@ -1060,7 +1056,6 @@ func (r *message) clientSendMessageMedia(da request.Callback) {
 
 func (r *message) clientGetFrequentReactions(da request.Callback) {
 	reactions := domain.SysConfig.Reactions
-	r.Log().Info("Reactions", zap.Int("ReactionsCount", len(reactions)))
 
 	useCountsMap := make(map[string]uint32, len(reactions))
 
@@ -1073,10 +1068,11 @@ func (r *message) clientGetFrequentReactions(da request.Callback) {
 		return useCountsMap[reactions[i]] > useCountsMap[reactions[j]]
 	})
 
-	res := &msg.ClientFrequentReactions{
-		Reactions: reactions,
-	}
-	da.Response(msg.C_ClientFrequentReactions, res)
+	da.Response(msg.C_ClientFrequentReactions,
+		&msg.ClientFrequentReactions{
+			Reactions: reactions,
+		},
+	)
 }
 
 func (r *message) clientGetCachedMedia(da request.Callback) {
@@ -1103,10 +1099,7 @@ func (r *message) clientClearCachedMedia(da request.Callback) {
 		repo.Files.ClearCache()
 	}
 
-	res := &msg.Bool{
-		Result: true,
-	}
-	da.Response(msg.C_Bool, res)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
 func (r *message) clientGetLastBotKeyboard(da request.Callback) {
@@ -1116,7 +1109,6 @@ func (r *message) clientGetLastBotKeyboard(da request.Callback) {
 	}
 
 	lastKeyboardMsg, _ := repo.Messages.GetLastBotKeyboard(da.TeamID(), req.Peer.ID, int32(req.Peer.Type))
-
 	if lastKeyboardMsg == nil {
 		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: "message not found"})
 		return
