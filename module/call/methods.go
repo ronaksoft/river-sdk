@@ -1861,17 +1861,7 @@ func (c *call) sdpAnswerUpdated(in *UpdatePhoneCall) {
 
 	answerSDP := in.Data.(*msg.PhoneActionSDPAnswer)
 
-	answerSDPData, err := answerSDP.Marshal()
-	if err != nil {
-		return
-	}
-
-	if c.callback.SetAnswerSDP == nil {
-		c.Log().Error("callbacks are not initialized")
-		return
-	}
-
-	_ = c.callback.SetAnswerSDP(connId, answerSDPData)
+	_ = c.CallbackSetAnswerSDP(connId, answerSDP)
 }
 
 func (c *call) callAcknowledged(in *UpdatePhoneCall) {
