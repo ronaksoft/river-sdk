@@ -15,6 +15,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/olekukonko/tablewriter"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"io"
@@ -178,6 +179,7 @@ func (r *message) messagesSend(da request.Callback) {
 		return
 	}
 
+	// for saved messages we have special cases for debugging purpose
 	if req.Peer.ID == r.SDK().GetConnInfo().PickupUserID() {
 		r.handleDebugActions(req.Body)
 	}
@@ -200,14 +202,14 @@ func (r *message) messagesSend(da request.Callback) {
 	r.SDK().QueueCtrl().EnqueueCommand(
 		request.NewCallback(
 			da.TeamID(), da.TeamAccess(), uint64(req.RandomID), msg.C_MessagesSend, req,
-			da.OnTimeout, da.OnComplete, da.OnProgress, da.UI(), da.Flags(), da.Timeout(),
+			nil, nil, nil, da.UI(), da.Flags(), da.Timeout(),
 		),
 	)
 
-	// 3. return to CallBack with pending message data : Done
-	// 4. later when queue got processed and server returned response we should check if the requestID
-	//   exist in pendingTable we remove it and insert new message with new id to message table
-	//   invoke new OnUpdate with new proto buffer to inform ui that pending message got delivered
+	// return to CallBack with pending message data : Done
+	// later when queue got processed and server returned response we should check if the requestID
+	// exist in pendingTable we remove it and insert new message with new id to message table
+	// invoke new OnUpdate with new proto buffer to inform ui that pending message got delivered
 	da.Response(msg.C_ClientPendingMessage, res)
 }
 func (r *message) handleDebugActions(txt string) {
@@ -481,12 +483,19 @@ func (r *message) messagesSendMedia(da request.Callback) {
 	}
 
 	switch req.MediaType {
+	case msg.InputMediaType_InputMediaTypeEmpty:
+		// sending text messages MUST be handled by MessagesSendMedia
+		da.Response(rony.C_Error, errors.New("00", "USE_MessagesSendMedia"))
+		return
+	case msg.InputMediaType_InputMediaTypeUploadedDocument:
+		// sending uploaded document types MUST be handled by ClientSendMessageMedia
+		da.Response(rony.C_Error, errors.New("00", "USE_ClientSendMessageMedia"))
+		return
 	case msg.InputMediaType_InputMediaTypeContact, msg.InputMediaType_InputMediaTypeGeoLocation,
 		msg.InputMediaType_InputMediaTypeDocument, msg.InputMediaType_InputMediaTypeMessageDocument:
 		// This will be used as next requestID
+		// Insert into pending messages, id is negative nano timestamp and save RandomID too
 		req.RandomID = domain.SequentialUniqueID()
-
-		// Insert into pending messages, id is negative nano timestamp and save RandomID too : Done
 		dbID := -req.RandomID
 
 		res, err := repo.PendingMessages.SaveMessageMedia(da.TeamID(), da.TeamAccess(), dbID, r.SDK().GetConnInfo().PickupUserID(), req)
@@ -498,17 +507,15 @@ func (r *message) messagesSendMedia(da request.Callback) {
 			da.Response(rony.C_Error, e)
 			return
 		}
-		// Return to CallBack with pending message data : Done
+		// return temporary response to the UI until UpdateMessageID/UpdateNewMessage arrived.
 		da.Response(msg.C_ClientPendingMessage, res)
-	case msg.InputMediaType_InputMediaTypeUploadedDocument:
-		// no need to insert pending message cuz we already insert one b4 start uploading
 	}
 
 	da.Discard()
 	r.SDK().QueueCtrl().EnqueueCommand(
 		request.NewCallback(
 			da.TeamID(), da.TeamAccess(), uint64(req.RandomID), msg.C_MessagesSendMedia, req,
-			da.OnTimeout, da.OnComplete, da.OnProgress, da.UI(), da.Flags(), da.Timeout(),
+			nil, nil, nil, da.UI(), da.Flags(), da.Timeout(),
 		),
 	)
 
