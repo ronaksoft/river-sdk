@@ -297,16 +297,18 @@ func (c *call) accept(callID int64, video bool) (err error) {
 					return
 				}
 
-				streamState, innerErr := c.getMediaSettings()
-				if innerErr != nil {
-					return
-				}
+				time.AfterFunc(time.Duration(255)*time.Millisecond, func() {
+					streamState, innerErr := c.getMediaSettings()
+					if innerErr != nil {
+						return
+					}
 
-				c.mediaSettingsInit(streamState)
-				c.propagateMediaSettings(MediaSettingsIn{
-					Audio:       &streamState.Audio,
-					ScreenShare: &streamState.ScreenShare,
-					Video:       &streamState.Video,
+					c.mediaSettingsInit(streamState)
+					c.propagateMediaSettings(MediaSettingsIn{
+						Audio:       &streamState.Audio,
+						ScreenShare: &streamState.ScreenShare,
+						Video:       &streamState.Video,
+					})
 				})
 			}(request)
 		}
@@ -1682,16 +1684,19 @@ func (c *call) callAccepted(in *UpdatePhoneCall) {
 	pc.mu.Unlock()
 	c.flushIceCandidates(in.CallID, connId)
 
-	streamState, err := c.getMediaSettings()
-	if err != nil {
-		return
-	}
+	time.AfterFunc(time.Duration(255)*time.Millisecond, func() {
+		streamState, err := c.getMediaSettings()
+		if err != nil {
+			return
+		}
 
-	c.propagateMediaSettings(MediaSettingsIn{
-		Audio:       &streamState.Audio,
-		ScreenShare: &streamState.ScreenShare,
-		Video:       &streamState.Video,
+		c.propagateMediaSettings(MediaSettingsIn{
+			Audio:       &streamState.Audio,
+			ScreenShare: &streamState.ScreenShare,
+			Video:       &streamState.Video,
+		})
 	})
+
 	c.clearRetryInterval(connId)
 	c.appendToAcceptedList(connId)
 	c.Log().Info("[webrtc] accept signal", zap.Int32("connId", connId))
