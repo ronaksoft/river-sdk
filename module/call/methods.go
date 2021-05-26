@@ -1080,10 +1080,8 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn) {
 		return
 	}
 
-	c.mu.RLock()
-	info, ok := c.callInfo[c.activeCallID]
-	c.mu.RUnlock()
-	if !ok {
+	info := c.getCallInfo(c.activeCallID)
+	if info == nil {
 		return
 	}
 
@@ -1136,7 +1134,10 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn) {
 	}
 
 	inputUsers := c.getInputUsers(c.activeCallID)
-	_, _ = c.apiSendUpdate(c.peer, c.activeCallID, inputUsers, msg.PhoneCallAction_PhoneCallMediaSettingsChanged, actionData, false)
+	_, err = c.apiSendUpdate(c.peer, c.activeCallID, inputUsers, msg.PhoneCallAction_PhoneCallMediaSettingsChanged, actionData, false)
+	if err != nil {
+		c.Log().Info("apiSendUpdate, PhoneCallAction_PhoneCallMediaSettingsChanged", zap.Error(err))
+	}
 	return
 }
 
