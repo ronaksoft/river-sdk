@@ -30,7 +30,6 @@ type Config struct {
 	TeamID     int64
 	TeamAccess uint64
 	UserID     int64
-	AuthID     int64
 	DeviceType msg.CallDeviceType
 	Callback   *Callback
 }
@@ -46,7 +45,6 @@ type call struct {
 
 	iceServer []*msg.IceServer
 	userID    int64
-	authID    int64
 
 	teamInput  teamInput
 	deviceType msg.CallDeviceType
@@ -63,7 +61,6 @@ func New(config *Config) *call {
 		callInfo:        make(map[int64]*Info),
 		iceServer:       nil,
 		userID:          config.UserID,
-		authID:          config.AuthID,
 		teamInput: teamInput{
 			teamID:     config.TeamID,
 			teamAccess: config.TeamAccess,

@@ -282,12 +282,18 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	// Set current team
 	domain.SetCurrentTeam(conf.TeamID, uint64(conf.TeamAccessHash))
 
+	deviceType := msg.CallDeviceType_CallDeviceUnknown
+	if domain.ClientPlatform == "River iOS" {
+		deviceType = msg.CallDeviceType_CallDeviceIOS
+	} else if domain.ClientPlatform == "River Android" {
+		deviceType = msg.CallDeviceType_CallDeviceAndroid
+	}
+
 	callModule := call.New(&call.Config{
 		TeamID:     domain.GetCurrTeamID(),
 		TeamAccess: domain.GetCurrTeamAccess(),
 		UserID:     r.ConnInfo.UserID,
-		AuthID:     r.ConnInfo.AuthID,
-		DeviceType: msg.CallDeviceType_CallDeviceUnknown,
+		DeviceType: deviceType,
 		Callback: &call.Callback{
 			OnUpdate:             r.callDelegate.OnUpdate,
 			InitStream:           r.callDelegate.InitStream,

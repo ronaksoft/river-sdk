@@ -2005,7 +2005,7 @@ func (c *call) screenShareUpdated(in *UpdatePhoneCall) {
 
 func (c *call) callPicked(in *UpdatePhoneCall) {
 	data := in.Data.(*msg.PhoneActionPicked)
-	if data.AuthID != c.authID {
+	if data.AuthID != c.SDK().GetConnInfo().PickupAuthID() {
 		update := msg.CallUpdateCallCancelled{
 			CallID: in.CallID,
 		}
