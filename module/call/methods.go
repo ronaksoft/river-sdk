@@ -60,7 +60,7 @@ func (c *call) destroy(callID int64) {
 	c.peerConnections = make(map[int32]*Connection)
 	if info, ok := c.callInfo[callID]; ok {
 		for reqID := range info.requestMap {
-			c.SDK().QueueCtrl().CancelRequest(reqID)
+			c.SDK().QueueCtrl().CancelRequest(uint64(reqID))
 		}
 	}
 	delete(c.callInfo, callID)

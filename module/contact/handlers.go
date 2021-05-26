@@ -80,7 +80,7 @@ func (r *contact) contactsAdd(in, out *rony.MessageEnvelope, da request.Callback
 
 	// reset contacts hash to update the contacts
 	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(domain.GetTeamID(in)), 0)
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -100,7 +100,7 @@ func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da request.Callb
 	// If only importing one contact then we don't need to calculate contacts hash
 	if len(req.Contacts) == 1 {
 		// send request to server
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
 	}
 
@@ -142,7 +142,7 @@ func (r *contact) contactsImport(in, out *rony.MessageEnvelope, da request.Callb
 
 	if len(diffContacts) <= 250 {
 		// send the request to server
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
 	}
 
@@ -167,7 +167,7 @@ func (r *contact) contactsDelete(in, out *rony.MessageEnvelope, da request.Callb
 	_ = repo.Users.DeleteContact(domain.GetTeamID(in), req.UserIDs...)
 	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(domain.GetTeamID(in)), 0)
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 	return
 }
 
@@ -182,7 +182,7 @@ func (r *contact) contactsDeleteAll(in, out *rony.MessageEnvelope, da request.Ca
 	_ = repo.Users.DeleteAllContacts(domain.GetTeamID(in))
 	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(domain.GetTeamID(in)), 0)
 	_ = repo.System.SaveInt(domain.SkContactsImportHash, 0)
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 	return
 }
 
@@ -196,7 +196,7 @@ func (r *contact) contactsGetTopPeers(in, out *rony.MessageEnvelope, da request.
 	res := &msg.ContactsTopPeers{}
 	topPeers, _ := repo.TopPeers.List(domain.GetTeamID(in), req.Category, req.Offset, req.Limit)
 	if len(topPeers) == 0 {
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
 	}
 
@@ -271,7 +271,7 @@ func (r *contact) contactsResetTopPeer(in, out *rony.MessageEnvelope, da request
 		return
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *contact) clientContactSearch(in, out *rony.MessageEnvelope, da request.Callback) {

@@ -175,7 +175,7 @@ func (r *message) messagesGetDialog(in, out *rony.MessageEnvelope, da request.Ca
 	// if the localDB had no data send the request to server
 	if err != nil {
 		r.Log().Warn("got error on repo GetDialog", zap.Error(err), zap.Int64("PeerID", req.Peer.ID))
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
 	}
 
@@ -221,18 +221,14 @@ func (r *message) messagesSend(in, out *rony.MessageEnvelope, da request.Callbac
 		uiexec.ExecSuccessCB(da.OnComplete, out)
 		return
 	}
-	// 2. add to queue [ looks like there is general queue to send messages ] : Done
-	requestBytes, _ := req.Marshal()
 
 	// using req randomID as requestID later in queue processing and network controller messageHandler
+	da.Discard()
 	r.SDK().QueueCtrl().EnqueueCommand(
-		&rony.MessageEnvelope{
-			Header:      in.Header,
-			Constructor: msg.C_MessagesSend,
-			RequestID:   uint64(req.RandomID),
-			Message:     requestBytes,
-		},
-		da.OnTimeout, da.OnComplete, true,
+		request.NewCallback(
+			da.TeamID(), da.TeamAccess(), uint64(req.RandomID), msg.C_MessagesSend, req,
+			da.OnTimeout, da.OnComplete, da.OnProgress, da.UI(), da.Flags(), da.Timeout(),
+		),
 	)
 
 	// 3. return to CallBack with pending message data : Done
@@ -542,16 +538,14 @@ func (r *message) messagesSendMedia(in, out *rony.MessageEnvelope, da request.Ca
 		// no need to insert pending message cuz we already insert one b4 start uploading
 	}
 
-	requestBytes, _ := req.Marshal()
+	da.Discard()
 	r.SDK().QueueCtrl().EnqueueCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_MessagesSendMedia,
-			RequestID:   uint64(req.RandomID),
-			Message:     requestBytes,
-			Header:      in.Header,
-		},
-		da.OnTimeout, da.OnComplete, true,
+		request.NewCallback(
+			da.TeamID(), da.TeamAccess(), uint64(req.RandomID), msg.C_MessagesSendMedia, req,
+			da.OnTimeout, da.OnComplete, da.OnProgress, da.UI(), da.Flags(), da.Timeout(),
+		),
 	)
+
 }
 
 func (r *message) messagesReadHistory(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -574,7 +568,7 @@ func (r *message) messagesReadHistory(in, out *rony.MessageEnvelope, da request.
 	_ = repo.Dialogs.UpdateReadInboxMaxID(r.SDK().GetConnInfo().PickupUserID(), domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -622,7 +616,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da request.C
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 			return
 		}
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
@@ -636,7 +630,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da request.C
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 			return
 		}
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
@@ -650,7 +644,7 @@ func (r *message) messagesGetHistory(in, out *rony.MessageEnvelope, da request.C
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 			return
 		}
 		messages, users, groups := repo.Messages.GetMessageHistory(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
@@ -758,7 +752,7 @@ func (r *message) messagesGetMediaHistory(in, out *rony.MessageEnvelope, da requ
 			zap.Int64("TopMsgID", dialog.TopMessageID),
 			zap.String("Holes", messageHole.PrintHole(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.Cat)),
 		)
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 		return
 	}
 
@@ -831,7 +825,7 @@ func (r *message) messagesDelete(in, out *rony.MessageEnvelope, da request.Callb
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 
 }
 
@@ -882,7 +876,7 @@ func (r *message) messagesGet(in, out *rony.MessageEnvelope, da request.Callback
 	}
 
 	// WebsocketSend the request to the server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -918,7 +912,7 @@ func (r *message) messagesClearHistory(in, out *rony.MessageEnvelope, da request
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -932,7 +926,7 @@ func (r *message) messagesReadContents(in, out *rony.MessageEnvelope, da request
 	repo.Messages.SetContentRead(req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -960,7 +954,7 @@ func (r *message) messagesSaveDraft(in, out *rony.MessageEnvelope, da request.Ca
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -978,7 +972,7 @@ func (r *message) messagesClearDraft(in, out *rony.MessageEnvelope, da request.C
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -992,7 +986,7 @@ func (r *message) messagesTogglePin(in, out *rony.MessageEnvelope, da request.Ca
 	err := repo.Dialogs.UpdatePinMessageID(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MessageID)
 	r.Log().ErrorOnErr("MessagesTogglePin", err)
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -1006,7 +1000,7 @@ func (r *message) messagesSendReaction(in, out *rony.MessageEnvelope, da request
 	err := repo.Reactions.IncrementReactionUseCount(req.Reaction, 1)
 	r.Log().ErrorOnErr("messagesSendReaction", err)
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -1022,7 +1016,7 @@ func (r *message) messagesDeleteReaction(in, out *rony.MessageEnvelope, da reque
 		r.Log().ErrorOnErr("messagesDeleteReaction", err)
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -1040,7 +1034,7 @@ func (r *message) messagesToggleDialogPin(in, out *rony.MessageEnvelope, da requ
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 
 }
 

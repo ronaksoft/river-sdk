@@ -29,7 +29,7 @@ func (r *group) groupsEditTitle(in, out *rony.MessageEnvelope, da request.Callba
 	repo.Groups.UpdateTitle(req.GroupID, req.Title)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 
 }
 
@@ -53,7 +53,7 @@ func (r *group) groupAddUser(in, out *rony.MessageEnvelope, da request.Callback)
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 
 }
 
@@ -72,7 +72,7 @@ func (r *group) groupDeleteUser(in, out *rony.MessageEnvelope, da request.Callba
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *group) groupsGetFull(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -85,14 +85,14 @@ func (r *group) groupsGetFull(in, out *rony.MessageEnvelope, da request.Callback
 
 	res, err := repo.Groups.GetFull(req.GroupID)
 	if err != nil {
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
 	}
 
 	// NotifySettings
 	dlg, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.GroupID, int32(msg.PeerType_PeerGroup))
 	if dlg == nil {
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
 	}
 	res.NotifySettings = dlg.NotifySettings
@@ -110,7 +110,7 @@ func (r *group) groupsGetFull(in, out *rony.MessageEnvelope, da request.Callback
 	}
 	users, _ := repo.Users.GetMany(userIDs.ToArray())
 	if len(res.Participants) != len(users) {
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
 	}
 	res.Users = users
@@ -131,7 +131,7 @@ func (r *group) groupUpdateAdmin(in, out *rony.MessageEnvelope, da request.Callb
 	repo.Groups.UpdateMemberType(req.GroupID, req.User.UserID, req.Admin)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *group) groupToggleAdmin(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -149,12 +149,12 @@ func (r *group) groupToggleAdmin(in, out *rony.MessageEnvelope, da request.Callb
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *group) groupRemovePhoto(in, out *rony.MessageEnvelope, da request.Callback) {
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 
 	req := new(msg.GroupsRemovePhoto)
 	err := req.Unmarshal(in.Message)

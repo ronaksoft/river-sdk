@@ -32,7 +32,7 @@ func (r *team) teamEdit(in, out *rony.MessageEnvelope, da request.Callback) {
 		_ = repo.Teams.Save(team)
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, da request.Callback) {

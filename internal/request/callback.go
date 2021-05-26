@@ -37,6 +37,7 @@ type Callback interface {
 	Discard()
 	CreatedOn() int64
 	SentOn() int64
+	ReplaceCompleteCB(h domain.MessageHandler) Callback
 }
 
 // serialized
@@ -155,6 +156,11 @@ func (c *callback) CreatedOn() int64 {
 
 func (c *callback) SentOn() int64 {
 	return c.sentOn
+}
+
+func (c *callback) ReplaceCompleteCB(h domain.MessageHandler) Callback {
+	c.onComplete = h
+	return c
 }
 
 func NewCallback(

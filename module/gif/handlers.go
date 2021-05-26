@@ -61,7 +61,7 @@ func (r *gif) gifSave(in, out *rony.MessageEnvelope, da request.Callback) {
 	}
 	_ = repo.Gifs.UpdateLastAccess(cf.ClusterID, cf.FileID, domain.Now().Unix())
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -77,7 +77,7 @@ func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da request.Callback) {
 		r.Log().Warn("got error on deleting GIF document", zap.Error(err))
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -101,13 +101,12 @@ func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, da request.Callback) {
 		out.Fill(out.RequestID, msg.C_SavedGifs, res)
 		da.OnComplete(out)
 
-		// ignore success cb because we notify views on message hanlder
-		enqueueSuccessCB = func(m *rony.MessageEnvelope) {
-
-		}
+		// ignore success cb because we notify views on message handler
+		enqueueSuccessCB = func(m *rony.MessageEnvelope) {}
 	} else {
 		enqueueSuccessCB = da.OnComplete
 	}
 
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, enqueueSuccessCB, true)
+	// TODO:: set ui to false
+	r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(enqueueSuccessCB))
 }

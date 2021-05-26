@@ -46,7 +46,7 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -63,7 +63,7 @@ func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da request.Callback)
 	r.Log().ErrorOnErr("LabelsDelete", err)
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callback) {
@@ -124,7 +124,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 	case req.MinID == 0 && req.MaxID != 0:
 		b, _ := repo.Labels.GetLowerFilled(domain.GetTeamID(in), req.LabelID, req.MaxID)
 		if !b {
@@ -133,7 +133,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, 0, req.MaxID)
@@ -146,13 +146,13 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("MaxID", req.MaxID),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
+			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, req.MinID, 0)
 		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
 	default:
-		r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, preSuccessCB, true)
+		r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 		return
 	}
 }
@@ -184,7 +184,7 @@ func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da request.Call
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 
 }
 
@@ -206,7 +206,7 @@ func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da request
 	}
 
 	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(in, da.OnTimeout, da.OnComplete, da.UI())
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 
 }
 

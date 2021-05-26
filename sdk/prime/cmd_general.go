@@ -106,10 +106,8 @@ func (r *River) executeRemoteCommand(reqCB request.Callback) {
 	var (
 		directToNet    = r.realTimeCommands[reqCB.Constructor()]
 		waitForNetwork = true
-		flags          int32
 	)
 
-	flags = reqCB.Flags()
 	if reqCB.Flags()&request.SkipWaitForNetwork != 0 {
 		waitForNetwork = false
 		directToNet = true
@@ -132,10 +130,7 @@ func (r *River) executeRemoteCommand(reqCB request.Callback) {
 
 	// If the constructor is a realtime command, then just send it to the server
 	if directToNet {
-		r.networkCtrl.WebsocketCommand(
-			reqCB.Envelope(),
-			reqCB.OnTimeout, reqCB.OnComplete, reqCB.UI(), flags, reqCB.Timeout(),
-		)
+		r.networkCtrl.WebsocketCommand(reqCB)
 	} else {
 		r.queueCtrl.EnqueueCommand(reqCB)
 	}
@@ -421,12 +416,8 @@ func (r *River) ResetAuthKey() {
 
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
-	// Remove Callback
-	request.unregister(uint64(requestID))
-
 	// Cancel Request
-	r.queueCtrl.CancelRequest(requestID)
-
+	r.queueCtrl.CancelRequest(uint64(requestID))
 }
 
 // DeletePendingMessage removes pending message from DB
@@ -442,38 +433,6 @@ func (r *River) DeletePendingMessage(id int64) (isSuccess bool) {
 	err := repo.PendingMessages.Delete(id)
 	isSuccess = err == nil
 	return
-}
-
-// RetryPendingMessage puts pending message again in command queue to re send it
-func (r *River) RetryPendingMessage(id int64) bool {
-	pmsg, _ := repo.PendingMessages.GetByID(id)
-	if pmsg == nil {
-		return false
-	}
-	req := &msg.MessagesSend{
-		Body: pmsg.Body,
-		Peer: &msg.InputPeer{
-			ID:         pmsg.PeerID,
-			AccessHash: pmsg.AccessHash,
-			Type:       msg.PeerType(pmsg.PeerType),
-		},
-		RandomID:   pmsg.RequestID,
-		ReplyTo:    pmsg.ReplyTo,
-		ClearDraft: pmsg.ClearDraft,
-		Entities:   pmsg.Entities,
-	}
-	buff, _ := req.Marshal()
-	r.queueCtrl.EnqueueCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_MessagesSend,
-			RequestID:   uint64(req.RandomID),
-			Message:     buff,
-		},
-		nil, nil, true,
-	)
-
-	logger.Debug("RetryPendingMessage() Request enqueued")
-	return true
 }
 
 // GetSyncStatus returns SyncController status
