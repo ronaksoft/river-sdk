@@ -19,9 +19,7 @@ import (
 
 func (r *team) teamEdit(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.TeamEdit{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -37,9 +35,7 @@ func (r *team) teamEdit(in, out *rony.MessageEnvelope, da request.Callback) {
 
 func (r *team) clientGetTeamCounters(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientGetTeamCounters{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 

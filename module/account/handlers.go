@@ -21,9 +21,7 @@ import (
 
 func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountUpdateUsername{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -36,9 +34,7 @@ func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, da reques
 
 func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountRegisterDevice{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -58,9 +54,7 @@ func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da reques
 
 func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountUnregisterDevice{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -81,13 +75,11 @@ func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da requ
 
 func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountSetNotifySettings{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
-	dialog, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type))
+	dialog, _ := repo.Dialogs.Get(da.TeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog == nil {
 		return
 	}
@@ -101,8 +93,10 @@ func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da req
 }
 
 func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da request.Callback) {
-	x := &msg.AccountRemovePhoto{}
-	_ = x.Unmarshal(in.Message)
+	req := &msg.AccountRemovePhoto{}
+	if err := da.RequestData(req); err != nil {
+		return
+	}
 
 	// send the request to server
 	r.SDK().QueueCtrl().EnqueueCommand(da)
@@ -112,7 +106,7 @@ func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da request.C
 		return
 	}
 
-	if user.Photo != nil && user.Photo.PhotoID == x.PhotoID {
+	if user.Photo != nil && user.Photo.PhotoID == req.PhotoID {
 		_ = repo.Users.UpdatePhoto(r.SDK().GetConnInfo().PickupUserID(), &msg.UserPhoto{
 			PhotoBig:      &msg.FileLocation{},
 			PhotoSmall:    &msg.FileLocation{},
@@ -122,14 +116,12 @@ func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da request.C
 		})
 	}
 
-	_ = repo.Users.RemovePhotoGallery(r.SDK().GetConnInfo().PickupUserID(), x.PhotoID)
+	_ = repo.Users.RemovePhotoGallery(r.SDK().GetConnInfo().PickupUserID(), req.PhotoID)
 }
 
 func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountUpdateProfile{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -150,9 +142,7 @@ func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, da request
 
 func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.AccountGetTeams{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 

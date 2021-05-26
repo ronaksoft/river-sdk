@@ -147,7 +147,6 @@ func (r *River) executeRemoteCommand(reqCB request.Callback) {
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 	)
 
-
 	ctx, cf := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
 	defer cf()
 	res, err := r.network.SendHttp(ctx, reqCB.Envelope())

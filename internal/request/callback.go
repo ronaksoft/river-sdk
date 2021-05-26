@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/tools"
 	"google.golang.org/protobuf/proto"
 	"sync"
@@ -20,24 +21,29 @@ import (
    Copyright Ronak Software Group 2020
 */
 
+type Unmarshaller interface {
+	Unmarshal(data []byte) error
+}
+
 type Callback interface {
 	Constructor() int64
+	CreatedOn() int64
+	Discard()
+	Envelope() *rony.MessageEnvelope
 	Flags() DelegateFlag
+	Marshal() ([]byte, error)
 	OnComplete(m *rony.MessageEnvelope)
 	OnProgress(percent int64)
 	OnTimeout()
+	ReplaceCompleteCB(h domain.MessageHandler) Callback
+	RequestData(req Unmarshaller) error
 	RequestID() uint64
-	Envelope() *rony.MessageEnvelope
+	ResponseChan() chan *rony.MessageEnvelope
+	SentOn() int64
 	TeamAccess() uint64
 	TeamID() int64
 	Timeout() time.Duration
 	UI() bool
-	Marshal() ([]byte, error)
-	ResponseChan() chan *rony.MessageEnvelope
-	Discard()
-	CreatedOn() int64
-	SentOn() int64
-	ReplaceCompleteCB(h domain.MessageHandler) Callback
 }
 
 // serialized
@@ -161,6 +167,16 @@ func (c *callback) SentOn() int64 {
 func (c *callback) ReplaceCompleteCB(h domain.MessageHandler) Callback {
 	c.onComplete = h
 	return c
+}
+
+func (c *callback) RequestData(u Unmarshaller) error {
+	err := u.Unmarshal(c.envelope.Message)
+	if err != nil {
+		me := &rony.MessageEnvelope{}
+		me.Fill(c.envelope.RequestID, rony.C_Error, errors.New(errors.Internal, err.Error()), c.envelope.Header...)
+		c.OnComplete(me)
+	}
+	return err
 }
 
 func NewCallback(

@@ -90,7 +90,6 @@ func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 	)
 
-
 	out := &rony.MessageEnvelope{
 		RequestID: reqCB.RequestID(),
 	}

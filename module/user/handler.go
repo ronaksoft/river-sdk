@@ -7,7 +7,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
-	"go.uber.org/zap"
 	"sort"
 )
 
@@ -22,10 +21,10 @@ import (
 
 func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.UsersGetFull{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		r.Log().Error("UserModule::usersGetFull()-> Unmarshal()", zap.Error(err))
+	if err := da.RequestData(req); err != nil {
 		return
 	}
+
 	userIDs := domain.MInt64B{}
 	for _, v := range req.Users {
 		userIDs[v.UserID] = true
@@ -67,11 +66,10 @@ func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da request.Callback) 
 
 func (r *user) usersGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.UsersGet{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
+
 	userIDs := domain.MInt64B{}
 	for _, v := range req.Users {
 		userIDs[v.UserID] = true

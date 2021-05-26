@@ -20,9 +20,7 @@ import (
 
 func (r *gif) gifSave(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.GifSave{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -66,9 +64,7 @@ func (r *gif) gifSave(in, out *rony.MessageEnvelope, da request.Callback) {
 
 func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.GifDelete{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -82,11 +78,10 @@ func (r *gif) gifDelete(in, out *rony.MessageEnvelope, da request.Callback) {
 
 func (r *gif) gifGetSaved(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.GifGetSaved{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
+
 	gifHash, _ := repo.System.LoadInt(domain.SkGifHash)
 
 	var enqueueSuccessCB domain.MessageHandler

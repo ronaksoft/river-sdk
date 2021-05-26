@@ -2,7 +2,6 @@ package notification
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
@@ -38,13 +37,11 @@ func (r *notification) Name() string {
 
 func (r *notification) clientDismissNotification(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientDismissNotification{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
-	err := repo.Notifications.SetNotificationDismissTime(domain.GetTeamID(in), req.Peer, req.Ts)
+	err := repo.Notifications.SetNotificationDismissTime(da.TeamID(), req.Peer, req.Ts)
 	if err != nil {
 		r.Log().Error("got error on set client dismiss notification", zap.Error(err))
 	}
@@ -52,13 +49,11 @@ func (r *notification) clientDismissNotification(in, out *rony.MessageEnvelope, 
 
 func (r *notification) clientGetNotificationDismissTime(in, out *rony.MessageEnvelope, da request.Callback) {
 	req := &msg.ClientDismissNotification{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
-	ts, err := repo.Notifications.GetNotificationDismissTime(domain.GetTeamID(in), req.Peer)
+	ts, err := repo.Notifications.GetNotificationDismissTime(da.TeamID(), req.Peer)
 	if err != nil {
 		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		da.OnComplete(out)
