@@ -67,7 +67,6 @@ type ConnInfoDelegates struct{}
 func (c *ConnInfoDelegates) Load(connInfo *RiverConnection) {
 	b, _ := ioutil.ReadFile("./_connection/connInfo")
 	_ = json.Unmarshal(b, connInfo)
-	return
 }
 
 func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {

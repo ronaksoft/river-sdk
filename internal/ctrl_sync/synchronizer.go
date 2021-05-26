@@ -271,23 +271,23 @@ func getUpdateTargetID(u *msg.UpdateEnvelope) string {
 	case msg.C_UpdateNewMessage:
 		x := &msg.UpdateNewMessage{}
 		_ = x.Unmarshal(u.Update)
-		return fmt.Sprintf(fmt.Sprintf("NewMessage_%d_%d_%d", x.Message.TeamID, x.Message.PeerID, x.Message.PeerType))
+		return fmt.Sprintf("NewMessage_%d_%d_%d", x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 	case msg.C_UpdateDraftMessage:
 		x := &msg.UpdateDraftMessage{}
 		_ = x.Unmarshal(u.Update)
-		return fmt.Sprintf(fmt.Sprintf("DraftMessage_%d_%d_%d", x.Message.TeamID, x.Message.PeerID, x.Message.PeerType))
+		return fmt.Sprintf("DraftMessage_%d_%d_%d", x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 	case msg.C_UpdateDraftMessageCleared:
 		x := &msg.UpdateDraftMessageCleared{}
 		_ = x.Unmarshal(u.Update)
-		return fmt.Sprintf(fmt.Sprintf("DraftMessage_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type))
+		return fmt.Sprintf("DraftMessage_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type)
 	case msg.C_UpdateReadHistoryInbox:
 		x := &msg.UpdateReadHistoryInbox{}
 		_ = x.Unmarshal(u.Update)
-		return fmt.Sprintf(fmt.Sprintf("ReadHistoryIn_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type))
+		return fmt.Sprintf("ReadHistoryIn_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type)
 	case msg.C_UpdateReadHistoryOutbox:
 		x := &msg.UpdateReadHistoryOutbox{}
 		_ = x.Unmarshal(u.Update)
-		return fmt.Sprintf(fmt.Sprintf("ReadHistoryOut_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type))
+		return fmt.Sprintf("ReadHistoryOut_%d_%d_%d", x.TeamID, x.Peer.ID, x.Peer.Type)
 	default:
 		return fmt.Sprintf("%d", u.Constructor)
 	}
@@ -571,7 +571,6 @@ func (ctrl *Controller) UpdateApplier(updateContainer *msg.UpdateContainer, outO
 
 	udpContainer.Length = int32(len(udpContainer.Updates))
 	uiexec.ExecUpdate(msg.C_UpdateContainer, updateContainer)
-	return
 }
 
 // ResetIDs reset updateID
@@ -665,7 +664,6 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 	} else {
 		uiexec.ExecDataSynced(false, true, false)
 	}
-	return
 }
 
 func (ctrl *Controller) GetSyncStatus() domain.SyncStatus {

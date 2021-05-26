@@ -157,7 +157,6 @@ func (r *contact) contactsDelete(da request.Callback) {
 	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(da.TeamID()), 0)
 
 	r.SDK().QueueCtrl().EnqueueCommand(da)
-	return
 }
 
 func (r *contact) contactsDeleteAll(da request.Callback) {
@@ -170,7 +169,6 @@ func (r *contact) contactsDeleteAll(da request.Callback) {
 	_ = repo.System.SaveInt(domain.GetContactsGetHashKey(da.TeamID()), 0)
 	_ = repo.System.SaveInt(domain.SkContactsImportHash, 0)
 	r.SDK().QueueCtrl().EnqueueCommand(da)
-	return
 }
 
 func (r *contact) contactsGetTopPeers(da request.Callback) {

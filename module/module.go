@@ -51,10 +51,6 @@ type Module interface {
 // Base provides the boilerplate code for every module. Hence developer only needs to write the module specific
 // LocalHandlers, UpdateAppliers and MessageAppliers.
 type Base struct {
-	queueCtrl       *queueCtrl.Controller
-	networkCtrl     *networkCtrl.Controller
-	fileCtrl        *fileCtrl.Controller
-	syncCtrl        *syncCtrl.Controller
 	sdk             SDK
 	handlers        map[int64]request.LocalHandler
 	updateAppliers  map[int64]domain.UpdateApplier

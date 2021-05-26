@@ -32,12 +32,12 @@ type ConnInfoDelegate interface {
 type CallDelegate interface {
 	OnUpdate(action int32, b []byte)
 	InitStream(audio, video bool) bool
-	InitConnection(connId int32, b []byte) int64
-	CloseConnection(connId int32) bool
-	GetOfferSDP(connId int32) (out []byte)
-	SetOfferGetAnswerSDP(connId int32, req []byte) (out []byte)
-	SetAnswerSDP(connId int32, b []byte) bool
-	AddIceCandidate(connId int32, b []byte) bool
+	InitConnection(connID int32, b []byte) int64
+	CloseConnection(connID int32) bool
+	GetOfferSDP(connID int32) (out []byte)
+	SetOfferGetAnswerSDP(connID int32, req []byte) (out []byte)
+	SetAnswerSDP(connID int32, b []byte) bool
+	AddIceCandidate(connID int32, b []byte) bool
 }
 
 type RequestDelegateFlag = request.DelegateFlag

@@ -47,7 +47,7 @@ func (r *contact) contactsMany(e *rony.MessageEnvelope) {
 	)
 
 	// If contacts are modified in server, then first clear all the contacts and rewrite the new ones
-	if x.Modified == true {
+	if x.Modified {
 		_ = repo.Users.DeleteAllContacts(domain.GetTeamID(e))
 	}
 

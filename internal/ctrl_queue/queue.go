@@ -193,7 +193,6 @@ func (ctrl *Controller) executor(reqCB request.Callback) {
 		}
 		reqCB.OnComplete(res)
 	}
-	return
 }
 
 // EnqueueCommand put request in queue and distributor will execute it later

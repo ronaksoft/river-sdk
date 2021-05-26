@@ -29,8 +29,6 @@ func (r *label) labelsMany(e *rony.MessageEnvelope) {
 
 	err = repo.Labels.Save(domain.GetTeamID(e), u.Labels...)
 	r.Log().WarnOnErr("LabelModule got error on applying LabelsMany", err)
-
-	return
 }
 
 func (r *label) labelItems(e *rony.MessageEnvelope) {

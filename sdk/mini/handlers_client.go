@@ -34,12 +34,8 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 	}
 
 	// support IOS file path
-	if strings.HasPrefix(reqMedia.FilePath, "file://") {
-		reqMedia.FilePath = reqMedia.FilePath[7:]
-	}
-	if strings.HasPrefix(reqMedia.ThumbFilePath, "file://") {
-		reqMedia.ThumbFilePath = reqMedia.ThumbFilePath[7:]
-	}
+	reqMedia.FilePath = strings.TrimPrefix(reqMedia.FilePath, "file://")
+	reqMedia.ThumbFilePath = strings.TrimPrefix(reqMedia.ThumbFilePath, "file://")
 
 	fileID := tools.SecureRandomInt63(0)
 	thumbID := int64(0)

@@ -24,11 +24,6 @@ type repoDialogs struct {
 	*repository
 }
 
-type dialogsCounter struct {
-	unread    int32
-	mentioned int32
-}
-
 func getDialogKey(teamID int64, peerID int64, peerType int32) []byte {
 	sb := pools.AcquireStringsBuilder()
 	sb.WriteString(prefixDialogs)

@@ -44,10 +44,10 @@ func GenSrpHash(password []byte, algorithm int64, algorithmData []byte) []byte {
 // GenInputPassword  accepts AccountPassword marshaled as argument and return InputPassword marshaled
 func GenInputPassword(password []byte, accountPasswordBytes []byte) []byte {
 	ap := &msg.AccountPassword{}
-	err := ap.Unmarshal(accountPasswordBytes)
+	_ = ap.Unmarshal(accountPasswordBytes)
 
 	algo := &msg.PasswordAlgorithmVer6A{}
-	err = algo.Unmarshal(ap.AlgorithmData)
+	err := algo.Unmarshal(ap.AlgorithmData)
 	if err != nil {
 		return nil
 	}
@@ -94,18 +94,13 @@ func Version() string {
 
 // BadgerSupport identifies the version of the badger
 func BadgerSupport(dbDir string) bool {
-	if strings.HasPrefix(dbDir, "file://") {
-		dbDir = dbDir[7:]
-	}
+	dbDir = strings.TrimPrefix(dbDir, "file://")
 	f, err := os.Open(filepath.Join(dbDir, "MANIFEST"))
 	if err != nil {
 		return false
 	}
 	_, _, err = badger.ReplayManifestFile(f)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func LastSeenEstimate(ts int64) int {

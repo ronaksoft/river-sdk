@@ -278,5 +278,4 @@ func getMessage(c *ishell.Context, msgIDs []int64) {
 		reqD.RequestID = reqID
 	}
 	wg.Wait()
-	return
 }

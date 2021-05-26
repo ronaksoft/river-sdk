@@ -117,11 +117,10 @@ func (r *River) executeRemoteCommand(reqCB request.Callback) {
 		directToNet = true
 
 		go func() {
-			select {
-			case <-time.After(reqCB.Timeout()):
-				reqCB.OnTimeout()
-				r.CancelRequest(int64(reqCB.RequestID()))
-			}
+			<-time.After(reqCB.Timeout())
+
+			reqCB.OnTimeout()
+			r.CancelRequest(int64(reqCB.RequestID()))
 		}()
 	}
 	if reqCB.Flags()&request.Realtime != 0 {
@@ -258,8 +257,6 @@ func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP,
 			false, 0, domain.WebsocketRequestTimeout,
 		),
 	)
-
-	return
 }
 func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
 	logger.Info("CreateAuthKey() 2nd Step Started :: InitCompleteAuth")

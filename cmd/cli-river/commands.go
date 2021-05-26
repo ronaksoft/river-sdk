@@ -728,21 +728,6 @@ func fnGetMime(c *ishell.Context) string {
 	return mime
 }
 
-func fnGetMediaType(c *ishell.Context) msg.ClientMediaType {
-	mediaType := msg.ClientMediaType_ClientMediaNone
-	for {
-		c.Print("Media Type : (All=0, File= 1, Media= 2, Voice= 3, Audio= 4)")
-		id, err := strconv.ParseInt(c.ReadLine(), 10, 64)
-		if err == nil && id < 5 {
-			mediaType = msg.ClientMediaType(id)
-			break
-		} else {
-			c.Println("entered value is invalid ")
-		}
-	}
-	return mediaType
-}
-
 func fnGetMediaCat(c *ishell.Context) msg.MediaCategory {
 	options := make([]string, len(msg.MediaCategory_value))
 	for n, v := range msg.MediaCategory_value {

@@ -469,12 +469,10 @@ func (ctrl *Controller) updateNetworkStatus(newStatus domain.NetworkStatus) {
 	}
 }
 
-// Start
-// Starts the controller background controller and watcher routines
+// Start starts the controller background controller and watcher routines
 func (ctrl *Controller) Start() {
 	// Run the keepAlive and watchDog in background
 	go ctrl.watchDog()
-	return
 }
 
 // Stop sends stop signal to keepAlive and watchDog routines.
@@ -769,10 +767,8 @@ func (ctrl *Controller) WebsocketCommand(reqCB request.Callback) {
 			)
 			reqCB.OnComplete(res)
 		}
-		return
 	}
 	execBlock(reqCB.RequestID(), reqCB.Envelope())
-	return
 }
 
 // SendHttp encrypt and send request to server and receive and decrypt its response
@@ -856,6 +852,9 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		return receivedEnvelope, err
 	}
 	decryptedBytes, err := domain.Decrypt(ctrl.authKey, res.MessageKey, res.Payload)
+	if err != nil {
+		return nil, err
+	}
 
 	receivedEncryptedPayload := &msg.ProtoEncryptedPayload{}
 	err = receivedEncryptedPayload.Unmarshal(decryptedBytes)

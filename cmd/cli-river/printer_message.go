@@ -312,10 +312,10 @@ func printGroupFull(envelope *rony.MessageEnvelope) {
 		for _, x := range x.Participants {
 			tableUsers.Append([]string{
 				fmt.Sprintf("%d", x.UserID),
-				fmt.Sprintf("%s", x.FirstName),
-				fmt.Sprintf("%s", x.LastName),
+				x.FirstName,
+				x.LastName,
 				fmt.Sprintf("%d", x.AccessHash),
-				fmt.Sprintf("%s", x.Username),
+				x.Username,
 				fmt.Sprintf("%d", len(x.Photo.String())),
 			})
 		}
@@ -349,9 +349,9 @@ func printLabelItems(envelope *rony.MessageEnvelope) {
 			fmt.Sprintf("%d", d.PeerType),
 			fmt.Sprintf("%d", d.CreatedOn),
 			fmt.Sprintf("%d", d.Flags),
-			fmt.Sprintf("%v", d.Body),
+			d.Body,
 			fmt.Sprintf("%v", d.Entities),
-			fmt.Sprintf("%s", d.MediaType.String()),
+			d.MediaType.String(),
 		})
 	}
 	tableMessages.Render()
@@ -535,8 +535,8 @@ func printClientSearchResult(envelope *rony.MessageEnvelope) {
 	for _, x := range x.Users {
 		tableUsers.Append([]string{
 			fmt.Sprintf("%d", x.ID),
-			fmt.Sprintf("%s", x.FirstName),
-			fmt.Sprintf("%s", x.LastName),
+			x.FirstName,
+			x.LastName,
 			x.Username,
 			fmt.Sprintf("%s", time.Unix(x.LastSeen, 0).Format(time.RFC822)),
 		})

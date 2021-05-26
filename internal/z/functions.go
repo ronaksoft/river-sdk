@@ -21,7 +21,6 @@ func AppendStrInt64(sb *strings.Builder, x int64) {
 	binary.BigEndian.PutUint64(b, uint64(x))
 	sb.Write(b)
 	pools.TinyBytes.Put(b)
-	return
 }
 
 func AppendStrUInt64(sb *strings.Builder, x uint64) {
@@ -29,7 +28,6 @@ func AppendStrUInt64(sb *strings.Builder, x uint64) {
 	binary.BigEndian.PutUint64(b, x)
 	sb.Write(b)
 	pools.TinyBytes.Put(b)
-	return
 }
 
 func AppendStrInt32(sb *strings.Builder, x int32) {
@@ -37,7 +35,6 @@ func AppendStrInt32(sb *strings.Builder, x int32) {
 	binary.BigEndian.PutUint32(b, uint32(x))
 	sb.Write(b)
 	pools.TinyBytes.Put(b)
-	return
 }
 
 func AppendStrUInt32(sb *strings.Builder, x uint32) {
@@ -45,7 +42,7 @@ func AppendStrUInt32(sb *strings.Builder, x uint32) {
 	binary.BigEndian.PutUint32(b, x)
 	sb.Write(b)
 	pools.TinyBytes.Put(b)
-	return
+
 }
 
 func ByteToUInt32(bts []byte) uint32 {

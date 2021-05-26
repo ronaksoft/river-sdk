@@ -34,14 +34,8 @@ func ParseServerError(b []byte) error {
 }
 
 func CheckErrorCode(err *rony.Error, code string) bool {
-	if err.Code == code {
-		return true
-	}
-	return false
+	return err.Code == code
 }
 func CheckError(err *rony.Error, code, item string) bool {
-	if err.Code == code && err.Items == item {
-		return true
-	}
-	return false
+	return err.Code == code && err.Items == item
 }

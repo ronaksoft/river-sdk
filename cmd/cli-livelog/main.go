@@ -110,10 +110,7 @@ func runServer() {
 		err := http.ListenAndServe(
 			fmt.Sprintf(":%d", viper.GetInt(ConfMonitorPort)),
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				conn, _, _, err := ws.UpgradeHTTP(r, w)
-				if err != nil {
-					// handle error
-				}
+				conn, _, _, _ := ws.UpgradeHTTP(r, w)
 				pid := strings.TrimLeft(r.RequestURI, "/")
 				go func(pid string) {
 					defer conn.Close()

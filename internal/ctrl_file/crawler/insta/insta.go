@@ -42,13 +42,13 @@ func GetPostInfo(url string) (em instago.IGMedia, err error) {
 		return
 	}
 
-	postUrl := strings.Replace(urlPost, "{{CODE}}", parts[2], 1)
-	b, err := getHTTPResponseNoLogin(postUrl)
+	postURL := strings.Replace(urlPost, "{{CODE}}", parts[2], 1)
+	b, err := getHTTPResponseNoLogin(postURL)
 	if err != nil {
 		return
 	}
 
-	fmt.Println(postUrl, err)
+	fmt.Println(postURL, err)
 
 	pi := postInfo{}
 	err = json.Unmarshal(b, &pi)

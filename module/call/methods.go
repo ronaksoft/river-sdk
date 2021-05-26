@@ -703,7 +703,6 @@ func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequ
 		mu:                    &sync.RWMutex{},
 	}
 	c.mu.Unlock()
-	return
 }
 
 func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator bool, request *UpdatePhoneCall) (res *msg.PhoneCall, err error) {
@@ -907,8 +906,7 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	} else {
 		// Client should create offer
 		// Client should setLocalDescription and pass the offer to SDK
-		sdpOffer := &msg.PhoneActionSDPOffer{}
-		sdpOffer, err = c.CallbackGetOfferSDP(connId)
+		sdpOffer, err := c.CallbackGetOfferSDP(connId)
 		if err != nil {
 			return
 		}
@@ -1419,7 +1417,6 @@ func (c *call) callBusy(in *UpdatePhoneCall) {
 	inputPeer := c.getInputUserFromUpdate(in)
 
 	_, _ = c.apiReject(inputPeer, in.CallID, msg.DiscardReason_DiscardReasonBusy, 0)
-	return
 }
 
 func (c *call) sendCallAck(in *UpdatePhoneCall) {
@@ -1437,7 +1434,6 @@ func (c *call) sendCallAck(in *UpdatePhoneCall) {
 	}
 
 	_, _ = c.apiSendUpdate(inputPeer, in.CallID, []*msg.InputUser{inputUser}, msg.PhoneCallAction_PhoneCallAck, actionData, false)
-	return
 }
 
 func (c *call) sendSdpAnswer(connId int32, sdp *msg.PhoneActionSDPAnswer) {
@@ -1452,7 +1448,6 @@ func (c *call) sendSdpAnswer(connId int32, sdp *msg.PhoneActionSDPAnswer) {
 	}
 
 	_, _ = c.apiSendUpdate(c.peer, c.activeCallID, []*msg.InputUser{inputUser}, msg.PhoneCallAction_PhoneCallSDPAnswer, actionData, false)
-	return
 }
 
 func (c *call) sendSdpOffer(connId int32, sdp *msg.PhoneActionSDPOffer) {
@@ -1467,7 +1462,6 @@ func (c *call) sendSdpOffer(connId int32, sdp *msg.PhoneActionSDPOffer) {
 	}
 
 	_, _ = c.apiSendUpdate(c.peer, c.activeCallID, []*msg.InputUser{inputUser}, msg.PhoneCallAction_PhoneCallSDPOffer, actionData, false)
-	return
 }
 
 func (c *call) getInputUserFromUpdate(in *UpdatePhoneCall) *msg.InputPeer {

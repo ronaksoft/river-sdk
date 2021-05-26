@@ -48,7 +48,7 @@ func (r *RemoteWrite) flusher() {
 			qty++
 			continue
 		}
-		_, err = r.HttpClient.Post(r.Url, "", writeBuff)
+		_, _ = r.HttpClient.Post(r.Url, "", writeBuff)
 		writeBuff.Reset()
 	}
 }

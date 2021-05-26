@@ -69,8 +69,7 @@ type RiverConfig struct {
 	TeamAccessHash int64
 }
 
-// River
-// This the main and a wrapper around all the components of the system (networkController, queueController,
+// River is the main and a wrapper around all the components of the system (networkController, queueController,
 // syncController). All the controllers could be used standalone, but this SDK connect them in a way
 // we think is the best possible.
 // Only the functions which are exposed will be used by the user of the SDK. All the low-level tasks
@@ -113,9 +112,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 	}
 
 	// Initialize DB Path
-	if strings.HasPrefix(conf.DbPath, "file://") {
-		conf.DbPath = conf.DbPath[7:]
-	}
+	conf.DbPath = strings.TrimPrefix(conf.DbPath, "file://")
 	conf.DbPath = strings.TrimRight(conf.DbPath, "/ ")
 	r.dbPath = fmt.Sprintf("%s/%s.db", conf.DbPath, conf.DbID)
 

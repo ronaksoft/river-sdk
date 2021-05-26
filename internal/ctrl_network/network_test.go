@@ -158,8 +158,7 @@ func TestReconnect(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			wg.Add(1)
 			go func() {
-				var ctrl *networkCtrl.Controller
-				ctrl = networkCtrl.New(networkCtrl.Config{
+				ctrl := networkCtrl.New(networkCtrl.Config{
 					SeedHosts:   []string{"edge.river.im"},
 					CountryCode: "IR",
 				})

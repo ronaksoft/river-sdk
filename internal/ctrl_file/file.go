@@ -45,10 +45,9 @@ type Config struct {
 }
 
 type Controller struct {
-	network      *networkCtrl.Controller
-	mtxDownloads sync.Mutex
-	downloader   *executor.Executor
-	uploader     *executor.Executor
+	network    *networkCtrl.Controller
+	downloader *executor.Executor
+	uploader   *executor.Executor
 
 	// Callbacks
 	onProgressChanged func(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64)
@@ -499,11 +498,7 @@ func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {
 }
 
 func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
-	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-	}
-
+	filePath = strings.TrimPrefix(filePath, "file://")
 	fileID := domain.RandomInt63()
 	err := ctrl.upload(&msg.ClientFileRequest{
 		IsProfilePhoto: true,
@@ -517,9 +512,7 @@ func (ctrl *Controller) UploadUserPhoto(filePath string) (reqID string) {
 }
 func (ctrl *Controller) UploadGroupPhoto(groupID int64, filePath string) (reqID string) {
 	// support IOS file path
-	if strings.HasPrefix(filePath, "file://") {
-		filePath = filePath[7:]
-	}
+	filePath = strings.TrimPrefix(filePath, "file://")
 
 	fileID := domain.RandomInt63()
 	err := ctrl.upload(&msg.ClientFileRequest{

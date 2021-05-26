@@ -342,8 +342,6 @@ func (u *UploadRequest) ActionDone(id int32) {
 
 	// Clean up
 	u.complete()
-
-	return
 }
 
 func (u *UploadRequest) Serialize() []byte {
