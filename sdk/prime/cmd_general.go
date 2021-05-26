@@ -51,21 +51,21 @@ func (r *River) ExecuteCommandWithTeam(teamID, accessHash, constructor int64, co
 	return requestID, err
 }
 
-func (r *River) executeCommand(cb request.Callback) (err error) {
-	if registry.ConstructorName(cb.Constructor()) == "" {
+func (r *River) executeCommand(reqCB request.Callback) (err error) {
+	if registry.ConstructorName(reqCB.Constructor()) == "" {
 		err = domain.ErrInvalidConstructor
 		return
 	}
 
 	var (
 		waitGroup    = &sync.WaitGroup{}
-		blockingMode = cb.Flags()&request.Blocking != 0
-		serverForce  = cb.Flags()&request.ServerForced != 0
+		blockingMode = reqCB.Flags()&request.Blocking != 0
+		serverForce  = reqCB.Flags()&request.ServerForced != 0
 	)
 
 	logger.Debug("executes command",
-		zap.Uint64("ReqID", cb.RequestID()),
-		zap.String("C", registry.ConstructorName(cb.Constructor())),
+		zap.Uint64("ReqID", reqCB.RequestID()),
+		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 	)
 
 	// if function is in blocking mode set the waitGroup to block until the job is done, otherwise
@@ -76,27 +76,27 @@ func (r *River) executeCommand(cb request.Callback) (err error) {
 	}
 
 	// If the constructor is a local command then
-	handler, ok := r.localCommands[cb.Constructor()]
+	handler, ok := r.localCommands[reqCB.Constructor()]
 	if ok && !serverForce {
-		go r.executeLocalCommand(handler, cb)
+		go r.executeLocalCommand(handler, reqCB)
 		return
 	}
 
-	go r.executeRemoteCommand(cb)
+	go r.executeRemoteCommand(reqCB)
 	return
 }
-func (r *River) executeLocalCommand(handler request.LocalHandler, cb request.Callback) {
+func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.Callback) {
 	logger.Debug("execute local command",
-		zap.String("C", registry.ConstructorName(cb.Constructor())),
+		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 	)
 
-	in := cb.Envelope()
-	out := &rony.MessageEnvelope{
-		RequestID: cb.RequestID(),
-	}
-	out.Header = append(out.Header, in.Header...)
 
-	handler(cb.Envelope(), out, cb)
+	out := &rony.MessageEnvelope{
+		RequestID: reqCB.RequestID(),
+	}
+	out.Header = append(out.Header, reqCB.Envelope().Header...)
+
+	handler(reqCB.Envelope(), out, reqCB)
 }
 func (r *River) executeRemoteCommand(reqCB request.Callback) {
 	logger.Debug("execute remote command",
