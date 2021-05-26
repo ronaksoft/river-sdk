@@ -533,8 +533,6 @@ func (c *call) executeRemoteCommand(
 		wg.Done()
 	}
 
-
-
 	executeFn = func() {
 		reqID := domain.NextRequestID()
 		cb := request.NewCallbackFromBytes(

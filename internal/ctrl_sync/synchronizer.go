@@ -205,7 +205,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		zap.Int64("ClientUpdateID", ctrl.GetUpdateID()),
 	)
 
-
 	for serverUpdateID > ctrl.GetUpdateID() {
 		limit := serverUpdateID - ctrl.GetUpdateID()
 		if limit > 250 {
@@ -223,7 +222,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			Limit: int32(limit),
 			From:  ctrl.GetUpdateID() + 1, // +1 cuz we already have ctrl.updateID itself,
 		}
-
 
 		ctrl.networkCtrl.WebsocketCommand(
 			request.NewCallback(
@@ -265,7 +263,6 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 				false, request.SkipFlusher, domain.WebsocketRequestTimeoutLong,
 			),
 		)
-
 
 	}
 }

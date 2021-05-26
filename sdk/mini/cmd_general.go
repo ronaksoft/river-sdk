@@ -103,7 +103,7 @@ func (r *River) executeCommand(
 
 	// If this request must be sent to the server then executeRemoteCommand
 	if serverForce {
-		r.executeRemoteCommand(teamID, teamAccess,  commandBytes, rda)
+		r.executeRemoteCommand(teamID, teamAccess, commandBytes, rda)
 		return
 	}
 
