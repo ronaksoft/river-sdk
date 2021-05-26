@@ -172,96 +172,89 @@ func (r *River) CreateAuthKey() (err error) {
 }
 func (r *River) getServerKeys() (sk *msg.SystemKeys, err error) {
 	logger.Info("GetServerKeys")
-	waitGroup := new(sync.WaitGroup)
-	waitGroup.Add(1)
+	r.networkCtrl.WebsocketCommand(
+		request.NewCallback(
+			0, 0,
+			domain.NextRequestID(),
+			msg.C_SystemGetServerKeys,
+			&msg.SystemGetServerKeys{},
+			func() {
+				err = domain.ErrRequestTimeout
+			},
+			func(res *rony.MessageEnvelope) {
+				logger.Debug("GetServerKeys() Success Callback Called")
+				switch res.Constructor {
+				case msg.C_SystemKeys:
+					sk = &msg.SystemKeys{}
+					err = sk.Unmarshal(res.Message)
+					if err != nil {
+						logger.Error("couldn't unmarshal SystemKeys response", zap.Error(err))
+						return
+					}
 
-	cb := request.NewCallback(
-		0, 0,
-		domain.NextRequestID(),
-		msg.C_SystemGetServerKeys,
-		&msg.SystemGetServerKeys{},
-		func() {
-			defer waitGroup.Done()
-			err = domain.ErrRequestTimeout
-		},
-		func(res *rony.MessageEnvelope) {
-			defer waitGroup.Done()
-			logger.Debug("GetServerKeys() Success Callback Called")
-			switch res.Constructor {
-			case msg.C_SystemKeys:
-				sk = &msg.SystemKeys{}
-				err = sk.Unmarshal(res.Message)
-				if err != nil {
-					logger.Error("couldn't unmarshal SystemKeys response", zap.Error(err))
-					return
+					logger.Debug("received SystemKeys",
+						zap.Int("Keys", len(sk.RSAPublicKeys)),
+						zap.Int("DHGroups", len(sk.DHGroups)),
+					)
+				case rony.C_Error:
+					err = domain.ParseServerError(res.Message)
+				default:
+					err = domain.ErrInvalidConstructor
 				}
-
-				logger.Debug("received SystemKeys",
-					zap.Int("Keys", len(sk.RSAPublicKeys)),
-					zap.Int("DHGroups", len(sk.DHGroups)),
-				)
-			case rony.C_Error:
-				err = domain.ParseServerError(res.Message)
-			default:
-				err = domain.ErrInvalidConstructor
-			}
-		},
-		nil,
-		false,
-		0, domain.WebsocketRequestTimeout,
+			},
+			nil,
+			false,
+			0, domain.WebsocketRequestTimeout,
+		),
 	)
-	r.executeRemoteCommand(cb)
-	waitGroup.Wait()
+
 	return
 
 }
 func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) {
 	logger.Info("CreateAuthKey() 1st Step Started :: InitConnect")
-	waitGroup := new(sync.WaitGroup)
-	waitGroup.Add(1)
-	cb := request.NewCallback(
-		0, 0,
-		domain.NextRequestID(),
-		msg.C_InitConnect,
-		&msg.InitConnect{
-			ClientNonce: domain.NextRequestID(),
-		},
-		func() {
-			defer waitGroup.Done()
-			err = domain.ErrRequestTimeout
-		},
-		func(res *rony.MessageEnvelope) {
-			defer waitGroup.Done()
-			logger.Debug("CreateAuthKey() Success Callback Called")
-			switch res.Constructor {
-			case msg.C_InitResponse:
-				x := new(msg.InitResponse)
-				err = x.Unmarshal(res.Message)
-				if err != nil {
-					logger.Error("CreateAuthKey() Success Callback", zap.Error(err))
+	r.networkCtrl.WebsocketCommand(
+		request.NewCallback(
+			0, 0,
+			domain.NextRequestID(),
+			msg.C_InitConnect,
+			&msg.InitConnect{
+				ClientNonce: domain.NextRequestID(),
+			},
+			func() {
+				err = domain.ErrRequestTimeout
+			},
+			func(res *rony.MessageEnvelope) {
+				logger.Debug("CreateAuthKey() Success Callback Called")
+				switch res.Constructor {
+				case msg.C_InitResponse:
+					x := new(msg.InitResponse)
+					err = x.Unmarshal(res.Message)
+					if err != nil {
+						logger.Error("CreateAuthKey() Success Callback", zap.Error(err))
+					}
+					clientNonce = x.ClientNonce
+					serverNonce = x.ServerNonce
+					serverPubFP = x.RSAPubKeyFingerPrint
+					serverDHFP = x.DHGroupFingerPrint
+					serverPQ = x.PQ
+					logger.Debug("CreateAuthKey() InitResponse Received",
+						zap.Uint64("ServerNonce", serverNonce),
+						zap.Uint64("ClientNonce", clientNonce),
+						zap.Uint64("ServerDhFingerPrint", serverDHFP),
+						zap.Uint64("ServerFingerPrint", serverPubFP),
+					)
+				case rony.C_Error:
+					err = domain.ParseServerError(res.Message)
+				default:
+					err = domain.ErrInvalidConstructor
 				}
-				clientNonce = x.ClientNonce
-				serverNonce = x.ServerNonce
-				serverPubFP = x.RSAPubKeyFingerPrint
-				serverDHFP = x.DHGroupFingerPrint
-				serverPQ = x.PQ
-				logger.Debug("CreateAuthKey() InitResponse Received",
-					zap.Uint64("ServerNonce", serverNonce),
-					zap.Uint64("ClientNonce", clientNonce),
-					zap.Uint64("ServerDhFingerPrint", serverDHFP),
-					zap.Uint64("ServerFingerPrint", serverPubFP),
-				)
-			case rony.C_Error:
-				err = domain.ParseServerError(res.Message)
-			default:
-				err = domain.ErrInvalidConstructor
-			}
-		},
-		nil,
-		false, 0, domain.WebsocketRequestTimeout,
+			},
+			nil,
+			false, 0, domain.WebsocketRequestTimeout,
+		),
 	)
-	r.executeRemoteCommand(cb)
-	waitGroup.Wait()
+
 	return
 }
 func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
@@ -314,72 +307,67 @@ func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, s
 		logger.Error("CreateAuthKey() -> EncryptPKCS1v15()", zap.Error(err))
 	}
 	req2.EncryptedPayload = encrypted
+	r.networkCtrl.WebsocketCommand(
+		request.NewCallback(
+			0, 0,
+			domain.NextRequestID(),
+			msg.C_InitCompleteAuth,
+			req2,
+			func() {
+				err = domain.ErrRequestTimeout
+			},
+			func(res *rony.MessageEnvelope) {
+				switch res.Constructor {
+				case msg.C_InitAuthCompleted:
+					x := new(msg.InitAuthCompleted)
+					_ = x.Unmarshal(res.Message)
+					switch x.Status {
+					case msg.InitAuthCompleted_OK:
+						serverDhKey, err := dh.ComputeKey(dhkx.NewPublicKey(x.ServerDHPubKey), clientDhKey)
+						if err != nil {
+							logger.Error("CreateAuthKey() -> ComputeKey()", zap.Error(err))
+							return
+						}
+						// r.ConnInfo.AuthKey = serverDhKey.Bytes()
+						copy(r.ConnInfo.AuthKey[:], serverDhKey.Bytes())
 
-	waitGroup := new(sync.WaitGroup)
-	waitGroup.Add(1)
-	cb := request.NewCallback(
-		0, 0,
-		domain.NextRequestID(),
-		msg.C_InitCompleteAuth,
-		req2,
-		func() {
-			defer waitGroup.Done()
-			err = domain.ErrRequestTimeout
-		},
-		func(res *rony.MessageEnvelope) {
-			defer waitGroup.Done()
-			switch res.Constructor {
-			case msg.C_InitAuthCompleted:
-				x := new(msg.InitAuthCompleted)
-				_ = x.Unmarshal(res.Message)
-				switch x.Status {
-				case msg.InitAuthCompleted_OK:
-					serverDhKey, err := dh.ComputeKey(dhkx.NewPublicKey(x.ServerDHPubKey), clientDhKey)
-					if err != nil {
-						logger.Error("CreateAuthKey() -> ComputeKey()", zap.Error(err))
+						// authKeyHash, _ := domain.Sha256(r.ConnInfo.AuthKey[:])
+						var authKeyHash [32]byte
+						tools.MustSha256(r.ConnInfo.AuthKey[:], authKeyHash[:0])
+						r.ConnInfo.AuthID = int64(binary.LittleEndian.Uint64(authKeyHash[24:32]))
+
+						var (
+							secret     []byte
+							secretHash [32]byte
+						)
+						secret = append(secret, q2Internal.SecretNonce...)
+						secret = append(secret, byte(msg.InitAuthCompleted_OK))
+						secret = append(secret, authKeyHash[:8]...)
+						tools.MustSha256(secret, secretHash[:0])
+						if x.SecretHash != binary.LittleEndian.Uint64(secretHash[24:32]) {
+							fmt.Println(x.SecretHash, binary.LittleEndian.Uint64(secretHash[24:32]))
+							err = domain.ErrSecretNonceMismatch
+							return
+						}
+					case msg.InitAuthCompleted_RETRY:
+						// TODO:: Retry with new DHKey
+					case msg.InitAuthCompleted_FAIL:
+						err = domain.ErrAuthFailed
 						return
 					}
-					// r.ConnInfo.AuthKey = serverDhKey.Bytes()
-					copy(r.ConnInfo.AuthKey[:], serverDhKey.Bytes())
-
-					// authKeyHash, _ := domain.Sha256(r.ConnInfo.AuthKey[:])
-					var authKeyHash [32]byte
-					tools.MustSha256(r.ConnInfo.AuthKey[:], authKeyHash[:0])
-					r.ConnInfo.AuthID = int64(binary.LittleEndian.Uint64(authKeyHash[24:32]))
-
-					var (
-						secret     []byte
-						secretHash [32]byte
-					)
-					secret = append(secret, q2Internal.SecretNonce...)
-					secret = append(secret, byte(msg.InitAuthCompleted_OK))
-					secret = append(secret, authKeyHash[:8]...)
-					tools.MustSha256(secret, secretHash[:0])
-					if x.SecretHash != binary.LittleEndian.Uint64(secretHash[24:32]) {
-						fmt.Println(x.SecretHash, binary.LittleEndian.Uint64(secretHash[24:32]))
-						err = domain.ErrSecretNonceMismatch
-						return
-					}
-				case msg.InitAuthCompleted_RETRY:
-					// TODO:: Retry with new DHKey
-				case msg.InitAuthCompleted_FAIL:
-					err = domain.ErrAuthFailed
+					r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
+				case rony.C_Error:
+					err = domain.ParseServerError(res.Message)
+					return
+				default:
+					err = domain.ErrInvalidConstructor
 					return
 				}
-				r.networkCtrl.SetAuthorization(r.ConnInfo.AuthID, r.ConnInfo.AuthKey[:])
-			case rony.C_Error:
-				err = domain.ParseServerError(res.Message)
-				return
-			default:
-				err = domain.ErrInvalidConstructor
-				return
-			}
-		},
-		nil,
-		false, 0, domain.WebsocketRequestTimeout,
+			},
+			nil,
+			false, 0, domain.WebsocketRequestTimeout,
+		),
 	)
-	r.executeRemoteCommand(cb)
-	waitGroup.Wait()
 	return
 }
 func (r *River) getPublicKey(pk *msg.SystemKeys, keyFP int64) (*msg.RSAPublicKey, error) {

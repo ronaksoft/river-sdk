@@ -219,7 +219,13 @@ func UnmarshalCallback(data []byte) (*callback, error) {
 	if err != nil {
 		return nil, err
 	}
-	cb := &callback{
+	callbacksMtx.Lock()
+	cb := requestCallbacks[scb.MessageEnvelope.RequestID]
+	callbacksMtx.Unlock()
+	if cb != nil {
+		return cb, nil
+	}
+	cb = &callback{
 		envelope:   scb.MessageEnvelope.Clone(),
 		onComplete: nil,
 		onTimeout:  nil,
@@ -243,14 +249,14 @@ func EmptyCallback() *callback {
 
 var (
 	callbacksMtx     sync.Mutex
-	requestCallbacks map[uint64]Callback
+	requestCallbacks map[uint64]*callback
 )
 
 func init() {
-	requestCallbacks = make(map[uint64]Callback, 100)
+	requestCallbacks = make(map[uint64]*callback, 100)
 }
 
-func register(cb Callback) {
+func register(cb *callback) {
 	callbacksMtx.Lock()
 	requestCallbacks[cb.RequestID()] = cb
 	callbacksMtx.Unlock()
