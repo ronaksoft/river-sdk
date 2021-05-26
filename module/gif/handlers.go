@@ -93,11 +93,9 @@ func (r *gif) gifGetSaved(da request.Callback) {
 		da.Response(msg.C_SavedGifs, res)
 
 		// ignore success cb because we notify views on message handler
-		enqueueSuccessCB = func(m *rony.MessageEnvelope) {}
-	} else {
-		enqueueSuccessCB = da.OnComplete
+		da.ReplaceCompleteCB(func(m *rony.MessageEnvelope) {})
 	}
 
 	// TODO:: set ui to false
-	r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(enqueueSuccessCB))
+	r.SDK().QueueCtrl().EnqueueCommand(da)
 }

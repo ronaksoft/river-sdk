@@ -556,8 +556,7 @@ func (r *message) messagesGetHistory(da request.Callback) {
 	}
 
 	// Prepare the the result before sending back to the client
-	preSuccessCB := r.genGetHistoryCB(da.OnComplete, da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID)
-
+	da.ReplaceCompleteCB(r.genGetHistoryCB(da.OnComplete, da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID))
 	// We are Offline/Disconnected
 	if !r.SDK().NetCtrl().Connected() {
 		messages, users, groups := repo.Messages.GetMessageHistory(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
@@ -585,7 +584,7 @@ func (r *message) messagesGetHistory(da request.Callback) {
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
+			r.SDK().QueueCtrl().EnqueueCommand(da)
 			return
 		}
 		messages, users, groups := repo.Messages.GetMessageHistory(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
@@ -599,7 +598,7 @@ func (r *message) messagesGetHistory(da request.Callback) {
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 				zap.String("Holes", messageHole.PrintHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
+			r.SDK().QueueCtrl().EnqueueCommand(da)
 			return
 		}
 		messages, users, groups := repo.Messages.GetMessageHistory(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
@@ -613,7 +612,7 @@ func (r *message) messagesGetHistory(da request.Callback) {
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
+			r.SDK().QueueCtrl().EnqueueCommand(da)
 			return
 		}
 		messages, users, groups := repo.Messages.GetMessageHistory(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)

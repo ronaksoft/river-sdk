@@ -75,7 +75,7 @@ func (r *label) labelsListItems(da request.Callback) {
 		return
 	}
 
-	preSuccessCB := func(m *rony.MessageEnvelope) {
+	da.ReplaceCompleteCB(func(m *rony.MessageEnvelope) {
 		switch m.Constructor {
 		case msg.C_LabelItems:
 			x := &msg.LabelItems{}
@@ -107,13 +107,10 @@ func (r *label) labelsListItems(da request.Callback) {
 		default:
 			r.Log().Warn("LabelModule received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
 		}
-
-		da.OnComplete(m)
-	}
-
+	})
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
-		r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
+		r.SDK().QueueCtrl().EnqueueCommand(da)
 	case req.MinID == 0 && req.MaxID != 0:
 		b, _ := repo.Labels.GetLowerFilled(da.TeamID(), req.LabelID, req.MaxID)
 		if !b {
@@ -122,7 +119,7 @@ func (r *label) labelsListItems(da request.Callback) {
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
+			r.SDK().QueueCtrl().EnqueueCommand(da)
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, da.TeamID(), req.Limit, 0, req.MaxID)
@@ -135,13 +132,13 @@ func (r *label) labelsListItems(da request.Callback) {
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("MaxID", req.MaxID),
 			)
-			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
+			r.SDK().QueueCtrl().EnqueueCommand(da)
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, da.TeamID(), req.Limit, req.MinID, 0)
 		fillLabelItems(da, messages, users, groups)
 	default:
-		r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
+		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
 	}
 }
