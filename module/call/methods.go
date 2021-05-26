@@ -1129,7 +1129,7 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn) {
 		ScreenShare: info.mediaSettings.ScreenShare,
 	}
 	actionData, err := action.Marshal()
-	if err == nil {
+	if err != nil {
 		return
 	}
 
