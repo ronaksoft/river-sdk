@@ -257,6 +257,7 @@ func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP,
 			false, 0, domain.WebsocketRequestTimeout,
 		),
 	)
+	return
 }
 func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
 	logger.Info("CreateAuthKey() 2nd Step Started :: InitCompleteAuth")

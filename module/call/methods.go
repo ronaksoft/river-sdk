@@ -906,7 +906,8 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	} else {
 		// Client should create offer
 		// Client should setLocalDescription and pass the offer to SDK
-		sdpOffer, err := c.CallbackGetOfferSDP(connId)
+		var sdpOffer *msg.PhoneActionSDPOffer
+		sdpOffer, err = c.CallbackGetOfferSDP(connId)
 		if err != nil {
 			return
 		}
