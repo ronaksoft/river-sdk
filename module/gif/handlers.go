@@ -82,8 +82,6 @@ func (r *gif) gifGetSaved(da request.Callback) {
 
 	gifHash, _ := repo.System.LoadInt(domain.SkGifHash)
 
-	var enqueueSuccessCB domain.MessageHandler
-
 	if gifHash != 0 {
 		res, err := repo.Gifs.GetSaved()
 		if err != nil {
