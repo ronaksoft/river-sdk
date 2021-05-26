@@ -11,13 +11,11 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
-	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 	"sort"
 	"sync"
 	"time"
@@ -207,7 +205,7 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 		zap.Int64("ClientUpdateID", ctrl.GetUpdateID()),
 	)
 
-	waitGroup := sync.WaitGroup{}
+
 	for serverUpdateID > ctrl.GetUpdateID() {
 		limit := serverUpdateID - ctrl.GetUpdateID()
 		if limit > 250 {
@@ -225,56 +223,50 @@ func getUpdateDifference(ctrl *Controller, serverUpdateID int64) {
 			Limit: int32(limit),
 			From:  ctrl.GetUpdateID() + 1, // +1 cuz we already have ctrl.updateID itself,
 		}
-		reqBytes, _ := req.Marshal()
-		waitGroup.Add(1)
-		ctrl.networkCtrl.WebsocketCommandWithTimeout(
-			&rony.MessageEnvelope{
-				Constructor: msg.C_UpdateGetDifference,
-				RequestID:   uint64(domain.SequentialUniqueID()),
-				Message:     reqBytes,
-			},
-			func() {
-				waitGroup.Done()
-				logger.Warn("got timeout on UpdateGetDifference")
-			},
-			func(m *rony.MessageEnvelope) {
-				defer waitGroup.Done()
-				switch m.Constructor {
-				case msg.C_UpdateDifference:
-					x := new(msg.UpdateDifference)
-					err := x.Unmarshal(m.Message)
-					if err != nil {
-						logger.Error("couldn't unmarshal response (UpdateDifference)", zap.Error(err))
-						time.Sleep(time.Second)
-						return
+
+
+		ctrl.networkCtrl.WebsocketCommand(
+			request.NewCallback(
+				0, 0, domain.NextRequestID(), msg.C_UpdateGetDifference, req,
+				func() {
+					logger.Warn("got timeout on UpdateGetDifference")
+				},
+				func(m *rony.MessageEnvelope) {
+					switch m.Constructor {
+					case msg.C_UpdateDifference:
+						x := new(msg.UpdateDifference)
+						err := x.Unmarshal(m.Message)
+						if err != nil {
+							logger.Error("couldn't unmarshal response (UpdateDifference)", zap.Error(err))
+							time.Sleep(time.Second)
+							return
+						}
+						sort.Slice(x.Updates, func(i, j int) bool {
+							return x.Updates[i].UpdateID < x.Updates[j].UpdateID
+						})
+
+						onGetDifferenceSucceed(ctrl, x)
+						if x.CurrentUpdateID != 0 {
+							serverUpdateID = x.CurrentUpdateID
+						}
+
+						// If there is no more update then set ClientUpdateID to the ServerUpdateID
+						if !x.More {
+							_ = ctrl.SetUpdateID(x.CurrentUpdateID)
+						}
+					case rony.C_Error:
+						logger.Debug("got error response",
+							zap.String("Error", domain.ParseServerError(m.Message).Error()),
+						)
+
 					}
-					sort.Slice(x.Updates, func(i, j int) bool {
-						return x.Updates[i].UpdateID < x.Updates[j].UpdateID
-					})
 
-					onGetDifferenceSucceed(ctrl, x)
-					if x.CurrentUpdateID != 0 {
-						serverUpdateID = x.CurrentUpdateID
-					}
-
-					// If there is no more update then set ClientUpdateID to the ServerUpdateID
-					if !x.More {
-						_ = ctrl.SetUpdateID(x.CurrentUpdateID)
-					}
-
-				case rony.C_Error:
-					logger.Debug("got error response",
-						zap.String("Error", domain.ParseServerError(m.Message).Error()),
-					)
-
-				}
-
-			},
-			false,
-			request.SkipFlusher,
-			domain.WebsocketRequestTimeoutLong,
+				}, nil,
+				false, request.SkipFlusher, domain.WebsocketRequestTimeoutLong,
+			),
 		)
-		waitGroup.Wait()
+
+
 	}
 }
 func getUpdateTargetID(u *msg.UpdateEnvelope) string {
@@ -619,66 +611,59 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 			Replace:  replace,
 			Contacts: phoneContacts,
 		}
-		mo := proto.MarshalOptions{UseCachedSize: true}
-		reqBytes := pbytes.GetCap(mo.Size(req))
-		reqBytes, _ = mo.MarshalAppend(reqBytes, req)
-
 		wg.Add(1)
 		ctrl.queueCtrl.EnqueueCommand(
-			&rony.MessageEnvelope{
-				Constructor: msg.C_ContactsImport,
-				RequestID:   uint64(domain.SequentialUniqueID()),
-				Message:     reqBytes,
-			},
-			func() {
-				wg.Done()
-				logger.Error("got timeout on ContactsImport")
-			},
-			func(m *rony.MessageEnvelope) {
-				defer wg.Done()
-				switch m.Constructor {
-				case msg.C_ContactsImported:
-					x := &msg.ContactsImported{}
-					err := x.Unmarshal(m.Message)
-					if err != nil {
-						logger.Error("got error on ContactsImport when unmarshal", zap.Error(err))
-						return
-					}
-					_ = repo.Users.DeletePhoneContact(phoneContacts...)
-					contactsImported.Users = append(contactsImported.Users, x.Users...)
-					contactsImported.ContactUsers = append(contactsImported.ContactUsers, x.ContactUsers...)
-					out.Fill(out.RequestID, msg.C_ContactsImported, contactsImported)
-				case rony.C_Error:
-					x := &rony.Error{}
-					_ = x.Unmarshal(m.Message)
-					out.Fill(out.RequestID, rony.C_Error, x)
-					switch {
-					case x.Code == msg.ErrCodeRateLimit:
-						maxTry = 0
+			request.NewCallback(
+				0, 0, domain.NextRequestID(), msg.C_ContactsImport, req,
+				func() {
+					wg.Done()
+					logger.Error("got timeout on ContactsImport")
+				},
+				func(m *rony.MessageEnvelope) {
+					defer wg.Done()
+					switch m.Constructor {
+					case msg.C_ContactsImported:
+						x := &msg.ContactsImported{}
+						err := x.Unmarshal(m.Message)
+						if err != nil {
+							logger.Error("got error on ContactsImport when unmarshal", zap.Error(err))
+							return
+						}
+						_ = repo.Users.DeletePhoneContact(phoneContacts...)
+						contactsImported.Users = append(contactsImported.Users, x.Users...)
+						contactsImported.ContactUsers = append(contactsImported.ContactUsers, x.ContactUsers...)
+						out.Fill(out.RequestID, msg.C_ContactsImported, contactsImported)
+					case rony.C_Error:
+						x := &rony.Error{}
+						_ = x.Unmarshal(m.Message)
+						out.Fill(out.RequestID, rony.C_Error, x)
+						switch {
+						case x.Code == msg.ErrCodeRateLimit:
+							maxTry = 0
+						default:
+							logger.Warn("got error response from server, will retry",
+								zap.String("Code", x.Code), zap.String("Item", x.Items),
+							)
+							time.Sleep(time.Second)
+						}
+						if maxTry--; maxTry < 0 {
+							keepGoing = false
+						}
 					default:
-						logger.Warn("got error response from server, will retry",
-							zap.String("Code", x.Code), zap.String("Item", x.Items),
+						logger.Error("expected ContactsImported but we got something else!!!",
+							zap.String("C", registry.ConstructorName(m.Constructor)),
 						)
 						time.Sleep(time.Second)
+						if maxTry--; maxTry < 0 {
+							keepGoing = false
+						}
 					}
-					if maxTry--; maxTry < 0 {
-						keepGoing = false
-					}
-				default:
-					logger.Error("expected ContactsImported but we got something else!!!",
-						zap.String("C", registry.ConstructorName(m.Constructor)),
-					)
-					time.Sleep(time.Second)
-					if maxTry--; maxTry < 0 {
-						keepGoing = false
-					}
-				}
 
-			},
-			false,
+				}, nil,
+				false, 0, 0,
+			),
 		)
 		wg.Wait()
-		pbytes.Put(reqBytes)
 	}
 	if successCB != nil && out != nil {
 		successCB(out)

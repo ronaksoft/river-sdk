@@ -98,35 +98,31 @@ func (r *River) executeLocalCommand(handler request.LocalHandler, cb request.Cal
 
 	handler(cb.Envelope(), out, cb)
 }
-func (r *River) executeRemoteCommand(cb request.Callback) {
+func (r *River) executeRemoteCommand(reqCB request.Callback) {
 	logger.Debug("execute remote command",
-		zap.String("C", registry.ConstructorName(cb.Constructor())),
+		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 	)
 
 	var (
-		directToNet    = r.realTimeCommands[cb.Constructor()]
+		directToNet    = r.realTimeCommands[reqCB.Constructor()]
 		waitForNetwork = true
 		flags          int32
 	)
 
-	flags = cb.Flags()
-	if cb.Flags()&request.SkipWaitForNetwork != 0 {
+	flags = reqCB.Flags()
+	if reqCB.Flags()&request.SkipWaitForNetwork != 0 {
 		waitForNetwork = false
 		directToNet = true
 
 		go func() {
 			select {
-			case <-time.After(cb.Timeout()):
-				reqCB := request.GetCallback(cb.RequestID())
-				if reqCB == nil {
-					break
-				}
+			case <-time.After(reqCB.Timeout()):
 				reqCB.OnTimeout()
-				r.CancelRequest(int64(cb.RequestID()))
+				r.CancelRequest(int64(reqCB.RequestID()))
 			}
 		}()
 	}
-	if cb.Flags()&request.Realtime != 0 {
+	if reqCB.Flags()&request.Realtime != 0 {
 		directToNet = true
 	}
 
@@ -136,15 +132,12 @@ func (r *River) executeRemoteCommand(cb request.Callback) {
 
 	// If the constructor is a realtime command, then just send it to the server
 	if directToNet {
-		r.networkCtrl.WebsocketCommandWithTimeout(
-			cb.Envelope(),
-			cb.OnTimeout, cb.OnComplete, cb.UI(), flags, cb.Timeout(),
+		r.networkCtrl.WebsocketCommand(
+			reqCB.Envelope(),
+			reqCB.OnTimeout, reqCB.OnComplete, reqCB.UI(), flags, reqCB.Timeout(),
 		)
 	} else {
-		r.queueCtrl.EnqueueCommandWithTimeout(
-			cb.Envelope(),
-			cb.OnTimeout, cb.OnComplete, cb.UI(), cb.Timeout(),
-		)
+		r.queueCtrl.EnqueueCommand(reqCB)
 	}
 }
 
@@ -429,7 +422,7 @@ func (r *River) ResetAuthKey() {
 // CancelRequest remove given requestID callbacks&delegates and if its not processed by queue we skip it on queue distributor
 func (r *River) CancelRequest(requestID int64) {
 	// Remove Callback
-	request.UnregisterCallback(uint64(requestID))
+	request.unregister(uint64(requestID))
 
 	// Cancel Request
 	r.queueCtrl.CancelRequest(requestID)

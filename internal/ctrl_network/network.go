@@ -723,42 +723,33 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 	return nil
 }
 
-// WebsocketCommandWithTimeout run request immediately in blocking or non-blocking mode
-func (ctrl *Controller) WebsocketCommandWithTimeout(
-	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	isUICallback bool, flag request.DelegateFlag, timeout time.Duration,
-) {
+// WebsocketCommand run request immediately in blocking or non-blocking mode
+func (ctrl *Controller) WebsocketCommand(reqCB request.Callback) {
 	defer logger.RecoverPanic(
 		"NetCtrl::WebsocketCommandWithTimeout",
 		domain.M{
 			"OS":  domain.ClientOS,
 			"Ver": domain.ClientVersion,
-			"C":   messageEnvelope.Constructor,
+			"C":   reqCB.Constructor(),
 		},
 		nil,
 	)
 
 	logger.Debug("execute command over websocket",
-		zap.Uint64("ReqID", messageEnvelope.RequestID),
-		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
-	)
-
-	// Add the callback functions
-	reqCB := request.RegisterCallback(
-		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, timeout, timeoutCB, isUICallback,
+		zap.Uint64("ReqID", reqCB.RequestID()),
+		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 	)
 
 	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
-		err := ctrl.WebsocketSend(req, flag)
+		err := ctrl.WebsocketSend(req, reqCB.Flags())
 		if err != nil {
 			logger.Warn("got error from NetCtrl",
 				zap.Uint64("ReqID", req.RequestID),
 				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Error(err),
 			)
-			if timeoutCB != nil {
-				timeoutCB()
-			}
+			reqCB.OnTimeout()
+
 			return
 		}
 
@@ -768,10 +759,9 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 				zap.String("C", registry.ConstructorName(req.Constructor)),
 				zap.Uint64("ReqID", req.RequestID),
 			)
-			request.UnregisterCallback(reqID)
 			reqCB.OnTimeout()
 			return
-		case res := <-reqCB.ResponseChannel:
+		case res := <-reqCB.ResponseChan():
 			logger.Debug("got response for websocket command",
 				zap.Uint64("ReqID", req.RequestID),
 				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
@@ -781,15 +771,8 @@ func (ctrl *Controller) WebsocketCommandWithTimeout(
 		}
 		return
 	}
-	execBlock(messageEnvelope.RequestID, messageEnvelope)
+	execBlock(reqCB.RequestID(), reqCB.Envelope())
 	return
-}
-
-func (ctrl *Controller) WebsocketCommand(
-	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	isUICallback bool, flag request.DelegateFlag,
-) {
-	ctrl.WebsocketCommandWithTimeout(messageEnvelope, timeoutCB, successCB, isUICallback, flag, domain.WebsocketRequestTimeout)
 }
 
 // SendHttp encrypt and send request to server and receive and decrypt its response

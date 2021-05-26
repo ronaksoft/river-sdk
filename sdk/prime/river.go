@@ -127,9 +127,9 @@ type River struct {
 	fileCtrl    *fileCtrl.Controller
 
 	// Delegates
-	mainDelegate  MainDelegate
-	fileDelegate  FileDelegate
-	callDelegate  CallDelegate
+	mainDelegate MainDelegate
+	fileDelegate FileDelegate
+	callDelegate CallDelegate
 
 	// Internal Misc. Configs
 	dbPath               string
@@ -437,9 +437,9 @@ func (r *River) messageReceiver() {
 				continue
 			}
 
-			mon.ServerResponseTime(reqCB.Constructor(), msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.DepartureTime))
+			mon.ServerResponseTime(reqCB.Constructor(), msgs[idx].Constructor, time.Duration(tools.NanoTime()-reqCB.SentOn()))
 			select {
-			case reqCB.ResponseChannel <- msgs[idx]:
+			case reqCB.ResponseChan() <- msgs[idx]:
 				logger.Debug("SDK received response",
 					zap.Uint64("ReqID", reqCB.RequestID()),
 					zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
@@ -449,8 +449,8 @@ func (r *River) messageReceiver() {
 					zap.Uint64("ReqID", reqCB.RequestID()),
 					zap.String("C", registry.ConstructorName(msgs[idx].Constructor)),
 				)
+				reqCB.Discard()
 			}
-			request.UnregisterCallback(msgs[idx].RequestID)
 		}
 	}
 }
@@ -586,7 +586,7 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 
 	default:
 	}
-	reqBuff, _ := x.Marshal()
+
 	success = true
 
 	waitGroup := sync.WaitGroup{}
@@ -617,14 +617,14 @@ func (r *River) sendMessageMedia(uploadRequest *msg.ClientFileRequest) (success 
 		logger.Debug("got Timeout! on MessagesSendMedia response")
 		waitGroup.Done()
 	}
+
 	r.queueCtrl.EnqueueCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_MessagesSendMedia,
-			RequestID:   uint64(x.RandomID),
-			Message:     reqBuff,
-			Header:      domain.TeamHeader(pendingMessage.TeamID, pendingMessage.TeamAccessHash),
-		},
-		timeoutCB, successCB, false)
+		request.NewCallback(
+			0, 0, uint64(x.RandomID), msg.C_MessagesSendMedia, x,
+			timeoutCB, successCB, nil, false, 0, 0,
+		),
+	)
+
 	waitGroup.Wait()
 	return
 }
@@ -639,8 +639,6 @@ func (r *River) uploadGroupPhoto(uploadRequest *msg.ClientFileRequest) (success 
 			MD5Checksum: "",
 		},
 	}
-
-	reqBuff, _ := x.Marshal()
 
 	success = true
 	waitGroup := sync.WaitGroup{}
@@ -664,12 +662,11 @@ func (r *River) uploadGroupPhoto(uploadRequest *msg.ClientFileRequest) (success 
 		waitGroup.Done()
 	}
 	r.queueCtrl.EnqueueCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_GroupsUploadPhoto,
-			RequestID:   uint64(domain.SequentialUniqueID()),
-			Message:     reqBuff,
-		},
-		timeoutCB, successCB, false,
+		request.NewCallback(
+			0, 0, domain.NextRequestID(), msg.C_GroupsUploadPhoto, x,
+			timeoutCB, successCB, nil,
+			false, 0, 0,
+		),
 	)
 	waitGroup.Wait()
 	return
@@ -684,7 +681,7 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 			MD5Checksum: "",
 		},
 	}
-	reqBuff, _ := x.Marshal()
+
 	success = true
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)
@@ -706,13 +703,13 @@ func (r *River) uploadAccountPhoto(uploadRequest *msg.ClientFileRequest) (succes
 		logger.Debug("Timeout! on AccountUploadPhoto response")
 		waitGroup.Done()
 	}
+
 	r.queueCtrl.EnqueueCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_AccountUploadPhoto,
-			RequestID:   uint64(domain.SequentialUniqueID()),
-			Message:     reqBuff,
-		},
-		timeoutCB, successCB, false,
+		request.NewCallback(
+			0, 0, domain.NextRequestID(), msg.C_AccountUploadPhoto, x,
+			timeoutCB, successCB, nil,
+			false, 0, 0,
+		),
 	)
 	waitGroup.Wait()
 	return

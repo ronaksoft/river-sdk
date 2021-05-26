@@ -1,7 +1,6 @@
 package queueCtrl
 
 import (
-	"encoding/json"
 	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
 	"git.ronaksoft.com/river/sdk/internal/ctrl_network"
@@ -29,14 +28,6 @@ func init() {
 	logger = logs.With("QueueCtrl")
 }
 
-// request
-type queuedRequest struct {
-	ID              uint64                `json:"id"`
-	Timeout         time.Duration         `json:"timeout"`
-	MessageEnvelope *rony.MessageEnvelope `json:"message_envelope"`
-	InsertTime      time.Time             `json:"insert_time"`
-}
-
 // Controller ...
 // This controller will be connected to networkController and messages will be queued here
 // before passing to the networkController.
@@ -53,7 +44,7 @@ type Controller struct {
 
 	// Cancelled request
 	cancelLock       sync.Mutex
-	cancelledRequest map[int64]bool
+	cancelledRequest map[uint64]bool
 }
 
 func New(fileCtrl *fileCtrl.Controller, network *networkCtrl.Controller, dataDir string) *Controller {
@@ -64,7 +55,7 @@ func New(fileCtrl *fileCtrl.Controller, network *networkCtrl.Controller, dataDir
 		panic(domain.ErrQueuePathIsNotSet)
 	}
 
-	ctrl.cancelledRequest = make(map[int64]bool)
+	ctrl.cancelledRequest = make(map[uint64]bool)
 	ctrl.networkCtrl = network
 	ctrl.fileCtrl = fileCtrl
 	return ctrl
@@ -93,29 +84,28 @@ func (ctrl *Controller) distributor() {
 		}
 
 		// Prepare
-		req := queuedRequest{}
-		if err := json.Unmarshal(item.Value, &req); err != nil {
+		reqCB, err := request.UnmarshalCallback(item.Value)
+		if err != nil {
 			logger.Error("could not unmarshal popped request", zap.Error(err))
 			continue
 		}
 
 		// If request is already canceled ignore it
-		if ctrl.IsRequestCancelled(int64(req.ID)) {
+		if ctrl.IsRequestCancelled(reqCB.RequestID()) {
 			logger.Info("discarded a canceled request",
-				zap.Uint64("ReqID", req.ID),
-				zap.String("C", registry.ConstructorName(req.MessageEnvelope.Constructor)),
+				zap.Uint64("ReqID", reqCB.RequestID()),
+				zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 			)
 			continue
 		}
 
-		go ctrl.executor(req)
+		go ctrl.executor(reqCB)
 	}
 }
 
 // addToWaitingList
-func (ctrl *Controller) addToWaitingList(req *queuedRequest) {
-	req.InsertTime = time.Now()
-	jsonRequest, err := json.Marshal(req)
+func (ctrl *Controller) addToWaitingList(reqCB request.Callback) {
+	jsonRequest, err := reqCB.Marshal()
 	if err != nil {
 		logger.Warn("couldn't marshal the request", zap.Error(err))
 		return
@@ -135,64 +125,56 @@ func (ctrl *Controller) addToWaitingList(req *queuedRequest) {
 // executor
 // Sends the message to the networkController and waits for the response. If time is up then it call the
 // TimeoutCallback otherwise if response arrived in time, SuccessCallback will be called.
-func (ctrl *Controller) executor(req queuedRequest) {
+func (ctrl *Controller) executor(reqCB request.Callback) {
 	defer logger.RecoverPanic(
 		"SyncCtrl::executor",
 		domain.M{
 			"OS":  domain.ClientOS,
 			"Ver": domain.ClientVersion,
-			"C":   req.MessageEnvelope.Constructor,
+			"C":   reqCB.Constructor(),
 		},
 		nil,
 	)
 
-	reqCB := request.GetCallback(req.ID)
-	if reqCB == nil {
-		reqCB = request.RegisterCallback(
-			req.ID, req.MessageEnvelope.Constructor, nil, domain.WebsocketRequestTimeout, nil, false,
-		)
-	}
-	reqCB.DepartureTime = tools.NanoTime()
-
 	// Try to send it over wire, if error happened put it back into the queue
-	if err := ctrl.networkCtrl.WebsocketSend(req.MessageEnvelope, 0); err != nil {
+	if err := ctrl.networkCtrl.WebsocketSend(reqCB.Envelope(), 0); err != nil {
 		logger.Info("re-push the request into the queue", zap.Error(err))
-		ctrl.addToWaitingList(&req)
+		ctrl.addToWaitingList(reqCB)
 		return
 	}
 
 	select {
-	case <-time.After(req.Timeout):
-		switch req.MessageEnvelope.Constructor {
+	case <-time.After(reqCB.Timeout()):
+		switch reqCB.Constructor() {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
-			pmsg, err := repo.PendingMessages.GetByRandomID(int64(req.ID))
+			pmsg, err := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
 			if err == nil && pmsg != nil {
-				ctrl.addToWaitingList(&req)
+				ctrl.addToWaitingList(reqCB)
 				return
 			}
 		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory,
 			msg.C_ContactsImport, msg.C_ContactsGet,
 			msg.C_AuthSendCode, msg.C_AuthRegister, msg.C_AuthLogin,
 			msg.C_LabelsAddToMessage, msg.C_LabelsRemoveFromMessage:
-			ctrl.addToWaitingList(&req)
+			ctrl.addToWaitingList(reqCB)
 			return
 		default:
 			reqCB.OnTimeout()
 		}
-	case res := <-reqCB.ResponseChannel:
-		switch req.MessageEnvelope.Constructor {
+	case res := <-reqCB.ResponseChan():
+		switch reqCB.Constructor() {
 		case msg.C_MessagesSend, msg.C_MessagesSendMedia, msg.C_MessagesForward:
 			switch res.Constructor {
 			case rony.C_Error:
 				errMsg := &rony.Error{}
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeAlreadyExists && errMsg.Items == msg.ErrItemRandomID {
-					pm, _ := repo.PendingMessages.GetByRandomID(int64(req.ID))
+					pm, _ := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
 					if pm != nil {
 						_ = repo.PendingMessages.Delete(pm.ID)
 					}
 				} else if errMsg.Code == msg.ErrCodeAccess && errMsg.Items == "NON_TEAM_MEMBER" {
-					pm, _ := repo.PendingMessages.GetByRandomID(int64(req.ID))
+					pm, _ := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
 					if pm != nil {
 						_ = repo.PendingMessages.Delete(pm.ID)
 					}
@@ -204,61 +186,35 @@ func (ctrl *Controller) executor(req queuedRequest) {
 				errMsg := &rony.Error{}
 				_ = errMsg.Unmarshal(res.Message)
 				if errMsg.Code == msg.ErrCodeInvalid && errMsg.Items == msg.ErrItemSalt {
-					ctrl.addToWaitingList(&req)
+					ctrl.addToWaitingList(reqCB)
 					return
 				}
 			}
 		}
 		reqCB.OnComplete(res)
 	}
-	request.UnregisterCallback(req.ID)
 	return
 }
 
 // EnqueueCommand put request in queue and distributor will execute it later
-func (ctrl *Controller) EnqueueCommand(
-	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	isUICallback bool,
-) {
-	ctrl.EnqueueCommandWithTimeout(
-		messageEnvelope, timeoutCB, successCB, isUICallback, domain.WebsocketRequestTimeout,
-	)
-}
-
-func (ctrl *Controller) EnqueueCommandWithTimeout(
-	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	isUICallback bool, timeout time.Duration,
-) {
+func (ctrl *Controller) EnqueueCommand(reqCB request.Callback) {
 	defer logger.RecoverPanic(
 		"SyncCtrl::EnqueueCommandWithTimeout",
 		domain.M{
 			"OS":  domain.ClientOS,
 			"Ver": domain.ClientVersion,
-			"C":   messageEnvelope.Constructor,
+			"C":   reqCB.Constructor(),
 		},
 		nil,
 	)
 
 	logger.Debug("enqueues command",
-		zap.Uint64("ReqID", messageEnvelope.RequestID),
-		zap.String("C", registry.ConstructorName(messageEnvelope.Constructor)),
+		zap.Uint64("ReqID", reqCB.RequestID()),
+		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 	)
-
-	// Add the callback functions
-	_ = request.RegisterCallback(
-		messageEnvelope.RequestID, messageEnvelope.Constructor, successCB, domain.WebsocketRequestTimeout, timeoutCB, isUICallback,
-	)
-
-	if timeout == 0 {
-		timeout = domain.WebsocketRequestTimeout
-	}
 
 	// Add the request to the queue
-	ctrl.addToWaitingList(&queuedRequest{
-		ID:              messageEnvelope.RequestID,
-		Timeout:         timeout,
-		MessageEnvelope: messageEnvelope,
-	})
+	ctrl.addToWaitingList(reqCB)
 }
 
 // Start queue
@@ -286,12 +242,12 @@ func (ctrl *Controller) Start(resetQueue bool) {
 			)
 			// it will be MessagesSend
 			req := repo.PendingMessages.ToMessagesSend(pmsg)
-			reqBytes, _ := req.Marshal()
-			ctrl.EnqueueCommand(&rony.MessageEnvelope{
-				Constructor: msg.C_MessagesSend,
-				RequestID:   uint64(req.RandomID),
-				Message:     reqBytes,
-			}, nil, nil, false)
+			ctrl.EnqueueCommand(
+				request.NewCallback(
+					pmsg.TeamID, pmsg.TeamAccessHash, uint64(req.RandomID), msg.C_MessagesSend, req,
+					nil, nil, nil, false, 0, 0,
+				),
+			)
 
 		default:
 			req := &msg.ClientSendMessageMedia{}
@@ -315,12 +271,12 @@ func (ctrl *Controller) Start(resetQueue bool) {
 				if req == nil {
 					continue
 				}
-				reqBytes, _ := req.Marshal()
-				ctrl.EnqueueCommand(&rony.MessageEnvelope{
-					Constructor: msg.C_MessagesSendMedia,
-					RequestID:   uint64(req.RandomID),
-					Message:     reqBytes,
-				}, nil, nil, false)
+				ctrl.EnqueueCommand(
+					request.NewCallback(
+						pmsg.TeamID, pmsg.TeamAccessHash, uint64(req.RandomID), msg.C_MessagesSendMedia, req,
+						nil, nil, nil, false, 0, 0,
+					),
+				)
 			}
 		}
 	}
@@ -336,7 +292,7 @@ func (ctrl *Controller) Stop() {
 }
 
 // IsRequestCancelled handle canceled request to do not process its response
-func (ctrl *Controller) IsRequestCancelled(reqID int64) bool {
+func (ctrl *Controller) IsRequestCancelled(reqID uint64) bool {
 	_, ok := ctrl.cancelledRequest[reqID]
 	if ok {
 		ctrl.cancelLock.Lock()
@@ -347,7 +303,7 @@ func (ctrl *Controller) IsRequestCancelled(reqID int64) bool {
 }
 
 // CancelRequest cancel request
-func (ctrl *Controller) CancelRequest(reqID int64) {
+func (ctrl *Controller) CancelRequest(reqID uint64) {
 	ctrl.cancelLock.Lock()
 	ctrl.cancelledRequest[reqID] = true
 	ctrl.cancelLock.Unlock()

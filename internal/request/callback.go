@@ -1,6 +1,7 @@
 package request
 
 import (
+	"encoding/json"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
@@ -31,6 +32,21 @@ type Callback interface {
 	TeamID() int64
 	Timeout() time.Duration
 	UI() bool
+	Marshal() ([]byte, error)
+	ResponseChan() chan *rony.MessageEnvelope
+	Discard()
+	CreatedOn() int64
+	SentOn() int64
+}
+
+// serialized
+type serializedCallback struct {
+	Timeout         time.Duration         `json:"timeout"`
+	MessageEnvelope *rony.MessageEnvelope `json:"message_envelope"`
+	SerializedOn    int64                 `json:"serialized_on"`
+	CreatedOn       int64                 `json:"created_on"`
+	UI              bool                  `json:"ui"`
+	Flags           DelegateFlag          `json:"flags"`
 }
 
 type callback struct {
@@ -40,11 +56,10 @@ type callback struct {
 	onProgress func(percent int64)
 	ui         bool
 	createdOn  int64
+	sentOn     int64
 	flags      DelegateFlag
 	timeout    time.Duration
-
-	ResponseChannel chan *rony.MessageEnvelope
-	DepartureTime   int64
+	resChan    chan *rony.MessageEnvelope
 }
 
 func (c *callback) Flags() DelegateFlag {
@@ -68,6 +83,7 @@ func (c *callback) Constructor() int64 {
 }
 
 func (c *callback) OnComplete(m *rony.MessageEnvelope) {
+	unregister(c.envelope.RequestID)
 	if c.onComplete == nil {
 		return
 	}
@@ -79,6 +95,7 @@ func (c *callback) OnComplete(m *rony.MessageEnvelope) {
 }
 
 func (c *callback) OnTimeout() {
+	unregister(c.envelope.RequestID)
 	if c.onTimeout == nil {
 		return
 	}
@@ -112,6 +129,34 @@ func (c *callback) Envelope() *rony.MessageEnvelope {
 	return c.envelope
 }
 
+func (c *callback) Marshal() ([]byte, error) {
+	scb := &serializedCallback{
+		Timeout:         c.timeout,
+		MessageEnvelope: c.envelope.Clone(),
+		SerializedOn:    tools.TimeUnix(),
+		CreatedOn:       c.createdOn,
+		UI:              c.ui,
+		Flags:           c.flags,
+	}
+	return json.Marshal(scb)
+}
+
+func (c *callback) ResponseChan() chan *rony.MessageEnvelope {
+	return c.resChan
+}
+
+func (c *callback) Discard() {
+	unregister(c.envelope.RequestID)
+}
+
+func (c *callback) CreatedOn() int64 {
+	return c.createdOn
+}
+
+func (c *callback) SentOn() int64 {
+	return c.sentOn
+}
+
 func NewCallback(
 	teamID int64, teamAccess uint64,
 	reqID uint64, constructor int64, req proto.Message,
@@ -125,13 +170,13 @@ func NewCallback(
 		onProgress: onProgress,
 		ui:         ui,
 		createdOn:  tools.NanoTime(),
+		sentOn:     tools.NanoTime(),
 		flags:      flags,
 		timeout:    timeout,
-
-		DepartureTime:   tools.NanoTime(),
-		ResponseChannel: make(chan *rony.MessageEnvelope),
+		resChan:    make(chan *rony.MessageEnvelope, 1),
 	}
 	cb.envelope.Fill(reqID, constructor, req, domain.TeamHeader(teamID, teamAccess)...)
+	register(cb)
 	return cb
 }
 
@@ -146,19 +191,42 @@ func NewCallbackFromBytes(
 			RequestID:   reqID,
 			Constructor: constructor,
 		},
-		onComplete:      onComplete,
-		onTimeout:       onTimeout,
-		onProgress:      onProgress,
-		ui:              ui,
-		createdOn:       tools.NanoTime(),
-		flags:           flags,
-		timeout:         timeout,
-		DepartureTime:   tools.NanoTime(),
-		ResponseChannel: make(chan *rony.MessageEnvelope),
+		onComplete: onComplete,
+		onTimeout:  onTimeout,
+		onProgress: onProgress,
+		ui:         ui,
+		createdOn:  tools.NanoTime(),
+		sentOn:     tools.NanoTime(),
+		flags:      flags,
+		timeout:    timeout,
+		resChan:    make(chan *rony.MessageEnvelope, 1),
 	}
 	cb.envelope.Message = append(cb.envelope.Message, reqBytes...)
 	cb.envelope.Header = domain.TeamHeader(teamID, teamAccess)
+	register(cb)
 	return cb
+}
+
+func UnmarshalCallback(data []byte) (*callback, error) {
+	scb := &serializedCallback{}
+	err := json.Unmarshal(data, scb)
+	if err != nil {
+		return nil, err
+	}
+	cb := &callback{
+		envelope:   scb.MessageEnvelope.Clone(),
+		onComplete: nil,
+		onTimeout:  nil,
+		onProgress: nil,
+		ui:         scb.UI,
+		createdOn:  scb.CreatedOn,
+		sentOn:     tools.NanoTime(),
+		flags:      scb.Flags,
+		timeout:    scb.Timeout,
+		resChan:    make(chan *rony.MessageEnvelope, 1),
+	}
+	register(cb)
+	return cb, nil
 }
 
 func EmptyCallback() *callback {
@@ -169,44 +237,31 @@ func EmptyCallback() *callback {
 
 var (
 	callbacksMtx     sync.Mutex
-	requestCallbacks map[uint64]*callback
+	requestCallbacks map[uint64]Callback
 )
 
 func init() {
-	requestCallbacks = make(map[uint64]*callback, 100)
+	requestCallbacks = make(map[uint64]Callback, 100)
 }
 
-func RegisterCallback(
-	reqID uint64, constructor int64, completeCB domain.MessageHandler, timeOut time.Duration, timeoutCB domain.TimeoutCallback, isUICallback bool,
-) *callback {
-	cb := &callback{
-		envelope: &rony.MessageEnvelope{
-			Constructor: constructor,
-			RequestID:   reqID,
-		},
-		onComplete:      completeCB,
-		onTimeout:       timeoutCB,
-		ui:              isUICallback,
-		ResponseChannel: make(chan *rony.MessageEnvelope, 1),
-		createdOn:       tools.NanoTime(),
-		DepartureTime:   tools.NanoTime(),
-		timeout:         timeOut,
-	}
+func register(cb Callback) {
 	callbacksMtx.Lock()
-	requestCallbacks[reqID] = cb
+	requestCallbacks[cb.RequestID()] = cb
 	callbacksMtx.Unlock()
-	return cb
 }
 
-func UnregisterCallback(reqID uint64) {
+func unregister(reqID uint64) {
 	callbacksMtx.Lock()
 	delete(requestCallbacks, reqID)
 	callbacksMtx.Unlock()
 }
 
-func GetCallback(reqID uint64) (cb *callback) {
+func GetCallback(reqID uint64) Callback {
 	callbacksMtx.Lock()
-	cb = requestCallbacks[reqID]
+	cb := requestCallbacks[reqID]
 	callbacksMtx.Unlock()
-	return
+	if cb == nil {
+		return nil
+	}
+	return cb
 }
