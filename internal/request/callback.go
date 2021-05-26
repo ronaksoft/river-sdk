@@ -39,6 +39,7 @@ type Callback interface {
 	RequestData(req Unmarshaller) error
 	RequestID() uint64
 	ResponseChan() chan *rony.MessageEnvelope
+	Response(constructor int64, proto proto.Message)
 	SentOn() int64
 	TeamAccess() uint64
 	TeamID() int64
@@ -177,6 +178,12 @@ func (c *callback) RequestData(u Unmarshaller) error {
 		c.OnComplete(me)
 	}
 	return err
+}
+
+func (c *callback) Response(constructor int64, proto proto.Message) {
+	res := &rony.MessageEnvelope{}
+	res.Fill(c.envelope.RequestID, constructor, proto, c.envelope.Header...)
+	c.OnComplete(res)
 }
 
 func NewCallback(

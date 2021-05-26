@@ -391,7 +391,7 @@ func (r *River) onNetworkConnect() (err error) {
 			r.syncCtrl.GetContacts(waitGroup, 0, 0)
 			waitGroup.Wait()
 			domain.WindowLog(fmt.Sprintf("ContactsGet: %s", time.Since(domain.StartTime)))
-			r.syncCtrl.ContactsImport(true, nil, nil)
+			r.syncCtrl.ContactsImport(true, nil)
 			domain.WindowLog(fmt.Sprintf("ContactsImported: %s", time.Since(domain.StartTime)))
 		}
 		atomic.CompareAndSwapInt32(&domain.ContactsSynced, 0, 1)

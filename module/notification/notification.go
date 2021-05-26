@@ -4,9 +4,8 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"git.ronaksoft.com/river/sdk/module"
-	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +34,7 @@ func (r *notification) Name() string {
 	return module.Notification
 }
 
-func (r *notification) clientDismissNotification(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *notification) clientDismissNotification(da request.Callback) {
 	req := &msg.ClientDismissNotification{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -47,7 +46,7 @@ func (r *notification) clientDismissNotification(in, out *rony.MessageEnvelope, 
 	}
 }
 
-func (r *notification) clientGetNotificationDismissTime(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *notification) clientGetNotificationDismissTime(da request.Callback) {
 	req := &msg.ClientDismissNotification{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -55,15 +54,12 @@ func (r *notification) clientGetNotificationDismissTime(in, out *rony.MessageEnv
 
 	ts, err := repo.Notifications.GetNotificationDismissTime(da.TeamID(), req.Peer)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.OnComplete(errors.Message(da.RequestID(), "00", err.Error()))
 		return
 	}
 
 	res := &msg.ClientNotificationDismissTime{
 		Ts: ts,
 	}
-	out.Constructor = msg.C_ClientNotificationDismissTime
-	out.Message, _ = res.Marshal()
-	uiexec.ExecSuccessCB(da.OnComplete, out)
+	da.Response(msg.C_ClientNotificationDismissTime, res)
 }

@@ -2,10 +2,8 @@ package label
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -21,7 +19,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *label) labelsGet(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelsGet(da request.Callback) {
 	req := &msg.LabelsGet{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -36,10 +34,7 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da request.Callback) {
 		r.Log().Debug("found labels locally", zap.Int("L", len(labels)))
 		res := &msg.LabelsMany{}
 		res.Labels = labels
-
-		out.Constructor = msg.C_LabelsMany
-		out.Message, _ = res.Marshal()
-		uiexec.ExecSuccessCB(da.OnComplete, out)
+		da.Response(msg.C_LabelsMany, res)
 		return
 	}
 
@@ -47,7 +42,7 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelsDelete(da request.Callback) {
 	req := &msg.LabelsDelete{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -62,7 +57,7 @@ func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da request.Callback)
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelsListItems(da request.Callback) {
 	req := &msg.LabelsListItems{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -76,7 +71,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 			zap.Int64("MaxID", req.MaxID),
 		)
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, da.TeamID(), req.Limit, req.MinID, req.MaxID)
-		fillLabelItems(out, messages, users, groups, in.RequestID, da.OnComplete)
+		fillLabelItems(da, messages, users, groups)
 		return
 	}
 
@@ -131,7 +126,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, da.TeamID(), req.Limit, 0, req.MaxID)
-		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
+		fillLabelItems(da, messages, users, groups)
 	case req.MinID != 0 && req.MaxID == 0:
 		b, _ := repo.Labels.GetUpperFilled(da.TeamID(), req.LabelID, req.MinID)
 		if !b {
@@ -144,14 +139,14 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 			return
 		}
 		messages, users, groups := repo.Labels.ListMessages(req.LabelID, da.TeamID(), req.Limit, req.MinID, 0)
-		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
+		fillLabelItems(da, messages, users, groups)
 	default:
 		r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 		return
 	}
 }
 
-func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelAddToMessage(da request.Callback) {
 	req := &msg.LabelsAddToMessage{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -180,7 +175,7 @@ func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da request.Call
 
 }
 
-func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelRemoveFromMessage(da request.Callback) {
 	req := &msg.LabelsRemoveFromMessage{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -200,14 +195,11 @@ func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da request
 
 }
 
-func fillLabelItems(out *rony.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group, requestID uint64, successCB domain.MessageHandler) {
+func fillLabelItems(da request.Callback, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group) {
 	res := new(msg.LabelItems)
 	res.Messages = messages
 	res.Users = users
 	res.Groups = groups
 
-	out.RequestID = requestID
-	out.Constructor = msg.C_LabelItems
-	out.Message, _ = res.Marshal()
-	uiexec.ExecSuccessCB(successCB, out)
+	da.Response(msg.C_LabelItems, res)
 }

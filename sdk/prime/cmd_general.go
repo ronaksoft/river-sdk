@@ -95,7 +95,7 @@ func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.
 	}
 	out.Header = append(out.Header, reqCB.Envelope().Header...)
 
-	handler(reqCB.Envelope(), out, reqCB)
+	handler(reqCB)
 }
 func (r *River) executeRemoteCommand(reqCB request.Callback) {
 	logger.Debug("execute remote command",

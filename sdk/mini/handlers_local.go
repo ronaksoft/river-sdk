@@ -6,6 +6,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 	"go.uber.org/zap"
 )
 
@@ -18,11 +19,9 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *River) messagesSendMedia(da request.Callback) {
 	req := &msg.MessagesSendMedia{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -33,25 +32,24 @@ func (r *River) messagesSendMedia(in, out *rony.MessageEnvelope, da request.Call
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(req.RandomID),
 			Message:     requestBytes,
-			Header:      in.Header,
+			Header:      da.Envelope().Header,
 		}, da.OnTimeout, da.OnComplete,
 	)
 }
 
-func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *River) messagesGetDialogs(da request.Callback) {
 	req := &msg.MessagesGetDialogs{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
+
 	res := &msg.MessagesDialogs{}
-	res.Dialogs, _ = minirepo.Dialogs.List(domain.GetTeamID(in), req.Offset, req.Limit)
-	// res.Count = minirepo.Dialogs.CountDialogs(domain.GetTeamID(in))
+	res.Dialogs, _ = minirepo.Dialogs.List(da.TeamID(), req.Offset, req.Limit)
+	// res.Count = minirepo.Dialogs.CountDialogs(da.TeamID())
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		r.network.HttpCommand(in, da.OnTimeout, da.OnComplete)
+		r.network.HttpCommand(da.Envelope(), da.OnTimeout, da.OnComplete)
 		return
 	}
 
@@ -70,7 +68,7 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da request.Cal
 		}
 	}
 
-	res.Groups, _ = minirepo.Groups.ReadMany(domain.GetTeamID(in), mGroups.ToArray()...)
+	res.Groups, _ = minirepo.Groups.ReadMany(da.TeamID(), mGroups.ToArray()...)
 	if len(res.Groups) != len(mGroups) {
 		logger.Warn("found unmatched dialog groups", zap.Int("Got", len(res.Groups)), zap.Int("Need", len(mGroups)))
 		for groupID := range mGroups {
@@ -103,23 +101,24 @@ func (r *River) messagesGetDialogs(in, out *rony.MessageEnvelope, da request.Cal
 		}
 	}
 
-	out.Fill(in.RequestID, msg.C_MessagesDialogs, res)
+	out := &rony.MessageEnvelope{}
+	out.Fill(da.RequestID(), msg.C_MessagesDialogs, res, da.Envelope().Header...)
 	da.OnComplete(out)
 }
 
-func (r *River) contactsGet(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *River) contactsGet(da request.Callback) {
 	req := &msg.ContactsGet{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
+
 	res, err := minirepo.Users.ReadAllContacts()
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.OnComplete(errors.Message(da.RequestID(), "00", err.Error()))
 		return
 	}
-	out.Fill(in.RequestID, msg.C_ContactsMany, res)
+
+	out := &rony.MessageEnvelope{}
+	out.Fill(da.RequestID(), msg.C_ContactsMany, res, da.Envelope().Header...)
 	da.OnComplete(out)
 }

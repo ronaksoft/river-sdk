@@ -8,7 +8,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/pools"
@@ -28,11 +27,9 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *River) clientSendMessageMedia(da request.Callback) {
 	reqMedia := &msg.ClientSendMessageMedia{}
-	if err := reqMedia.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		uiexec.ExecSuccessCB(da.OnComplete, out)
+	if err := da.RequestData(reqMedia); err != nil {
 		return
 	}
 
@@ -71,11 +68,9 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da request
 	}
 
 	if thumbID != 0 {
-		err := r.uploadFile(in, nil, thumbID, reqMedia.ThumbFilePath, reqMedia.Peer.ID)
+		err := r.uploadFile(da.Envelope(), nil, thumbID, reqMedia.ThumbFilePath, reqMedia.Peer.ID)
 		if err != nil {
-			out.RequestID = in.RequestID
-			errors.New("E100", err.Error()).ToEnvelope(out)
-			da.OnComplete(out)
+			da.OnComplete(errors.Message(da.RequestID(), "E100", err.Error()))
 			return
 		}
 	}
@@ -118,11 +113,9 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da request
 		}
 		x.MediaData, _ = doc.Marshal()
 	} else {
-		err := r.uploadFile(in, da, fileID, reqMedia.FilePath, reqMedia.Peer.ID)
+		err := r.uploadFile(da.Envelope(), da, fileID, reqMedia.FilePath, reqMedia.Peer.ID)
 		if err != nil {
-			out.RequestID = in.RequestID
-			errors.New("E100", err.Error()).ToEnvelope(out)
-			da.OnComplete(out)
+			da.OnComplete(errors.Message(da.RequestID(), "E100", err.Error()))
 			return
 		}
 		// File just uploaded
@@ -155,7 +148,7 @@ func (r *River) clientSendMessageMedia(in, out *rony.MessageEnvelope, da request
 			Constructor: msg.C_MessagesSendMedia,
 			RequestID:   uint64(x.RandomID),
 			Message:     reqBuff,
-			Header:      domain.TeamHeader(domain.GetTeamID(in), domain.GetTeamAccess(in)),
+			Header:      domain.TeamHeader(da.TeamID(), da.TeamAccess()),
 		},
 		da.OnTimeout, da.OnComplete,
 	)
@@ -241,7 +234,7 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, da request.Callback, fileID
 			zap.Int32("PartID", partIndex), zap.Int32("Total", totalParts),
 			zap.Int64("FileSize", fileSize),
 		)
-		err = r.savePart(in, f, fileID, partIndex, totalParts)
+		err = r.savePart(da, f, fileID, partIndex, totalParts)
 		if err != nil {
 			logger.Warn("Error On SavePart (MiniSDK)", zap.Error(err))
 			return err
@@ -254,7 +247,7 @@ func (r *River) uploadFile(in *rony.MessageEnvelope, da request.Callback, fileID
 
 	return nil
 }
-func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, partIndex, totalParts int32) error {
+func (r *River) savePart(da request.Callback, f io.Reader, fileID int64, partIndex, totalParts int32) error {
 	var buf [fileCtrl.DefaultChunkSize]byte
 	n, err := f.Read(buf[:])
 	if err != nil {
@@ -273,7 +266,7 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 			Constructor: msg.C_FileSavePart,
 			RequestID:   tools.RandomUint64(0),
 			Message:     *reqBuf.Bytes(),
-			Header:      domain.TeamHeader(domain.GetTeamID(in), domain.GetTeamAccess(in)),
+			Header:      domain.TeamHeader(da.TeamID(), da.TeamAccess()),
 		},
 		func() {
 			err = domain.ErrRequestTimeout
@@ -294,11 +287,9 @@ func (r *River) savePart(in *rony.MessageEnvelope, f io.Reader, fileID int64, pa
 	return err
 }
 
-func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *River) clientGlobalSearch(da request.Callback) {
 	req := &msg.ClientGlobalSearch{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -308,6 +299,7 @@ func (r *River) clientGlobalSearch(in, out *rony.MessageEnvelope, da request.Cal
 	res.Groups = minirepo.Groups.Search(strings.ToLower(req.Text), int(req.Limit))
 	res.MatchedGroups = append(res.MatchedGroups, res.Groups...)
 
-	out.Fill(in.RequestID, msg.C_ClientSearchResult, res)
+	out := &rony.MessageEnvelope{}
+	out.Fill(da.RequestID(), msg.C_ClientSearchResult, res, da.Envelope().Header...)
 	da.OnComplete(out)
 }

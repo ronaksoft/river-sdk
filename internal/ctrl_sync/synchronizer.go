@@ -581,7 +581,7 @@ func (ctrl *Controller) ResetIDs() {
 }
 
 // ContactsImport executes ContactsImport rpc commands
-func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler, out *rony.MessageEnvelope) {
+func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHandler) {
 	var (
 		wg               = sync.WaitGroup{}
 		limit            = 250
@@ -589,9 +589,7 @@ func (ctrl *Controller) ContactsImport(replace bool, successCB domain.MessageHan
 		keepGoing        = true
 		contactsImported = &msg.ContactsImported{}
 	)
-	if out == nil {
-		out = &rony.MessageEnvelope{}
-	}
+	out := &rony.MessageEnvelope{}
 
 	for keepGoing {
 		phoneContacts, _ := repo.Users.GetPhoneContacts(limit)

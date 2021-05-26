@@ -6,7 +6,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
-	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +18,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *account) accountUpdateUsername(da request.Callback) {
 	req := &msg.AccountUpdateUsername{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -32,7 +31,7 @@ func (r *account) accountUpdateUsername(in, out *rony.MessageEnvelope, da reques
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *account) accountRegisterDevice(da request.Callback) {
 	req := &msg.AccountRegisterDevice{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -52,7 +51,7 @@ func (r *account) accountRegisterDevice(in, out *rony.MessageEnvelope, da reques
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *account) accountUnregisterDevice(da request.Callback) {
 	req := &msg.AccountUnregisterDevice{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -73,7 +72,7 @@ func (r *account) accountUnregisterDevice(in, out *rony.MessageEnvelope, da requ
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *account) accountSetNotifySettings(da request.Callback) {
 	req := &msg.AccountSetNotifySettings{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -92,7 +91,7 @@ func (r *account) accountSetNotifySettings(in, out *rony.MessageEnvelope, da req
 
 }
 
-func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *account) accountRemovePhoto(da request.Callback) {
 	req := &msg.AccountRemovePhoto{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -119,7 +118,7 @@ func (r *account) accountRemovePhoto(in, out *rony.MessageEnvelope, da request.C
 	_ = repo.Users.RemovePhotoGallery(r.SDK().GetConnInfo().PickupUserID(), req.PhotoID)
 }
 
-func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *account) accountUpdateProfile(da request.Callback) {
 	req := &msg.AccountUpdateProfile{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -140,7 +139,7 @@ func (r *account) accountUpdateProfile(in, out *rony.MessageEnvelope, da request
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *account) accountsGetTeams(da request.Callback) {
 	req := &msg.AccountGetTeams{}
 	if err := da.RequestData(req); err != nil {
 		return
@@ -152,8 +151,7 @@ func (r *account) accountsGetTeams(in, out *rony.MessageEnvelope, da request.Cal
 		teamsMany := &msg.TeamsMany{
 			Teams: teams,
 		}
-		out.Fill(out.RequestID, msg.C_TeamsMany, teamsMany)
-		da.OnComplete(out)
+		da.Response(msg.C_TeamsMany, teamsMany)
 		return
 	}
 

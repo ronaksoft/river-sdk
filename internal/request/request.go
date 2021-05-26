@@ -1,9 +1,5 @@
 package request
 
-import (
-	"github.com/ronaksoft/rony"
-)
-
 /*
    Creation Time: 2021 - May - 25
    Created by:  (ehsan)
@@ -14,4 +10,4 @@ import (
 */
 
 // LocalHandler SDK commands that handle user request from client cache
-type LocalHandler func(in, out *rony.MessageEnvelope, da Callback)
+type LocalHandler func(da Callback)
