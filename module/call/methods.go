@@ -20,7 +20,7 @@ import (
 func (c *call) toggleVideo(enable bool) (err error) {
 	c.propagateMediaSettings(MediaSettingsIn{
 		Video: &enable,
-	})
+	}, false)
 
 	return c.modifyMediaStream(enable)
 }
@@ -28,7 +28,7 @@ func (c *call) toggleVideo(enable bool) (err error) {
 func (c *call) toggleAudio(enable bool) (err error) {
 	c.propagateMediaSettings(MediaSettingsIn{
 		Audio: &enable,
-	})
+	}, false)
 	return
 }
 
@@ -308,7 +308,7 @@ func (c *call) accept(callID int64, video bool) (err error) {
 						Audio:       &streamState.Audio,
 						ScreenShare: &streamState.ScreenShare,
 						Video:       &streamState.Video,
-					})
+					}, true)
 				})
 			}(request)
 		}
@@ -1022,7 +1022,7 @@ func (c *call) modifyMediaStream(video bool) (err error) {
 	_ = c.upgradeConnection(video)
 	c.propagateMediaSettings(MediaSettingsIn{
 		Video: &video,
-	})
+	}, false)
 	return
 }
 
@@ -1073,7 +1073,7 @@ func (c *call) upgradeConnection(video bool) (err error) {
 	return
 }
 
-func (c *call) propagateMediaSettings(in MediaSettingsIn) {
+func (c *call) propagateMediaSettings(in MediaSettingsIn, force bool) {
 	if c.activeCallID == 0 {
 		return
 	}
@@ -1087,7 +1087,7 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn) {
 		return
 	}
 
-	shouldPropagate := false
+	shouldPropagate := force
 	if in.Audio != nil {
 		if info.mediaSettings.Audio != *in.Audio {
 			shouldPropagate = true
@@ -1694,7 +1694,7 @@ func (c *call) callAccepted(in *UpdatePhoneCall) {
 			Audio:       &streamState.Audio,
 			ScreenShare: &streamState.ScreenShare,
 			Video:       &streamState.Video,
-		})
+		}, true)
 	})
 
 	c.clearRetryInterval(connId)
