@@ -1826,12 +1826,7 @@ func (c *call) sdpOfferUpdated(in *UpdatePhoneCall) {
 		return
 	}
 
-	data := in.Data.(*msg.PhoneActionSDPOffer)
-
-	offerSDP := &msg.PhoneActionSDPOffer{
-		SDP:  data.SDP,
-		Type: data.Type,
-	}
+	offerSDP := in.Data.(*msg.PhoneActionSDPOffer)
 
 	sdpAnswer, err := c.CallbackSetOfferGetAnswerSDP(connId, offerSDP)
 	if err != nil {
@@ -1864,12 +1859,8 @@ func (c *call) sdpAnswerUpdated(in *UpdatePhoneCall) {
 		return
 	}
 
-	data := in.Data.(*msg.PhoneActionSDPAnswer)
+	answerSDP := in.Data.(*msg.PhoneActionSDPAnswer)
 
-	answerSDP := &msg.PhoneActionSDPAnswer{
-		SDP:  data.SDP,
-		Type: data.Type,
-	}
 	answerSDPData, err := answerSDP.Marshal()
 	if err != nil {
 		return
