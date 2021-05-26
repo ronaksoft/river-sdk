@@ -2,10 +2,8 @@ package label
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
@@ -21,16 +19,14 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *label) labelsGet(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelsGet(da request.Callback) {
 	req := &msg.LabelsGet{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
-	r.Log().Info("LabelGet", zap.Int64("TeamID", domain.GetTeamID(in)))
-	labels, _ := repo.Labels.GetAll(domain.GetTeamID(in))
+	r.Log().Info("LabelGet", zap.Int64("TeamID", da.TeamID()))
+	labels, _ := repo.Labels.GetAll(da.TeamID())
 	sort.Slice(labels, func(i, j int) bool {
 		return labels[i].Count > labels[j].Count
 	})
@@ -38,10 +34,7 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da request.Callback) {
 		r.Log().Debug("found labels locally", zap.Int("L", len(labels)))
 		res := &msg.LabelsMany{}
 		res.Labels = labels
-
-		out.Constructor = msg.C_LabelsMany
-		out.Message, _ = res.Marshal()
-		uiexec.ExecSuccessCB(da.OnComplete, out)
+		da.Response(msg.C_LabelsMany, res)
 		return
 	}
 
@@ -49,15 +42,13 @@ func (r *label) labelsGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelsDelete(da request.Callback) {
 	req := &msg.LabelsDelete{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
-	r.Log().Info("LabelsDelete", zap.Int64("TeamID", domain.GetTeamID(in)))
+	r.Log().Info("LabelsDelete", zap.Int64("TeamID", da.TeamID()))
 	err := repo.Labels.Delete(req.LabelIDs...)
 
 	r.Log().ErrorOnErr("LabelsDelete", err)
@@ -66,11 +57,9 @@ func (r *label) labelsDelete(in, out *rony.MessageEnvelope, da request.Callback)
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelsListItems(da request.Callback) {
 	req := &msg.LabelsListItems{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -81,8 +70,8 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 			zap.Int64("MinID", req.MinID),
 			zap.Int64("MaxID", req.MaxID),
 		)
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, req.MinID, req.MaxID)
-		fillLabelItems(out, messages, users, groups, in.RequestID, da.OnComplete)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, da.TeamID(), req.Limit, req.MinID, req.MaxID)
+		fillLabelItems(da, messages, users, groups)
 		return
 	}
 
@@ -108,11 +97,11 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 
 				switch {
 				case req.MinID == 0 && req.MaxID != 0:
-					_ = repo.Labels.Fill(domain.GetTeamID(in), req.LabelID, x.Messages[msgCount-1].ID, req.MaxID)
+					_ = repo.Labels.Fill(da.TeamID(), req.LabelID, x.Messages[msgCount-1].ID, req.MaxID)
 				case req.MinID != 0 && req.MaxID == 0:
-					_ = repo.Labels.Fill(domain.GetTeamID(in), req.LabelID, req.MinID, x.Messages[0].ID)
+					_ = repo.Labels.Fill(da.TeamID(), req.LabelID, req.MinID, x.Messages[0].ID)
 				case req.MinID == 0 && req.MaxID == 0:
-					_ = repo.Labels.Fill(domain.GetTeamID(in), req.LabelID, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+					_ = repo.Labels.Fill(da.TeamID(), req.LabelID, x.Messages[msgCount-1].ID, x.Messages[0].ID)
 				}
 			}
 		default:
@@ -126,7 +115,7 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 	case req.MinID == 0 && req.MaxID == 0:
 		r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 	case req.MinID == 0 && req.MaxID != 0:
-		b, _ := repo.Labels.GetLowerFilled(domain.GetTeamID(in), req.LabelID, req.MaxID)
+		b, _ := repo.Labels.GetLowerFilled(da.TeamID(), req.LabelID, req.MaxID)
 		if !b {
 			r.Log().Info("LabelModule detected label hole (With MaxID Only)",
 				zap.Int32("LabelID", req.LabelID),
@@ -136,10 +125,10 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 			return
 		}
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, 0, req.MaxID)
-		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, da.TeamID(), req.Limit, 0, req.MaxID)
+		fillLabelItems(da, messages, users, groups)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, _ := repo.Labels.GetUpperFilled(domain.GetTeamID(in), req.LabelID, req.MinID)
+		b, _ := repo.Labels.GetUpperFilled(da.TeamID(), req.LabelID, req.MinID)
 		if !b {
 			r.Log().Info("detected label hole (With MinID Only)",
 				zap.Int32("LabelID", req.LabelID),
@@ -149,19 +138,17 @@ func (r *label) labelsListItems(in, out *rony.MessageEnvelope, da request.Callba
 			r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 			return
 		}
-		messages, users, groups := repo.Labels.ListMessages(req.LabelID, domain.GetTeamID(in), req.Limit, req.MinID, 0)
-		fillLabelItems(out, messages, users, groups, in.RequestID, preSuccessCB)
+		messages, users, groups := repo.Labels.ListMessages(req.LabelID, da.TeamID(), req.Limit, req.MinID, 0)
+		fillLabelItems(da, messages, users, groups)
 	default:
 		r.SDK().QueueCtrl().EnqueueCommand(da.ReplaceCompleteCB(preSuccessCB))
 		return
 	}
 }
 
-func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelAddToMessage(da request.Callback) {
 	req := &msg.LabelsAddToMessage{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -170,14 +157,14 @@ func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da request.Call
 		zap.Int32s("LabelIDs", req.LabelIDs),
 	)
 	if len(req.MessageIDs) != 0 {
-		_ = repo.Labels.AddLabelsToMessages(req.LabelIDs, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
+		_ = repo.Labels.AddLabelsToMessages(req.LabelIDs, da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 		for _, labelID := range req.LabelIDs {
-			bar := repo.Labels.GetFilled(domain.GetTeamID(in), labelID)
+			bar := repo.Labels.GetFilled(da.TeamID(), labelID)
 			for _, msgID := range req.MessageIDs {
 				if msgID > bar.MaxID {
-					_ = repo.Labels.Fill(domain.GetTeamID(in), labelID, bar.MaxID, msgID)
+					_ = repo.Labels.Fill(da.TeamID(), labelID, bar.MaxID, msgID)
 				} else if msgID < bar.MinID {
-					_ = repo.Labels.Fill(domain.GetTeamID(in), labelID, msgID, bar.MinID)
+					_ = repo.Labels.Fill(da.TeamID(), labelID, msgID, bar.MinID)
 				}
 			}
 		}
@@ -188,11 +175,9 @@ func (r *label) labelAddToMessage(in, out *rony.MessageEnvelope, da request.Call
 
 }
 
-func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *label) labelRemoveFromMessage(da request.Callback) {
 	req := &msg.LabelsRemoveFromMessage{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -202,7 +187,7 @@ func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da request
 	)
 
 	if len(req.MessageIDs) != 0 {
-		_ = repo.Labels.RemoveLabelsFromMessages(req.LabelIDs, domain.GetTeamID(in), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
+		_ = repo.Labels.RemoveLabelsFromMessages(req.LabelIDs, da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
 	}
 
 	// send the request to server
@@ -210,14 +195,11 @@ func (r *label) labelRemoveFromMessage(in, out *rony.MessageEnvelope, da request
 
 }
 
-func fillLabelItems(out *rony.MessageEnvelope, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group, requestID uint64, successCB domain.MessageHandler) {
+func fillLabelItems(da request.Callback, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group) {
 	res := new(msg.LabelItems)
 	res.Messages = messages
 	res.Users = users
 	res.Groups = groups
 
-	out.RequestID = requestID
-	out.Constructor = msg.C_LabelItems
-	out.Message, _ = res.Marshal()
-	uiexec.ExecSuccessCB(successCB, out)
+	da.Response(msg.C_LabelItems, res)
 }

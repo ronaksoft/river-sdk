@@ -8,7 +8,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/request"
-	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
 )
 
 /*
@@ -45,7 +45,7 @@ type Module interface {
 	LocalHandlers() map[int64]request.LocalHandler
 	UpdateAppliers() map[int64]domain.UpdateApplier
 	MessageAppliers() map[int64]domain.MessageApplier
-	Execute(in *rony.MessageEnvelope, da request.Callback)
+	Execute(da request.Callback)
 }
 
 // Base provides the boilerplate code for every module. Hence developer only needs to write the module specific
@@ -67,16 +67,14 @@ func (b *Base) Init(sdk SDK, logger *logs.Logger) {
 	b.logger = logger
 }
 
-func (b *Base) Execute(in *rony.MessageEnvelope, da request.Callback) {
-	out := &rony.MessageEnvelope{}
-	h := b.handlers[in.Constructor]
+func (b *Base) Execute(da request.Callback) {
+	h := b.handlers[da.Constructor()]
 	if h == nil {
-		out.Fill(in.RequestID, rony.C_Error, &rony.Error{Code: "E100", Items: "MODULE_HANDLER_NOT_FOUND"})
-		da.OnComplete(out)
+		da.OnComplete(errors.Message(da.RequestID(), "E100", "MODULE_HANDLER_NOT_FOUND"))
 		return
 	}
 
-	h(in, out, da)
+	h(da)
 }
 
 func (b *Base) RegisterUpdateAppliers(appliers map[int64]domain.UpdateApplier) {

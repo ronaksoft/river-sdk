@@ -135,18 +135,12 @@ func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 	)
 
-	out := &rony.MessageEnvelope{
-		RequestID: reqCB.RequestID(),
-	}
-	out.Header = append(out.Header, reqCB.Envelope().Header...)
-
-	handler(reqCB.Envelope(), out, reqCB)
+	handler(reqCB)
 }
 func (r *River) executeRemoteCommand(reqCB request.Callback) {
 	logger.Debug("execute remote command",
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 	)
-
 
 	ctx, cf := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
 	defer cf()

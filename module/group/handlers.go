@@ -5,7 +5,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
-	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 )
 
@@ -18,11 +17,9 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *group) groupsEditTitle(in, out *rony.MessageEnvelope, da request.Callback) {
-	req := new(msg.GroupsEditTitle)
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+func (r *group) groupsEditTitle(da request.Callback) {
+	req := &msg.GroupsEditTitle{}
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -33,13 +30,12 @@ func (r *group) groupsEditTitle(in, out *rony.MessageEnvelope, da request.Callba
 
 }
 
-func (r *group) groupAddUser(in, out *rony.MessageEnvelope, da request.Callback) {
-	req := new(msg.GroupsAddUser)
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+func (r *group) groupAddUser(da request.Callback) {
+	req := &msg.GroupsAddUser{}
+	if err := da.RequestData(req); err != nil {
 		return
 	}
+
 	user, _ := repo.Users.Get(req.User.UserID)
 	if user != nil {
 		gp := &msg.GroupParticipant{
@@ -57,16 +53,13 @@ func (r *group) groupAddUser(in, out *rony.MessageEnvelope, da request.Callback)
 
 }
 
-func (r *group) groupDeleteUser(in, out *rony.MessageEnvelope, da request.Callback) {
-	req := new(msg.GroupsDeleteUser)
-	err := req.Unmarshal(in.Message)
-	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+func (r *group) groupDeleteUser(da request.Callback) {
+	req := &msg.GroupsDeleteUser{}
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
-	err = repo.Groups.RemoveParticipant(req.GroupID, req.User.UserID)
+	err := repo.Groups.RemoveParticipant(req.GroupID, req.User.UserID)
 	if err != nil {
 		r.Log().Error("got error on GroupDeleteUser local handler", zap.Error(err))
 	}
@@ -75,11 +68,9 @@ func (r *group) groupDeleteUser(in, out *rony.MessageEnvelope, da request.Callba
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *group) groupsGetFull(in, out *rony.MessageEnvelope, da request.Callback) {
-	req := new(msg.GroupsGetFull)
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+func (r *group) groupsGetFull(da request.Callback) {
+	req := &msg.GroupsGetFull{}
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -90,7 +81,7 @@ func (r *group) groupsGetFull(in, out *rony.MessageEnvelope, da request.Callback
 	}
 
 	// NotifySettings
-	dlg, _ := repo.Dialogs.Get(domain.GetTeamID(in), req.GroupID, int32(msg.PeerType_PeerGroup))
+	dlg, _ := repo.Dialogs.Get(da.TeamID(), req.GroupID, int32(msg.PeerType_PeerGroup))
 	if dlg == nil {
 		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
@@ -114,17 +105,12 @@ func (r *group) groupsGetFull(in, out *rony.MessageEnvelope, da request.Callback
 		return
 	}
 	res.Users = users
-
-	out.Constructor = msg.C_GroupFull
-	out.Message, _ = res.Marshal()
-	da.OnComplete(out)
+	da.Response(msg.C_GroupFull, res)
 }
 
-func (r *group) groupUpdateAdmin(in, out *rony.MessageEnvelope, da request.Callback) {
-	req := new(msg.GroupsUpdateAdmin)
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+func (r *group) groupUpdateAdmin(da request.Callback) {
+	req := &msg.GroupsUpdateAdmin{}
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
@@ -134,16 +120,13 @@ func (r *group) groupUpdateAdmin(in, out *rony.MessageEnvelope, da request.Callb
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *group) groupToggleAdmin(in, out *rony.MessageEnvelope, da request.Callback) {
-	req := new(msg.GroupsToggleAdmins)
-	err := req.Unmarshal(in.Message)
-	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+func (r *group) groupToggleAdmin(da request.Callback) {
+	req := &msg.GroupsToggleAdmins{}
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
-	err = repo.Groups.ToggleAdmins(req.GroupID, req.AdminEnabled)
+	err := repo.Groups.ToggleAdmins(req.GroupID, req.AdminEnabled)
 	if err != nil {
 		r.Log().Warn("got error on local handler for GroupToggleAdmin", zap.Error(err))
 	}
@@ -152,15 +135,14 @@ func (r *group) groupToggleAdmin(in, out *rony.MessageEnvelope, da request.Callb
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *group) groupRemovePhoto(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *group) groupRemovePhoto(da request.Callback) {
+	req := &msg.GroupsRemovePhoto{}
+	if err := da.RequestData(req); err != nil {
+		return
+	}
+
 	// send the request to server
 	r.SDK().QueueCtrl().EnqueueCommand(da)
-
-	req := new(msg.GroupsRemovePhoto)
-	err := req.Unmarshal(in.Message)
-	if err != nil {
-		r.Log().Error("groupRemovePhoto() failed to unmarshal", zap.Error(err))
-	}
 
 	group, _ := repo.Groups.Get(req.GroupID)
 	if group == nil {

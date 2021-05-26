@@ -5,9 +5,6 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/internal/uiexec"
-	"github.com/ronaksoft/rony"
-	"go.uber.org/zap"
 	"sort"
 )
 
@@ -20,12 +17,12 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *user) usersGetFull(da request.Callback) {
 	req := &msg.UsersGetFull{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		r.Log().Error("UserModule::usersGetFull()-> Unmarshal()", zap.Error(err))
+	if err := da.RequestData(req); err != nil {
 		return
 	}
+
 	userIDs := domain.MInt64B{}
 	for _, v := range req.Users {
 		userIDs[v.UserID] = true
@@ -42,10 +39,7 @@ func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da request.Callback) 
 			})
 		}
 		res.Users = users
-
-		out.Constructor = msg.C_UsersMany
-		out.Message, _ = res.Marshal()
-		uiexec.ExecSuccessCB(da.OnComplete, out)
+		da.Response(msg.C_UsersMany, res)
 
 		if len(outDated) > 0 {
 			req.Users = req.Users[:0]
@@ -55,7 +49,7 @@ func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da request.Callback) 
 					AccessHash: user.AccessHash,
 				})
 			}
-			in.Fill(in.RequestID, in.Constructor, req, in.Header...)
+			// TODO:: update da with new request
 			r.SDK().QueueCtrl().EnqueueCommand(da)
 		}
 		return
@@ -65,13 +59,12 @@ func (r *user) usersGetFull(in, out *rony.MessageEnvelope, da request.Callback) 
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
-func (r *user) usersGet(in, out *rony.MessageEnvelope, da request.Callback) {
+func (r *user) usersGet(da request.Callback) {
 	req := &msg.UsersGet{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
+
 	userIDs := domain.MInt64B{}
 	for _, v := range req.Users {
 		userIDs[v.UserID] = true
@@ -82,10 +75,7 @@ func (r *user) usersGet(in, out *rony.MessageEnvelope, da request.Callback) {
 	if allResolved {
 		res := new(msg.UsersMany)
 		res.Users = users
-
-		out.Constructor = msg.C_UsersMany
-		out.Message, _ = res.Marshal()
-		uiexec.ExecSuccessCB(da.OnComplete, out)
+		da.Response(msg.C_UsersMany, res)
 
 		if len(outDated) > 0 {
 			req.Users = req.Users[:0]
@@ -95,7 +85,7 @@ func (r *user) usersGet(in, out *rony.MessageEnvelope, da request.Callback) {
 					AccessHash: user.AccessHash,
 				})
 			}
-			in.Fill(in.RequestID, in.Constructor, req, in.Header...)
+			// TODO:: update da with new request
 			r.SDK().QueueCtrl().EnqueueCommand(da)
 		}
 		return

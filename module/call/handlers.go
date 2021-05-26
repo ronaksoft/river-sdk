@@ -15,379 +15,300 @@ import (
    Copyright Ronak Software Group 2021
 */
 
-func (c *call) toggleVideoHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) toggleVideoHandler(da request.Callback) {
 	req := &msg.ClientCallToggleVideo{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.toggleVideo(req.Video)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) toggleAudioHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) toggleAudioHandler(da request.Callback) {
 	req := &msg.ClientCallToggleAudio{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.toggleAudio(req.Audio)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) tryReconnectHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) tryReconnectHandler(da request.Callback) {
 	req := &msg.ClientCallTryReconnect{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.tryReconnect(req.ConnId)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) destroyHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) destroyHandler(da request.Callback) {
 	req := &msg.ClientCallDestroy{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	c.destroy(req.CallID)
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) areAllAudioHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) areAllAudioHandler(da request.Callback) {
 	req := &msg.ClientCallDestroy{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	ok, err := c.areAllAudio()
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: ok})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: ok})
 }
 
-func (c *call) iceCandidateHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) iceCandidateHandler(da request.Callback) {
 	req := &msg.ClientCallSendIceCandidate{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.iceCandidate(req.ConnId, req.Candidate)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) iceConnectionStatusChangeHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) iceConnectionStatusChangeHandler(da request.Callback) {
 	req := &msg.ClientCallSendIceConnectionStatus{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.iceConnectionStatusChange(req.ConnId, req.State, req.HasIceError)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) trackUpdateHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) trackUpdateHandler(da request.Callback) {
 	req := &msg.ClientCallSendTrack{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
+	// TODO: (@hamidrezakk)
 	err := c.trackUpdate(req.ConnId, req.StreamID)
-	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err = da.RequestData(req); err != nil {
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) mediaSettingsChangeHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) mediaSettingsChangeHandler(da request.Callback) {
 	req := &msg.ClientCallSendMediaSettings{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.mediaSettingsChange(req.MediaSettings)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) startHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) startHandler(da request.Callback) {
 	req := &msg.ClientCallStart{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	callID, err := c.start(req.Peer, req.InputUsers, req.Video, req.CallID)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_ClientCallStarted, &msg.ClientCallStarted{CallID: callID})
-	da.OnComplete(out)
+	da.Response(msg.C_ClientCallStarted, &msg.ClientCallStarted{CallID: callID})
 }
 
-func (c *call) joinHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) joinHandler(da request.Callback) {
 	req := &msg.ClientCallJoin{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.join(req.Peer, req.CallID)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) acceptHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) acceptHandler(da request.Callback) {
 	req := &msg.ClientCallAccept{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.accept(req.CallID, req.Video)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) rejectHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) rejectHandler(da request.Callback) {
 	req := &msg.ClientCallReject{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.reject(req.CallID, req.Duration, req.Reason, req.TargetPeer)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) getParticipantByUserIDHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) getParticipantByUserIDHandler(da request.Callback) {
 	req := &msg.ClientCallGetParticipantByUserID{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	participant, err := c.getParticipantByUserID(req.CallID, req.UserID)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_CallParticipant, participant)
-	da.OnComplete(out)
+	da.Response(msg.C_CallParticipant, participant)
 }
 
-func (c *call) getParticipantByConnIdHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) getParticipantByConnIdHandler(da request.Callback) {
 	req := &msg.ClientCallGetParticipantByConnId{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	participant, err := c.getParticipantByConnId(req.ConnId)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_CallParticipant, participant)
-	da.OnComplete(out)
+	da.Response(msg.C_CallParticipant, participant)
 }
 
-func (c *call) getParticipantListHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) getParticipantListHandler(da request.Callback) {
 	req := &msg.ClientCallGetParticipantList{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	participants, err := c.getParticipantList(req.CallID, req.ExcludeCurrent)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_CallParticipants, &msg.CallParticipants{
+	da.Response(msg.C_CallParticipants, &msg.CallParticipants{
 		CallParticipants: participants,
 	})
-	da.OnComplete(out)
 }
 
-func (c *call) muteParticipantHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) muteParticipantHandler(da request.Callback) {
 	req := &msg.ClientCallMuteParticipant{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.muteParticipant(req.UserID, req.Muted)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) groupAddParticipantHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) groupAddParticipantHandler(da request.Callback) {
 	req := &msg.ClientCallGroupAddParticipant{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.groupAddParticipant(req.CallID, req.Participants)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) groupRemoveParticipantHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) groupRemoveParticipantHandler(da request.Callback) {
 	req := &msg.ClientCallGroupRemoveParticipant{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.groupRemoveParticipant(req.CallID, req.UserIDs, req.Timeout)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
-func (c *call) groupUpdateAdminHandler(in, out *rony.MessageEnvelope, da request.Callback) {
+func (c *call) groupUpdateAdminHandler(da request.Callback) {
 	req := &msg.ClientCallGroupUpdateAdmin{}
-	if err := req.Unmarshal(in.Message); err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+	if err := da.RequestData(req); err != nil {
 		return
 	}
 
 	err := c.groupUpdateAdmin(req.CallID, req.UserID, req.Admin)
 	if err != nil {
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
 		return
 	}
 
-	out.Fill(out.RequestID, msg.C_Bool, &msg.Bool{Result: true})
-	da.OnComplete(out)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }

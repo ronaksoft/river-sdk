@@ -31,7 +31,12 @@ func (r *River) HandleDebugActions(txt string) {
 	}
 	in := &rony.MessageEnvelope{}
 	in.Fill(domain.NextRequestID(), msg.C_MessagesSend, req)
-	r.Module(module.Message).Execute(in, request.EmptyCallback())
+	r.Module(module.Message).Execute(
+		request.NewCallback(
+			0, 0, domain.NextRequestID(), msg.C_MessagesSend, req,
+			nil, nil, nil, false, 0, 0,
+		),
+	)
 }
 
 func (r *River) GetHole(peerID int64, peerType int32) []byte {
