@@ -48,9 +48,7 @@ func init() {
 
 func SetFilePath(logDir string) error {
 	// support IOS file path
-	if strings.HasPrefix(logDir, "file://") {
-		logDir = logDir[7:]
-	}
+	logDir = strings.TrimPrefix(logDir, "file://")
 
 	if logDir == "" {
 		return nil

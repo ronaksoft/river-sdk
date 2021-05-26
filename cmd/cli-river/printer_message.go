@@ -538,7 +538,7 @@ func printClientSearchResult(envelope *rony.MessageEnvelope) {
 			x.FirstName,
 			x.LastName,
 			x.Username,
-			fmt.Sprintf("%s", time.Unix(x.LastSeen, 0).Format(time.RFC822)),
+			time.Unix(x.LastSeen, 0).Format(time.RFC822),
 		})
 	}
 	tableUsers.Render()

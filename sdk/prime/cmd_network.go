@@ -25,8 +25,7 @@ func (r *River) StopNetwork() {
 	r.networkCtrl.Disconnect()
 }
 
-// NetworkChange
-// Possible Values: cellular (2), wifi (1), none (0)
+// NetworkChange accepts possible values: cellular (2), wifi (1), none (0)
 func (r *River) NetworkChange(connection int) {
 	logger.Debug("NetworkChange called", zap.Int("C", connection))
 	switch connection {

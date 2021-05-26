@@ -35,7 +35,7 @@ func (r *message) messagesDialogs(e *rony.MessageEnvelope) {
 		mMessages[message.ID] = message
 	}
 	for _, dialog := range x.Dialogs {
-		topMessage, _ := mMessages[dialog.TopMessageID]
+		topMessage := mMessages[dialog.TopMessageID]
 		if topMessage == nil {
 			r.Log().Error("got dialog with nil top message", zap.Int64("MessageID", dialog.TopMessageID))
 			err := repo.Dialogs.Save(dialog)

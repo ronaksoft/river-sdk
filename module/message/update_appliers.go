@@ -90,7 +90,7 @@ func (r *message) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 
 	// handle Message's Action
 	res := []*msg.UpdateEnvelope{u}
-	r.handleMessageAction(x, u, res)
+	res = append(res, r.handleMessageAction(x, u)...)
 
 	// If sender is me, check for pending
 	if x.Message.SenderID == r.SDK().SyncCtrl().GetUserID() {
@@ -150,7 +150,7 @@ func (r *message) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 
 	return res, nil
 }
-func (r *message) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope, res []*msg.UpdateEnvelope) {
+func (r *message) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope) {
 	switch x.Message.MessageAction {
 	case domain.MessageActionContactRegistered:
 		go func() {
@@ -228,6 +228,7 @@ func (r *message) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnve
 			}
 		}
 	}
+	return
 }
 func (r *message) handlePendingMessage(x *msg.UpdateNewMessage) {
 	pmsg := repo.PendingMessages.GetByRealID(x.Message.ID)

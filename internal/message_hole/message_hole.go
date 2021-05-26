@@ -315,7 +315,6 @@ func saveManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory, hm
 		return
 	}
 	repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, cat, b)
-	return
 }
 
 func InsertFill(teamID, peerID int64, peerType int32, cat msg.MediaCategory, minID, maxID int64) {
@@ -325,7 +324,6 @@ func InsertFill(teamID, peerID int64, peerType int32, cat msg.MediaCategory, min
 	hm := loadManager(teamID, peerID, peerType, cat)
 	hm.InsertBar(Bar{Type: Filled, Min: minID, Max: maxID})
 	saveManager(teamID, peerID, peerType, cat, hm)
-	return
 }
 
 // IsHole Checks if there is any hole in the range [minID-maxID].

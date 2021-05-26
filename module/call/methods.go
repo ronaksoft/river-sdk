@@ -390,7 +390,7 @@ func (c *call) getParticipantList(callID int64, excludeCurrent bool) (participan
 
 	c.mu.RLock()
 	for _, participant := range info.participants {
-		if excludeCurrent == false || participant.PhoneParticipant.Peer.UserID == c.userID {
+		if !excludeCurrent || participant.PhoneParticipant.Peer.UserID == c.userID {
 			if conn, ok := c.peerConnections[participant.PhoneParticipant.ConnectionId]; ok && conn.StreamID != "" {
 				participant.Started = true
 			}
@@ -1139,7 +1139,6 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn, force bool) {
 	if err != nil {
 		c.Log().Info("apiSendUpdate, PhoneCallAction_PhoneCallMediaSettingsChanged", zap.Error(err))
 	}
-	return
 }
 
 func (c *call) mediaSettingsInit(in *msg.CallMediaSettings) {

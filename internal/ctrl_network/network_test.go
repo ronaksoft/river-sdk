@@ -73,17 +73,6 @@ func dummyNetworkChangeHandler(newStatus domain.NetworkStatus) {
 	)
 }
 
-func authRecall() *rony.MessageEnvelope {
-	m := new(msg.AuthRecall)
-	m.ClientID = 2374
-	b, _ := m.Marshal()
-	return &rony.MessageEnvelope{
-		Constructor: msg.C_AuthRecall,
-		RequestID:   domain.RandomUint64(),
-		Message:     b,
-	}
-}
-
 func getServerTime() *rony.MessageEnvelope {
 	m := new(msg.SystemGetServerTime)
 	b, _ := m.Marshal()

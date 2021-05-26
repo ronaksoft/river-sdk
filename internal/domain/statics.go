@@ -42,7 +42,7 @@ const (
 )
 
 func init() {
-	exp, err := regexp.Compile("^\\d*$")
+	exp, err := regexp.Compile(`^\d*$`)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -109,18 +109,16 @@ func (ctrl *Controller) watchDog() {
 			<-t.C
 		}
 		t.Reset(syncTime)
-		select {
-		case <-t.C:
-			// Skip if we are not connected to server
-			if !ctrl.networkCtrl.Connected() {
-				break
-			}
 
-			// Check if we were not syncing in the last 3 minutes
-			if time.Duration(tools.NanoTime()-ctrl.lastUpdateReceived) > syncTime {
-				go ctrl.Sync()
-			}
+		<-t.C
+		// Skip if we are not connected to server
+		if !ctrl.networkCtrl.Connected() {
+			break
+		}
 
+		// Check if we were not syncing in the last 3 minutes
+		if time.Duration(tools.NanoTime()-ctrl.lastUpdateReceived) > syncTime {
+			go ctrl.Sync()
 		}
 	}
 }

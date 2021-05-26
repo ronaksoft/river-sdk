@@ -397,9 +397,7 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 	go ctrl.networkCtrl.WebsocketCommand(
 		request.NewCallback(
 			0, 0, domain.NextRequestID(), msg.C_AccountUpdateStatus, req,
-			func() {
-				return
-			},
+			func() {},
 			func(m *rony.MessageEnvelope) {
 				switch m.Constructor {
 				case rony.C_Error:
