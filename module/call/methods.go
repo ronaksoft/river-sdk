@@ -20,7 +20,7 @@ import (
 func (c *call) toggleVideo(enable bool) (err error) {
 	c.propagateMediaSettings(MediaSettingsIn{
 		Video: &enable,
-	})
+	}, false)
 
 	return c.modifyMediaStream(enable)
 }
@@ -28,7 +28,7 @@ func (c *call) toggleVideo(enable bool) (err error) {
 func (c *call) toggleAudio(enable bool) (err error) {
 	c.propagateMediaSettings(MediaSettingsIn{
 		Audio: &enable,
-	})
+	}, false)
 	return
 }
 
@@ -297,16 +297,18 @@ func (c *call) accept(callID int64, video bool) (err error) {
 					return
 				}
 
-				streamState, innerErr := c.getMediaSettings()
-				if innerErr != nil {
-					return
-				}
+				time.AfterFunc(time.Duration(255)*time.Millisecond, func() {
+					streamState, innerErr := c.getMediaSettings()
+					if innerErr != nil {
+						return
+					}
 
-				c.mediaSettingsInit(streamState)
-				c.propagateMediaSettings(MediaSettingsIn{
-					Audio:       &streamState.Audio,
-					ScreenShare: &streamState.ScreenShare,
-					Video:       &streamState.Video,
+					c.mediaSettingsInit(streamState)
+					c.propagateMediaSettings(MediaSettingsIn{
+						Audio:       &streamState.Audio,
+						ScreenShare: &streamState.ScreenShare,
+						Video:       &streamState.Video,
+					}, true)
 				})
 			}(request)
 		}
@@ -1020,7 +1022,7 @@ func (c *call) modifyMediaStream(video bool) (err error) {
 	_ = c.upgradeConnection(video)
 	c.propagateMediaSettings(MediaSettingsIn{
 		Video: &video,
-	})
+	}, false)
 	return
 }
 
@@ -1071,7 +1073,7 @@ func (c *call) upgradeConnection(video bool) (err error) {
 	return
 }
 
-func (c *call) propagateMediaSettings(in MediaSettingsIn) {
+func (c *call) propagateMediaSettings(in MediaSettingsIn, force bool) {
 	if c.activeCallID == 0 {
 		return
 	}
@@ -1085,7 +1087,7 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn) {
 		return
 	}
 
-	shouldPropagate := false
+	shouldPropagate := force
 	if in.Audio != nil {
 		if info.mediaSettings.Audio != *in.Audio {
 			shouldPropagate = true
@@ -1682,16 +1684,19 @@ func (c *call) callAccepted(in *UpdatePhoneCall) {
 	pc.mu.Unlock()
 	c.flushIceCandidates(in.CallID, connId)
 
-	streamState, err := c.getMediaSettings()
-	if err != nil {
-		return
-	}
+	time.AfterFunc(time.Duration(255)*time.Millisecond, func() {
+		streamState, err := c.getMediaSettings()
+		if err != nil {
+			return
+		}
 
-	c.propagateMediaSettings(MediaSettingsIn{
-		Audio:       &streamState.Audio,
-		ScreenShare: &streamState.ScreenShare,
-		Video:       &streamState.Video,
+		c.propagateMediaSettings(MediaSettingsIn{
+			Audio:       &streamState.Audio,
+			ScreenShare: &streamState.ScreenShare,
+			Video:       &streamState.Video,
+		}, true)
 	})
+
 	c.clearRetryInterval(connId)
 	c.appendToAcceptedList(connId)
 	c.Log().Info("[webrtc] accept signal", zap.Int32("connId", connId))
@@ -1821,12 +1826,7 @@ func (c *call) sdpOfferUpdated(in *UpdatePhoneCall) {
 		return
 	}
 
-	data := in.Data.(*msg.PhoneActionSDPOffer)
-
-	offerSDP := &msg.PhoneActionSDPOffer{
-		SDP:  data.SDP,
-		Type: data.Type,
-	}
+	offerSDP := in.Data.(*msg.PhoneActionSDPOffer)
 
 	sdpAnswer, err := c.CallbackSetOfferGetAnswerSDP(connId, offerSDP)
 	if err != nil {
@@ -1859,23 +1859,9 @@ func (c *call) sdpAnswerUpdated(in *UpdatePhoneCall) {
 		return
 	}
 
-	data := in.Data.(*msg.PhoneActionSDPAnswer)
+	answerSDP := in.Data.(*msg.PhoneActionSDPAnswer)
 
-	answerSDP := &msg.PhoneActionSDPAnswer{
-		SDP:  data.SDP,
-		Type: data.Type,
-	}
-	answerSDPData, err := answerSDP.Marshal()
-	if err != nil {
-		return
-	}
-
-	if c.callback.SetAnswerSDP == nil {
-		c.Log().Error("callbacks are not initialized")
-		return
-	}
-
-	_ = c.callback.SetAnswerSDP(connId, answerSDPData)
+	_ = c.CallbackSetAnswerSDP(connId, answerSDP)
 }
 
 func (c *call) callAcknowledged(in *UpdatePhoneCall) {
