@@ -46,8 +46,8 @@ type Bar struct {
 
 type HoleManager struct {
 	mtxLock  sync.Mutex
-	maxIndex int64
-	bars     []Bar
+	MaxIndex int64
+	Bars     []Bar
 }
 
 func newHoleManager() *HoleManager {
@@ -57,11 +57,11 @@ func newHoleManager() *HoleManager {
 
 func (m *HoleManager) LoadFromDB(teamID, peerID int64, peerType int32, cat msg.MediaCategory) {
 	b := repo.MessagesExtra.GetHoles(teamID, peerID, peerType, cat)
-	_ = json.Unmarshal(b, &m.bars)
-	m.maxIndex = 0
-	for idx := range m.bars {
-		if m.bars[idx].Max > m.maxIndex {
-			m.maxIndex = m.bars[idx].Max
+	_ = json.Unmarshal(b, &m.Bars)
+	m.MaxIndex = 0
+	for idx := range m.Bars {
+		if m.Bars[idx].Max > m.MaxIndex {
+			m.MaxIndex = m.Bars[idx].Max
 		}
 	}
 }
@@ -71,33 +71,33 @@ func (m *HoleManager) InsertBar(b Bar) {
 	defer m.mtxLock.Unlock()
 
 	// If it is the first bar
-	if len(m.bars) == 0 {
+	if len(m.Bars) == 0 {
 		if b.Min > 0 {
-			m.bars = append(m.bars, Bar{Min: 0, Max: b.Min - 1, Type: Hole})
+			m.Bars = append(m.Bars, Bar{Min: 0, Max: b.Min - 1, Type: Hole})
 		}
-		m.maxIndex = b.Max
-		m.bars = append(m.bars, b)
+		m.MaxIndex = b.Max
+		m.Bars = append(m.Bars, b)
 		return
 	}
 
 	// We sort the bar to find the max point, if b.Max is larger than biggest index, then we have to
 	// insert a hole to increase the domain
-	// TODO:: We must make sure that bars are sorted all the time then we don't need to sort every time
-	sort.Slice(m.bars, func(i, j int) bool {
-		return m.bars[i].Min < m.bars[j].Min
+	// TODO:: We must make sure that Bars are sorted all the time then we don't need to sort every time
+	sort.Slice(m.Bars, func(i, j int) bool {
+		return m.Bars[i].Min < m.Bars[j].Min
 	})
-	maxIndex := m.bars[len(m.bars)-1].Max
+	maxIndex := m.Bars[len(m.Bars)-1].Max
 	if b.Max > maxIndex {
-		m.bars = append(m.bars, Bar{Min: maxIndex + 1, Max: b.Max, Type: Hole})
+		m.Bars = append(m.Bars, Bar{Min: maxIndex + 1, Max: b.Max, Type: Hole})
 	}
 
-	currentBars := m.bars
-	m.bars = make([]Bar, 0, len(currentBars)+1)
+	currentBars := m.Bars
+	m.Bars = make([]Bar, 0, len(currentBars)+1)
 
-	// Initially the biggest index is b.Max. We will update the maxIndex during the range over bars if
+	// Initially the biggest index is b.Max. We will update the MaxIndex during the range over Bars if
 	// necessary. In the first loop (InsertLoop) we go until we can insert the new bar into the list
 	idx := 0
-	m.maxIndex = b.Max
+	m.MaxIndex = b.Max
 InsertLoop:
 	for idx := 0; idx < len(currentBars); idx++ {
 		switch {
@@ -111,7 +111,7 @@ InsertLoop:
 					b,
 					Bar{Min: b.Max + 1, Max: currentBars[idx].Max, Type: currentBars[idx].Type},
 				)
-				m.maxIndex = currentBars[idx].Max
+				m.MaxIndex = currentBars[idx].Max
 			case b.Max == currentBars[idx].Max:
 				m.appendBar(
 					Bar{Min: currentBars[idx].Min, Max: b.Min - 1, Type: currentBars[idx].Type},
@@ -131,7 +131,7 @@ InsertLoop:
 					Bar{Min: b.Min, Max: b.Max, Type: b.Type},
 					Bar{Min: b.Max + 1, Max: currentBars[idx].Max, Type: currentBars[idx].Type},
 				)
-				m.maxIndex = currentBars[idx].Max
+				m.MaxIndex = currentBars[idx].Max
 			default:
 				m.appendBar(b)
 			}
@@ -140,34 +140,34 @@ InsertLoop:
 	}
 
 	// In this loop, we are assured that the new bar has been already added, we try to append the remaining
-	// bars to the list
+	// Bars to the list
 	for ; idx < len(currentBars); idx++ {
 		switch {
-		case currentBars[idx].Min < m.maxIndex:
+		case currentBars[idx].Min < m.MaxIndex:
 			switch {
-			case currentBars[idx].Max > m.maxIndex:
-				m.appendBar(Bar{Min: m.maxIndex + 1, Max: currentBars[idx].Max, Type: currentBars[idx].Type})
-				m.maxIndex = currentBars[idx].Max
+			case currentBars[idx].Max > m.MaxIndex:
+				m.appendBar(Bar{Min: m.MaxIndex + 1, Max: currentBars[idx].Max, Type: currentBars[idx].Type})
+				m.MaxIndex = currentBars[idx].Max
 			}
-		case currentBars[idx].Min == m.maxIndex:
+		case currentBars[idx].Min == m.MaxIndex:
 			if currentBars[idx].Max > currentBars[idx].Min {
 				m.appendBar(Bar{Min: currentBars[idx].Min + 1, Max: currentBars[idx].Max, Type: currentBars[idx].Type})
-				m.maxIndex = currentBars[idx].Max
+				m.MaxIndex = currentBars[idx].Max
 			}
 		default:
 			m.appendBar(currentBars[idx])
-			m.maxIndex = currentBars[idx].Max
+			m.MaxIndex = currentBars[idx].Max
 		}
 	}
 }
 
 func (m *HoleManager) appendBar(bars ...Bar) {
 	for _, b := range bars {
-		lastIndex := len(m.bars) - 1
-		if lastIndex >= 0 && m.bars[lastIndex].Type == b.Type {
-			m.bars[lastIndex].Max = b.Max
+		lastIndex := len(m.Bars) - 1
+		if lastIndex >= 0 && m.Bars[lastIndex].Type == b.Type {
+			m.Bars[lastIndex].Max = b.Max
 		} else {
-			m.bars = append(m.bars, b)
+			m.Bars = append(m.Bars, b)
 		}
 	}
 }
@@ -175,11 +175,11 @@ func (m *HoleManager) appendBar(bars ...Bar) {
 func (m *HoleManager) IsRangeFilled(min, max int64) bool {
 	m.mtxLock.Lock()
 	defer m.mtxLock.Unlock()
-	for idx := range m.bars {
-		if m.bars[idx].Type == Hole {
+	for idx := range m.Bars {
+		if m.Bars[idx].Type == Hole {
 			continue
 		}
-		if min >= m.bars[idx].Min && max <= m.bars[idx].Max {
+		if min >= m.Bars[idx].Min && max <= m.Bars[idx].Max {
 			return true
 		}
 	}
@@ -189,9 +189,9 @@ func (m *HoleManager) IsRangeFilled(min, max int64) bool {
 func (m *HoleManager) IsPointHole(pt int64) bool {
 	m.mtxLock.Lock()
 	defer m.mtxLock.Unlock()
-	for idx := range m.bars {
-		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
-			switch m.bars[idx].Type {
+	for idx := range m.Bars {
+		if pt >= m.Bars[idx].Min && pt <= m.Bars[idx].Max {
+			switch m.Bars[idx].Type {
 			case Filled:
 				return false
 			case Hole:
@@ -205,11 +205,11 @@ func (m *HoleManager) IsPointHole(pt int64) bool {
 func (m *HoleManager) GetUpperFilled(pt int64) (bool, Bar) {
 	m.mtxLock.Lock()
 	defer m.mtxLock.Unlock()
-	for idx := range m.bars {
-		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
-			switch m.bars[idx].Type {
+	for idx := range m.Bars {
+		if pt >= m.Bars[idx].Min && pt <= m.Bars[idx].Max {
+			switch m.Bars[idx].Type {
 			case Filled:
-				return true, Bar{Min: pt, Max: m.bars[idx].Max, Type: Filled}
+				return true, Bar{Min: pt, Max: m.Bars[idx].Max, Type: Filled}
 			case Hole:
 				return false, Bar{}
 			}
@@ -221,11 +221,11 @@ func (m *HoleManager) GetUpperFilled(pt int64) (bool, Bar) {
 func (m *HoleManager) GetLowerFilled(pt int64) (bool, Bar) {
 	m.mtxLock.Lock()
 	defer m.mtxLock.Unlock()
-	for idx := range m.bars {
-		if pt >= m.bars[idx].Min && pt <= m.bars[idx].Max {
-			switch m.bars[idx].Type {
+	for idx := range m.Bars {
+		if pt >= m.Bars[idx].Min && pt <= m.Bars[idx].Max {
+			switch m.Bars[idx].Type {
 			case Filled:
-				return true, Bar{Min: m.bars[idx].Min, Max: pt, Type: Filled}
+				return true, Bar{Min: m.Bars[idx].Min, Max: pt, Type: Filled}
 			case Hole:
 				return false, Bar{}
 			}
@@ -235,15 +235,15 @@ func (m *HoleManager) GetLowerFilled(pt int64) (bool, Bar) {
 }
 
 func (m *HoleManager) SetUpperFilled(pt int64) bool {
-	if pt <= m.maxIndex {
+	if pt <= m.MaxIndex {
 		return false
 	}
-	m.InsertBar(Bar{Type: Filled, Min: m.maxIndex + 1, Max: pt})
+	m.InsertBar(Bar{Type: Filled, Min: m.MaxIndex + 1, Max: pt})
 	return true
 }
 
 func (m *HoleManager) SetLowerFilled() {
-	for _, b := range m.bars {
+	for _, b := range m.Bars {
 		if b.Type == Filled {
 			if b.Min != 0 {
 				m.InsertBar(Bar{Min: 0, Max: b.Min, Type: Filled})
@@ -254,7 +254,7 @@ func (m *HoleManager) SetLowerFilled() {
 
 func (m *HoleManager) String() string {
 	sb := strings.Builder{}
-	for _, bar := range m.bars {
+	for _, bar := range m.Bars {
 		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))
 	}
 	return sb.String()
@@ -264,7 +264,7 @@ func (m *HoleManager) Valid() bool {
 	m.mtxLock.Lock()
 	defer m.mtxLock.Unlock()
 	idx := int64(-1)
-	for _, bar := range m.bars {
+	for _, bar := range m.Bars {
 		if bar.Min > bar.Max {
 			return false
 		}
@@ -309,7 +309,7 @@ func loadManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory) *H
 }
 
 func saveManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory, hm *HoleManager) {
-	b, err := json.Marshal(hm.bars)
+	b, err := json.Marshal(hm.Bars)
 	if err != nil {
 		logger.Error("Error On HoleManager", zap.Error(err))
 		return
@@ -349,7 +349,7 @@ func GetLowerFilled(teamID, peerID int64, peerType int32, cat msg.MediaCategory,
 func PrintHole(teamID, peerID int64, peerType int32, cat msg.MediaCategory) string {
 	hm := loadManager(teamID, peerID, peerType, cat)
 	sb := strings.Builder{}
-	for _, bar := range hm.bars {
+	for _, bar := range hm.Bars {
 		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))
 	}
 	return sb.String()
