@@ -623,12 +623,13 @@ func (r *message) messagesGetHistory(da request.Callback) {
 func fillMessagesMany(
 	da request.Callback, messages []*msg.UserMessage, users []*msg.User, groups []*msg.Group,
 ) {
-	res := &msg.MessagesMany{
-		Messages: messages,
-		Users:    users,
-		Groups:   groups,
-	}
-	da.Response(msg.C_MessagesMany, res)
+	da.Response(msg.C_MessagesMany,
+		&msg.MessagesMany{
+			Messages: messages,
+			Users:    users,
+			Groups:   groups,
+		},
+	)
 }
 func (r *message) genGetHistoryCB(
 	cb domain.MessageHandler, teamID, peerID int64, peerType int32, minID, maxID int64, topMessageID int64,
@@ -641,12 +642,12 @@ func (r *message) genGetHistoryCB(
 			err := x.Unmarshal(m.Message)
 			r.Log().WarnOnErr("Error On Unmarshal MessagesMany", err)
 
-			// 1st sort the received messages by id
+			// sort the received messages by id
 			sort.Slice(x.Messages, func(i, j int) bool {
 				return x.Messages[i].ID > x.Messages[j].ID
 			})
 
-			// Fill Messages Hole
+			// fill messages hole based on the server response
 			if msgCount := len(x.Messages); msgCount > 0 {
 				switch {
 				case minID == 0 && maxID != 0:
@@ -666,7 +667,7 @@ func (r *message) genGetHistoryCB(
 
 			m.Message, _ = x.Marshal()
 		case rony.C_Error:
-			r.Log().Warn("MessageModule received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
+			r.Log().Warn("received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
 		default:
 		}
 
@@ -731,12 +732,12 @@ func (r *message) genGetMediaHistoryCB(
 			err := x.Unmarshal(m.Message)
 			r.Log().WarnOnErr("Error On Unmarshal MessagesMany", err)
 
-			// 1st sort the received messages by id
+			// sort the received messages by id
 			sort.Slice(x.Messages, func(i, j int) bool {
 				return x.Messages[i].ID > x.Messages[j].ID
 			})
 
-			// Fill Messages Hole
+			// fill messages hole based on the server response
 			if msgCount := len(x.Messages); msgCount > 0 {
 				if maxID == 0 {
 					messageHole.InsertFill(teamID, peerID, peerType, cat, x.Messages[msgCount-1].ID, x.Messages[0].ID)
@@ -747,7 +748,7 @@ func (r *message) genGetMediaHistoryCB(
 
 			m.Message, _ = x.Marshal()
 		case rony.C_Error:
-			r.Log().Warn("MessageModule received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
+			r.Log().Warn("received error on GetMediaHistory", zap.Error(domain.ParseServerError(m.Message)))
 		default:
 		}
 
