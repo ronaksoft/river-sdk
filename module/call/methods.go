@@ -1087,25 +1087,29 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn) {
 		return
 	}
 
+	shouldPropagate := false
 	if in.Audio != nil {
+		if info.mediaSettings.Audio != *in.Audio {
+			shouldPropagate = true
+		}
 		info.mediaSettings.Audio = *in.Audio
 	}
 
 	if in.Video != nil {
+		if info.mediaSettings.Video != *in.Video {
+			shouldPropagate = true
+		}
 		info.mediaSettings.Video = *in.Video
 	}
 
 	if in.ScreenShare != nil {
+		if info.mediaSettings.ScreenShare != *in.ScreenShare {
+			shouldPropagate = true
+		}
 		info.mediaSettings.ScreenShare = *in.ScreenShare
 	}
 
-	action := &msg.PhoneActionMediaSettingsUpdated{
-		Video:       info.mediaSettings.Video,
-		Audio:       info.mediaSettings.Audio,
-		ScreenShare: info.mediaSettings.ScreenShare,
-	}
-	actionData, err := action.Marshal()
-	if err == nil {
+	if !shouldPropagate {
 		return
 	}
 
@@ -1119,6 +1123,16 @@ func (c *call) propagateMediaSettings(in MediaSettingsIn) {
 	updateData, uErr := update.Marshal()
 	if uErr == nil {
 		c.callUpdate(msg.CallUpdate_LocalMediaSettingsUpdated, updateData)
+	}
+
+	action := &msg.PhoneActionMediaSettingsUpdated{
+		Video:       info.mediaSettings.Video,
+		Audio:       info.mediaSettings.Audio,
+		ScreenShare: info.mediaSettings.ScreenShare,
+	}
+	actionData, err := action.Marshal()
+	if err == nil {
+		return
 	}
 
 	inputUsers := c.getInputUsers(c.activeCallID)
