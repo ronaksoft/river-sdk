@@ -292,7 +292,9 @@ func (r *message) updateReadHistoryInbox(u *msg.UpdateEnvelope) ([]*msg.UpdateEn
 		zap.Int64("PeerID", x.Peer.ID),
 	)
 
-	_ = repo.Dialogs.UpdateReadInboxMaxID(r.SDK().SyncCtrl().GetUserID(), x.TeamID, x.Peer.ID, x.Peer.Type, x.MaxID)
+	err = repo.Dialogs.UpdateReadInboxMaxID(r.SDK().SyncCtrl().GetUserID(), x.TeamID, x.Peer.ID, x.Peer.Type, x.MaxID)
+	r.Log().WarnOnErr("could not update read inbox max id on received update", err)
+
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }

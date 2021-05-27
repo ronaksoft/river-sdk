@@ -188,6 +188,9 @@ func (r *repoDialogs) UpdateReadInboxMaxID(userID, teamID, peerID int64, peerTyp
 		}
 		dialog.ReadInboxMaxID = maxID
 		dialog.UnreadCount, dialog.MentionedCount, err = countDialogUnread(txn, teamID, peerID, peerType, userID, maxID+1)
+		if err != nil {
+			return err
+		}
 		return saveDialog(txn, dialog)
 	})
 }

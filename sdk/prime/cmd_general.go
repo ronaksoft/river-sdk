@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/binary"
-	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
@@ -152,7 +151,7 @@ func (r *River) CreateAuthKey() (err error) {
 		return
 	}
 
-	err, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ := r.initConnect()
+	clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ, err := r.initConnect()
 	if err != nil {
 		logger.Warn("got error on InitConnect", zap.Error(err))
 		return
@@ -214,7 +213,7 @@ func (r *River) getServerKeys() (sk *msg.SystemKeys, err error) {
 	return
 
 }
-func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) {
+func (r *River) initConnect() (clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64, err error) {
 	logger.Info("CreateAuthKey() 1st Step Started :: InitConnect")
 	r.networkCtrl.WebsocketCommand(
 		request.NewCallback(
@@ -261,10 +260,6 @@ func (r *River) initConnect() (err error, clientNonce, serverNonce, serverPubFP,
 }
 func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, serverPubFP, serverDHFP, serverPQ uint64) (err error) {
 	logger.Info("CreateAuthKey() 2nd Step Started :: InitCompleteAuth")
-	req2 := &msg.InitCompleteAuth{
-		ServerNonce: serverNonce,
-		ClientNonce: clientNonce,
-	}
 
 	dhGroup, err := r.getDhGroup(sk, int64(serverDHFP))
 	if err != nil {
@@ -275,7 +270,12 @@ func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, s
 
 	dh := dhkx.CreateGroup(dhPrime, big.NewInt(int64(dhGroup.Gen)))
 	clientDhKey, _ := dh.GeneratePrivateKey(rand.Reader)
-	req2.ClientDHPubKey = clientDhKey.Bytes()
+
+	req2 := &msg.InitCompleteAuth{
+		ServerNonce:    serverNonce,
+		ClientNonce:    clientNonce,
+		ClientDHPubKey: clientDhKey.Bytes(),
+	}
 
 	p, q := domain.SplitPQ(big.NewInt(int64(serverPQ)))
 	if p.Cmp(q) < 0 {
@@ -285,13 +285,11 @@ func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, s
 		req2.P = q.Uint64()
 		req2.Q = p.Uint64()
 	}
+
 	logger.Debug("CreateAuthKey() PQ Split",
 		zap.Uint64("P", req2.P),
 		zap.Uint64("Q", req2.Q),
 	)
-
-	q2Internal := new(msg.InitCompleteAuthInternal)
-	q2Internal.SecretNonce = []byte(domain.RandomID(16))
 
 	serverPubKey, err := r.getPublicKey(sk, int64(serverPubFP))
 	if err != nil {
@@ -303,10 +301,14 @@ func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, s
 		N: n,
 		E: int(serverPubKey.E),
 	}
+
+	q2Internal := &msg.InitCompleteAuthInternal{
+		SecretNonce: []byte(domain.RandomID(16)),
+	}
 	decrypted, _ := q2Internal.Marshal()
 	encrypted, err := rsa.EncryptPKCS1v15(rand.Reader, &rsaPublicKey, decrypted)
 	if err != nil {
-		logger.Error("CreateAuthKey() -> EncryptPKCS1v15()", zap.Error(err))
+		logger.Error("CreateAuthKey() got error on EncryptPKCS1v15()", zap.Error(err))
 	}
 	req2.EncryptedPayload = encrypted
 	r.networkCtrl.WebsocketCommand(
@@ -347,8 +349,10 @@ func (r *River) initCompleteAuth(sk *msg.SystemKeys, clientNonce, serverNonce, s
 						secret = append(secret, authKeyHash[:8]...)
 						tools.MustSha256(secret, secretHash[:0])
 						if x.SecretHash != binary.LittleEndian.Uint64(secretHash[24:32]) {
-							fmt.Println(x.SecretHash, binary.LittleEndian.Uint64(secretHash[24:32]))
-							err = domain.ErrSecretNonceMismatch
+							logger.Warn("CreateAuthKey secret hashes do not match",
+								zap.Uint64("Server", x.SecretHash),
+								zap.Uint64("Client", binary.LittleEndian.Uint64(secretHash[24:32])),
+							)
 							return
 						}
 					case msg.InitAuthCompleted_RETRY:

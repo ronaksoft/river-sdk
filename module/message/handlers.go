@@ -456,6 +456,9 @@ func (r *message) sendUpdateLogs() {
 }
 func (r *message) sendLogs() {
 	_ = filepath.Walk(logs.Directory(), func(filePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
 		if strings.HasPrefix(info.Name(), "LOG") {
 			outPath := path.Join(repo.DirCache, info.Name())
 			err = domain.CopyFile(filePath, outPath)
@@ -536,7 +539,8 @@ func (r *message) messagesReadHistory(da request.Callback) {
 	}
 
 	// update read inbox max id
-	_ = repo.Dialogs.UpdateReadInboxMaxID(r.SDK().GetConnInfo().PickupUserID(), da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	err := repo.Dialogs.UpdateReadInboxMaxID(r.SDK().GetConnInfo().PickupUserID(), da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID)
+	r.Log().WarnOnErr("could not update read inbox max id", err)
 
 	// send the request to server
 	r.SDK().QueueCtrl().EnqueueCommand(da)
