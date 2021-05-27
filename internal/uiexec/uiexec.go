@@ -82,15 +82,6 @@ func ExecCompleteCB(handler domain.MessageHandler, out *rony.MessageEnvelope) {
 	})
 }
 
-func ExecTimeoutCB(h domain.TimeoutCallback) {
-	if h == nil {
-		return
-	}
-	exec("timeoutCB", 0, func() {
-		h()
-	})
-}
-
 func ExecUpdate(constructor int64, m proto.Message) {
 	buf := pools.Buffer.FromProto(m)
 	exec("update", constructor, func() {
