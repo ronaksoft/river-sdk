@@ -6,7 +6,9 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
+	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"sync"
 	"time"
@@ -92,6 +94,12 @@ func (c *callback) Constructor() int64 {
 }
 
 func (c *callback) OnComplete(m *rony.MessageEnvelope) {
+	logger.Info("onComplete called",
+		zap.Uint64("ReqID", c.envelope.RequestID),
+		zap.String("ReqC", registry.ConstructorName(c.envelope.Constructor)),
+		zap.String("ResC", registry.ConstructorName(m.Constructor)),
+		zap.Duration("D", time.Duration(tools.NanoTime()-c.createdOn)),
+	)
 	unregister(c.envelope.RequestID)
 	if c.preComplete != nil {
 		c.preComplete(m)
@@ -107,6 +115,12 @@ func (c *callback) OnComplete(m *rony.MessageEnvelope) {
 }
 
 func (c *callback) OnTimeout() {
+	logger.Info("onTimeout called",
+		zap.Uint64("ReqID", c.envelope.RequestID),
+		zap.String("ReqC", registry.ConstructorName(c.envelope.Constructor)),
+		zap.Duration("D", time.Duration(tools.NanoTime()-c.createdOn)),
+		zap.Duration("D-FLY", time.Duration(tools.NanoTime()-c.sentOn)),
+	)
 	unregister(c.envelope.RequestID)
 	if c.onTimeout == nil {
 		return
