@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
 	"git.ronaksoft.com/river/sdk/module"
+	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
 	"go.uber.org/zap"
 )
@@ -54,7 +55,7 @@ func (r *notification) clientGetNotificationDismissTime(da request.Callback) {
 
 	ts, err := repo.Notifications.GetNotificationDismissTime(da.TeamID(), req.Peer)
 	if err != nil {
-		da.OnComplete(errors.Message(da.RequestID(), "00", err.Error()))
+		da.Response(rony.C_Error, errors.New("00", err.Error()))
 		return
 	}
 

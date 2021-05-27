@@ -37,14 +37,14 @@ func (r *RemoteWrite) flusher() {
 		qty       = 0
 	)
 	for {
-		v, err := r.rBuf.Get()
+		v, err := r.rBuf.Poll(time.Second)
 		if err != nil {
 			continue
 		}
 		chunkBuff := v.(*pools.ByteBuffer)
 		writeBuff.Write(*chunkBuff.Bytes())
 		pools.Buffer.Put(chunkBuff)
-		if r.rBuf.Len() > 0 && qty < 10 {
+		if r.rBuf.Len() > 0 && qty < 25 {
 			qty++
 			continue
 		}

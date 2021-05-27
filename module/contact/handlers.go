@@ -50,9 +50,7 @@ func (r *contact) contactsAdd(da request.Callback) {
 	}
 
 	if da.TeamID() != 0 {
-		out := &rony.MessageEnvelope{}
-		out.Fill(out.RequestID, rony.C_Error, &rony.Error{Code: "00", Items: "teams cannot add contact"}, da.Envelope().Header...)
-		da.OnComplete(out)
+		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: "teams cannot add contact"})
 		return
 	}
 
@@ -86,7 +84,7 @@ func (r *contact) contactsImport(da request.Callback) {
 	}
 
 	if da.TeamID() != 0 {
-		da.OnComplete(errors.Message(da.RequestID(), "00", "teams cannot import contact"))
+		da.Response(rony.C_Error, errors.New("00", "teams cannot import contact"))
 		return
 	}
 
@@ -144,7 +142,7 @@ func (r *contact) contactsImport(da request.Callback) {
 
 func (r *contact) contactsDelete(da request.Callback) {
 	if da.TeamID() != 0 {
-		da.OnComplete(errors.Message(da.RequestID(), "00", "teams cannot delete contact"))
+		da.Response(rony.C_Error, errors.New("00", "teams cannot delete contact"))
 		return
 	}
 
@@ -243,7 +241,7 @@ func (r *contact) contactsResetTopPeer(da request.Callback) {
 
 	err := repo.TopPeers.Delete(req.Category, da.TeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if err != nil {
-		da.OnComplete(errors.Message(da.RequestID(), "00", err.Error()))
+		da.Response(rony.C_Error, errors.New("00", err.Error()))
 		return
 	}
 

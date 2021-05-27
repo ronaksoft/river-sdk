@@ -66,7 +66,7 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 	if thumbID != 0 {
 		err := r.uploadFile(da.Envelope(), nil, thumbID, reqMedia.ThumbFilePath, reqMedia.Peer.ID)
 		if err != nil {
-			da.OnComplete(errors.Message(da.RequestID(), "E100", err.Error()))
+			da.Response(rony.C_Error, errors.New("00", err.Error()))
 			return
 		}
 	}
@@ -111,7 +111,7 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 	} else {
 		err := r.uploadFile(da.Envelope(), da, fileID, reqMedia.FilePath, reqMedia.Peer.ID)
 		if err != nil {
-			da.OnComplete(errors.Message(da.RequestID(), "E100", err.Error()))
+			da.Response(rony.C_Error, errors.New("00", err.Error()))
 			return
 		}
 		// File just uploaded
@@ -295,7 +295,5 @@ func (r *River) clientGlobalSearch(da request.Callback) {
 	res.Groups = minirepo.Groups.Search(strings.ToLower(req.Text), int(req.Limit))
 	res.MatchedGroups = append(res.MatchedGroups, res.Groups...)
 
-	out := &rony.MessageEnvelope{}
-	out.Fill(da.RequestID(), msg.C_ClientSearchResult, res, da.Envelope().Header...)
-	da.OnComplete(out)
+	da.Response(msg.C_ClientSearchResult, res)
 }

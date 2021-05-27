@@ -8,6 +8,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/request"
+	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
 )
 
@@ -66,7 +67,7 @@ func (b *Base) Init(sdk SDK, logger *logs.Logger) {
 func (b *Base) Execute(da request.Callback) {
 	h := b.handlers[da.Constructor()]
 	if h == nil {
-		da.OnComplete(errors.Message(da.RequestID(), "E100", "MODULE_HANDLER_NOT_FOUND"))
+		da.Response(rony.C_Error, errors.New("00", "MODULE_HANDLER_NOT_FOUND"))
 		return
 	}
 

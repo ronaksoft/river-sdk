@@ -101,9 +101,7 @@ func (r *River) messagesGetDialogs(da request.Callback) {
 		}
 	}
 
-	out := &rony.MessageEnvelope{}
-	out.Fill(da.RequestID(), msg.C_MessagesDialogs, res, da.Envelope().Header...)
-	da.OnComplete(out)
+	da.Response(msg.C_MessagesDialogs, res)
 }
 
 func (r *River) contactsGet(da request.Callback) {
@@ -114,11 +112,9 @@ func (r *River) contactsGet(da request.Callback) {
 
 	res, err := minirepo.Users.ReadAllContacts()
 	if err != nil {
-		da.OnComplete(errors.Message(da.RequestID(), "00", err.Error()))
+		da.Response(rony.C_Error, errors.New("00", err.Error()))
 		return
 	}
 
-	out := &rony.MessageEnvelope{}
-	out.Fill(da.RequestID(), msg.C_ContactsMany, res, da.Envelope().Header...)
-	da.OnComplete(out)
+	da.Response(msg.C_ContactsMany, res)
 }

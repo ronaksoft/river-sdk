@@ -5,6 +5,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
+	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
 	"strings"
 	"time"
@@ -143,7 +144,7 @@ func (r *search) clientPutRecentSearch(da request.Callback) {
 	err := repo.RecentSearches.Put(da.TeamID(), recentSearch)
 
 	if err != nil {
-		da.OnComplete(errors.Message(da.RequestID(), "00", err.Error()))
+		da.Response(rony.C_Error, errors.New("00", err.Error()))
 		return
 	}
 
@@ -162,7 +163,7 @@ func (r *search) clientRemoveAllRecentSearches(da request.Callback) {
 	err := repo.RecentSearches.Clear(da.TeamID())
 
 	if err != nil {
-		da.OnComplete(errors.Message(da.RequestID(), "00", err.Error()))
+		da.Response(rony.C_Error, errors.New("00", err.Error()))
 		return
 	}
 
@@ -181,7 +182,7 @@ func (r *search) clientRemoveRecentSearch(da request.Callback) {
 	err := repo.RecentSearches.Delete(da.TeamID(), req.Peer)
 
 	if err != nil {
-		da.OnComplete(errors.Message(da.RequestID(), "00", err.Error()))
+		da.Response(rony.C_Error, errors.New("00", err.Error()))
 		return
 	}
 

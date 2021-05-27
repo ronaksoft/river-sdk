@@ -4,6 +4,7 @@ import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
+	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
 )
 
@@ -41,7 +42,7 @@ func (r *team) clientGetTeamCounters(da request.Callback) {
 	unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.SDK().GetConnInfo().PickupUserID(), req.Team.ID, req.WithMutes)
 
 	if err != nil {
-		da.OnComplete(errors.Message(da.RequestID(), "00", err.Error()))
+		da.Response(rony.C_Error, errors.New("00", err.Error()))
 		return
 	}
 

@@ -86,7 +86,7 @@ func (r *River) executeCommand(reqCB request.Callback) (err error) {
 	return
 }
 func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.Callback) {
-	logger.Debug("execute local command",
+	logger.Info("execute local command",
 		zap.Uint64("ReqID", reqCB.RequestID()),
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
@@ -100,7 +100,7 @@ func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.
 	handler(reqCB)
 }
 func (r *River) executeRemoteCommand(reqCB request.Callback) {
-	logger.Debug("execute remote command",
+	logger.Info("execute remote command",
 		zap.Uint64("ReqID", reqCB.RequestID()),
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
