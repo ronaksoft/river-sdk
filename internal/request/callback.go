@@ -3,6 +3,7 @@ package request
 import (
 	"encoding/json"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/tools"
@@ -98,7 +99,11 @@ func (c *callback) OnComplete(m *rony.MessageEnvelope) {
 	if c.onComplete == nil {
 		return
 	}
-	c.onComplete(m)
+	if c.ui {
+		uiexec.ExecCompleteCB(c.onComplete, m)
+	} else {
+		c.onComplete(m)
+	}
 }
 
 func (c *callback) OnTimeout() {
@@ -106,8 +111,11 @@ func (c *callback) OnTimeout() {
 	if c.onTimeout == nil {
 		return
 	}
-	c.onTimeout()
-
+	if c.ui {
+		uiexec.ExecTimeoutCB(c.onTimeout)
+	} else {
+		c.onTimeout()
+	}
 }
 
 func (c *callback) OnProgress(percent int64) {

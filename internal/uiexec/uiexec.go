@@ -20,15 +20,35 @@ const (
 var (
 	updateCB     domain.UpdateReceivedCallback
 	dataSyncedCB domain.DataSyncedCallback
-	funcChan     = make(chan execItem, 128)
+	callbackChan = make(chan execItem, 128)
 	logger       *logs.Logger
 )
 
+type kind int64
+
+const (
+	update kind = iota
+	completeCB
+	timeoutCB
+)
+
+func (k kind) String() string {
+	switch k {
+	case update:
+		return "Update"
+	case completeCB:
+		return "CompleteCB"
+	case timeoutCB:
+		return "TimeoutCB"
+	}
+	panic("invalid ui-exec kind")
+}
+
 type execItem struct {
-	fn          func()
 	insertTime  int64
 	constructor int64
-	kind        string
+	kind        kind
+	fn          func()
 }
 
 func init() {
@@ -39,7 +59,7 @@ func init() {
 }
 
 func executor() {
-	for it := range funcChan {
+	for it := range callbackChan {
 		startTime := tools.NanoTime()
 		ctx, cf := context.WithTimeout(context.Background(), time.Second)
 		doneChan := make(chan struct{})
@@ -52,7 +72,7 @@ func executor() {
 		case <-ctx.Done():
 			logger.Error("timeout waiting for UI-Exec to return",
 				zap.String("C", registry.ConstructorName(it.constructor)),
-				zap.String("Kind", it.kind),
+				zap.String("Kind", it.kind.String()),
 			)
 		}
 		cf() // Cancel func
@@ -60,7 +80,7 @@ func executor() {
 		if d := time.Duration(endTime - it.insertTime); d > maxDelay {
 			logger.Error("Too Long UIExec",
 				zap.String("C", registry.ConstructorName(it.constructor)),
-				zap.String("Kind", it.kind),
+				zap.String("Kind", it.kind.String()),
 				zap.Duration("ExecT", time.Duration(endTime-startTime)),
 				zap.Duration("WaitT", time.Duration(endTime-it.insertTime)),
 			)
@@ -77,17 +97,27 @@ func ExecCompleteCB(handler domain.MessageHandler, out *rony.MessageEnvelope) {
 	if handler == nil {
 		return
 	}
-	exec("completeCB", out.Constructor, func() {
+	exec(completeCB, out.Constructor, func() {
 		handler(out)
+	})
+}
+
+func ExecTimeoutCB(h domain.TimeoutCallback) {
+	if h == nil {
+		return
+	}
+	exec(timeoutCB, 0, func() {
+		h()
 	})
 }
 
 func ExecUpdate(constructor int64, m proto.Message) {
 	buf := pools.Buffer.FromProto(m)
-	exec("update", constructor, func() {
+	exec(update, constructor, func() {
 		updateCB(constructor, *buf.Bytes())
 		pools.Buffer.Put(buf)
 	})
+
 }
 
 func ExecDataSynced(dialogs, contacts, gifs bool) {
@@ -95,17 +125,17 @@ func ExecDataSynced(dialogs, contacts, gifs bool) {
 }
 
 // Exec pass given function to UIExecutor buffered channel
-func exec(kind string, constructor int64, fn func()) {
+func exec(kind kind, constructor int64, fn func()) {
 	select {
-	case funcChan <- execItem{
+	case callbackChan <- execItem{
 		kind:        kind,
 		fn:          fn,
 		insertTime:  tools.NanoTime(),
 		constructor: constructor,
 	}:
 	default:
-		logger.Error("Error On Pushing To UIExec",
-			zap.String("Kind", kind),
+		logger.Error("func channel is full we discard item",
+			zap.String("Kind", kind.String()),
 			zap.String("C", registry.ConstructorName(constructor)),
 		)
 	}
