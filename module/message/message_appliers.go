@@ -34,20 +34,35 @@ func (r *message) messagesDialogs(e *rony.MessageEnvelope) {
 	for _, message := range x.Messages {
 		mMessages[message.ID] = message
 	}
+
+	waitGroup := pools.AcquireWaitGroup()
 	for _, dialog := range x.Dialogs {
-		topMessage := mMessages[dialog.TopMessageID]
-		if topMessage == nil {
-			r.Log().Error("got dialog with nil top message", zap.Int64("MessageID", dialog.TopMessageID))
-			err := repo.Dialogs.Save(dialog)
-			r.Log().WarnOnErr("got error on save dialog", err)
-		} else {
-			err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
-			r.Log().WarnOnErr("got error on save new dialog", err)
-			hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, dialog.TopMessageID)
-		}
+		waitGroup.Add(1)
+		go func(dialog *msg.Dialog) {
+			topMessage := mMessages[dialog.TopMessageID]
+			if topMessage == nil {
+				r.Log().Error("got dialog with nil top message", zap.Int64("MessageID", dialog.TopMessageID))
+				err := repo.Dialogs.Save(dialog)
+				r.Log().WarnOnErr("got error on save dialog", err)
+			} else {
+				err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
+				r.Log().WarnOnErr("got error on save new dialog", err)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, msg.MediaCategory_MediaCategoryNone, dialog.TopMessageID, dialog.TopMessageID)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, msg.MediaCategory_MediaCategoryAudio, dialog.TopMessageID, dialog.TopMessageID)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, msg.MediaCategory_MediaCategoryVoice, dialog.TopMessageID, dialog.TopMessageID)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, msg.MediaCategory_MediaCategoryMedia, dialog.TopMessageID, dialog.TopMessageID)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, msg.MediaCategory_MediaCategoryFile, dialog.TopMessageID, dialog.TopMessageID)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, msg.MediaCategory_MediaCategoryGif, dialog.TopMessageID, dialog.TopMessageID)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, msg.MediaCategory_MediaCategoryWeb, dialog.TopMessageID, dialog.TopMessageID)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, msg.MediaCategory_MediaCategoryContact, dialog.TopMessageID, dialog.TopMessageID)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, msg.MediaCategory_MediaCategoryLocation, dialog.TopMessageID, dialog.TopMessageID)
+			}
+			waitGroup.Done()
+		}(dialog)
+
 	}
 	// save Groups & Users & Messages
-	waitGroup := pools.AcquireWaitGroup()
+
 	waitGroup.Add(3)
 	go func() {
 		_ = repo.Users.Save(x.Users...)
