@@ -7,6 +7,7 @@ import (
 	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/registry"
+	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"time"
@@ -19,13 +20,13 @@ const (
 var (
 	updateCB     domain.UpdateReceivedCallback
 	dataSyncedCB domain.DataSyncedCallback
-	funcChan     = make(chan execItem, 100)
+	funcChan     = make(chan execItem, 128)
 	logger       *logs.Logger
 )
 
 type execItem struct {
 	fn          func()
-	insertTime  time.Time
+	insertTime  int64
 	constructor int64
 	kind        string
 }
@@ -36,7 +37,7 @@ func init() {
 	dataSyncedCB = func(dialogs, contacts, gifs bool) {}
 	go func() {
 		for it := range funcChan {
-			startTime := time.Now()
+			startTime := tools.NanoTime()
 			ctx, cf := context.WithTimeout(context.Background(), time.Second)
 			doneChan := make(chan struct{})
 			go func() {
@@ -52,13 +53,13 @@ func init() {
 				)
 			}
 			cf() // Cancel func
-			endTime := time.Now()
-			if d := endTime.Sub(it.insertTime); d > maxDelay {
+			endTime := tools.NanoTime()
+			if d := time.Duration(endTime - it.insertTime); d > maxDelay {
 				logger.Error("Too Long UIExec",
 					zap.String("C", registry.ConstructorName(it.constructor)),
 					zap.String("Kind", it.kind),
-					zap.Duration("ExecT", endTime.Sub(startTime)),
-					zap.Duration("WaitT", endTime.Sub(it.insertTime)),
+					zap.Duration("ExecT", time.Duration(endTime-startTime)),
+					zap.Duration("WaitT", time.Duration(endTime-it.insertTime)),
 				)
 			}
 		}
@@ -109,7 +110,7 @@ func exec(kind string, constructor int64, fn func()) {
 	case funcChan <- execItem{
 		kind:        kind,
 		fn:          fn,
-		insertTime:  time.Now(),
+		insertTime:  tools.NanoTime(),
 		constructor: constructor,
 	}:
 	default:
