@@ -17,7 +17,7 @@ require (
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/getsentry/sentry-go v0.10.0
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
-	github.com/gobwas/pool v0.2.1
+	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.0.4
 	github.com/juju/ratelimit v1.0.1
 	github.com/miekg/dns v1.1.30 // indirect
@@ -36,8 +36,8 @@ require (
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	github.com/willf/bitset v1.1.11 // indirect
 	go.uber.org/zap v1.16.0
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
-	golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6 // indirect
+	golang.org/x/mobile v0.0.0-20210527171505-7e972142eb43
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect

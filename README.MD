@@ -6,13 +6,20 @@ We have two versions of the SDK, one is the complete solution named 'prime' and 
 is useful when we don't need the full functionality.
 
 # How TO Build for Mobiles
-for iOS:
-run `sh build-ios-prime.sh`
-run `sh build-ios-mini.sh`
+### Prepare ios project:
+1. `git clone https://git.ronaksoft.com/river/ios.git`
+2. `cd ./ios`
+3. `git submodule update --init --remote`
+4. `pod install`
+5. `export RIVER_IOS_PATH=$(pwd)`   
+6. build SDK for iOS:
+   1. change directory sdk root folder
+   2. run `RIVER_IOS_PATH=. sh build-ios-prime.sh`
+   3. run `RIVER_IOS_PATH=. sh build-ios-mini.sh`
 
 for Android:
-run `sh build-android-prime.sh`
-run `sh build-android-mini.sh`
+run `RIVER_IOS_PATH=<root_folder_of_ios_project> sh build-android-prime.sh`
+
 
 
 # Main Components
