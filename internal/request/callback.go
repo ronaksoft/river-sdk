@@ -100,7 +100,7 @@ func (c *callback) OnComplete(m *rony.MessageEnvelope) {
 		return
 	}
 	if c.ui {
-		uiexec.ExecSuccessCB(c.onComplete, m)
+		uiexec.ExecCompleteCB(c.onComplete, m)
 	} else {
 		c.onComplete(m)
 	}

@@ -7,8 +7,8 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/ctrl_file/executor"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
-	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"io"
@@ -378,8 +378,9 @@ func (a *UploadAction) ID() int32 {
 
 func (a *UploadAction) Do(ctx context.Context) {
 	startTime := domain.Now()
-	bytes := pbytes.GetLen(int(a.req.cfr.ChunkSize))
-	defer pbytes.Put(bytes)
+
+	bytes := pools.Bytes.GetLen(int(a.req.cfr.ChunkSize))
+	defer pools.Bytes.Put(bytes)
 
 	// Calculate offset based on chunk id and the chunk size
 	offset := a.id * a.req.cfr.ChunkSize

@@ -2,7 +2,6 @@ package domain
 
 import (
 	"crypto/sha256"
-	"github.com/gobwas/pool/pbytes"
 	"math/big"
 )
 
@@ -29,7 +28,7 @@ func H(data ...[]byte) []byte {
 }
 
 func SH(data, salt []byte) []byte {
-	b := pbytes.GetCap(len(data) + 2*len(salt))
+	b := make([]byte, 0, len(data)+2*len(salt))
 	b = append(b, salt...)
 	b = append(b, data...)
 	b = append(b, salt...)

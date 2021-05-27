@@ -4,8 +4,8 @@ import (
 	"context"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	"github.com/gobwas/pool/pbytes"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
@@ -35,35 +35,37 @@ func init() {
 	logger = logs.With("UIExec")
 	updateCB = func(constructor int64, msg []byte) {}
 	dataSyncedCB = func(dialogs, contacts, gifs bool) {}
-	go func() {
-		for it := range funcChan {
-			startTime := tools.NanoTime()
-			ctx, cf := context.WithTimeout(context.Background(), time.Second)
-			doneChan := make(chan struct{})
-			go func() {
-				it.fn()
-				doneChan <- struct{}{}
-			}()
-			select {
-			case <-doneChan:
-			case <-ctx.Done():
-				logger.Error("timeout waiting for UI-Exec to return",
-					zap.String("C", registry.ConstructorName(it.constructor)),
-					zap.String("Kind", it.kind),
-				)
-			}
-			cf() // Cancel func
-			endTime := tools.NanoTime()
-			if d := time.Duration(endTime - it.insertTime); d > maxDelay {
-				logger.Error("Too Long UIExec",
-					zap.String("C", registry.ConstructorName(it.constructor)),
-					zap.String("Kind", it.kind),
-					zap.Duration("ExecT", time.Duration(endTime-startTime)),
-					zap.Duration("WaitT", time.Duration(endTime-it.insertTime)),
-				)
-			}
+	go executor()
+}
+
+func executor() {
+	for it := range funcChan {
+		startTime := tools.NanoTime()
+		ctx, cf := context.WithTimeout(context.Background(), time.Second)
+		doneChan := make(chan struct{})
+		go func() {
+			it.fn()
+			doneChan <- struct{}{}
+		}()
+		select {
+		case <-doneChan:
+		case <-ctx.Done():
+			logger.Error("timeout waiting for UI-Exec to return",
+				zap.String("C", registry.ConstructorName(it.constructor)),
+				zap.String("Kind", it.kind),
+			)
 		}
-	}()
+		cf() // Cancel func
+		endTime := tools.NanoTime()
+		if d := time.Duration(endTime - it.insertTime); d > maxDelay {
+			logger.Error("Too Long UIExec",
+				zap.String("C", registry.ConstructorName(it.constructor)),
+				zap.String("Kind", it.kind),
+				zap.Duration("ExecT", time.Duration(endTime-startTime)),
+				zap.Duration("WaitT", time.Duration(endTime-it.insertTime)),
+			)
+		}
+	}
 }
 
 func Init(updateReceived domain.UpdateReceivedCallback, dataSynced domain.DataSyncedCallback) {
@@ -71,33 +73,30 @@ func Init(updateReceived domain.UpdateReceivedCallback, dataSynced domain.DataSy
 	dataSyncedCB = dataSynced
 }
 
-func ExecSuccessCB(handler domain.MessageHandler, out *rony.MessageEnvelope) {
-	if handler != nil {
-		exec("successCB", out.Constructor, func() {
-			handler(out)
-		})
+func ExecCompleteCB(handler domain.MessageHandler, out *rony.MessageEnvelope) {
+	if handler == nil {
+		return
 	}
+	exec("completeCB", out.Constructor, func() {
+		handler(out)
+	})
 }
 
 func ExecTimeoutCB(h domain.TimeoutCallback) {
-	if h != nil {
-		logger.Info("ExecTimeout")
-		exec("timeoutCB", 0, func() {
-			h()
-		})
+	if h == nil {
+		return
 	}
+	exec("timeoutCB", 0, func() {
+		h()
+	})
 }
 
 func ExecUpdate(constructor int64, m proto.Message) {
-	mo := proto.MarshalOptions{UseCachedSize: true}
-	b := pbytes.GetCap(mo.Size(m))
-	b, err := mo.MarshalAppend(b, m)
-	if err == nil {
-		exec("update", constructor, func() {
-			updateCB(constructor, b)
-			pbytes.Put(b)
-		})
-	}
+	buf := pools.Buffer.FromProto(m)
+	exec("update", constructor, func() {
+		updateCB(constructor, *buf.Bytes())
+		pools.Buffer.Put(buf)
+	})
 }
 
 func ExecDataSynced(dialogs, contacts, gifs bool) {
@@ -114,7 +113,10 @@ func exec(kind string, constructor int64, fn func()) {
 		constructor: constructor,
 	}:
 	default:
-		logger.Error("Error On Pushing To UIExec")
+		logger.Error("Error On Pushing To UIExec",
+			zap.String("Kind", kind),
+			zap.String("C", registry.ConstructorName(constructor)),
+		)
 	}
 
 }
