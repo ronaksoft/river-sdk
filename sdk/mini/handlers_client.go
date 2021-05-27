@@ -64,7 +64,7 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 	}
 
 	if thumbID != 0 {
-		err := r.uploadFile(da.Envelope(), nil, thumbID, reqMedia.ThumbFilePath, reqMedia.Peer.ID)
+		err := r.uploadFile(nil, thumbID, reqMedia.ThumbFilePath)
 		if err != nil {
 			da.Response(rony.C_Error, errors.New("00", err.Error()))
 			return
@@ -109,7 +109,7 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 		}
 		x.MediaData, _ = doc.Marshal()
 	} else {
-		err := r.uploadFile(da.Envelope(), da, fileID, reqMedia.FilePath, reqMedia.Peer.ID)
+		err := r.uploadFile(da, fileID, reqMedia.FilePath)
 		if err != nil {
 			da.Response(rony.C_Error, errors.New("00", err.Error()))
 			return
@@ -193,7 +193,7 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation,
 	}
 	return nil, domain.ErrServer
 }
-func (r *River) uploadFile(in *rony.MessageEnvelope, da request.Callback, fileID int64, filePath string, peerID int64) error {
+func (r *River) uploadFile(da request.Callback, fileID int64, filePath string) error {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
