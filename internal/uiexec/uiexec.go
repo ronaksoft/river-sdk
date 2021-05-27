@@ -21,6 +21,7 @@ var (
 	updateCB     domain.UpdateReceivedCallback
 	dataSyncedCB domain.DataSyncedCallback
 	callbackChan = make(chan execItem, 128)
+	rateLimit = make(chan struct{}, 5)
 	logger       *logs.Logger
 )
 
@@ -60,31 +61,38 @@ func init() {
 
 func executor() {
 	for it := range callbackChan {
-		startTime := tools.NanoTime()
-		ctx, cf := context.WithTimeout(context.Background(), time.Second)
-		doneChan := make(chan struct{})
-		go func() {
-			it.fn()
-			doneChan <- struct{}{}
-		}()
-		select {
-		case <-doneChan:
-		case <-ctx.Done():
-			logger.Error("timeout waiting for UI-Exec to return",
-				zap.String("C", registry.ConstructorName(it.constructor)),
-				zap.String("Kind", it.kind.String()),
-			)
-		}
-		cf() // Cancel func
-		endTime := tools.NanoTime()
-		if d := time.Duration(endTime - it.insertTime); d > maxDelay {
-			logger.Error("Too Long UIExec",
-				zap.String("C", registry.ConstructorName(it.constructor)),
-				zap.String("Kind", it.kind.String()),
-				zap.Duration("ExecT", time.Duration(endTime-startTime)),
-				zap.Duration("WaitT", time.Duration(endTime-it.insertTime)),
-			)
-		}
+		rateLimit <- struct{}{}
+		go func(it execItem) {
+			defer func() {
+				<- rateLimit
+			}()
+			startTime := tools.NanoTime()
+			ctx, cf := context.WithTimeout(context.Background(), time.Second)
+			doneChan := make(chan struct{})
+			go func() {
+				it.fn()
+				doneChan <- struct{}{}
+			}()
+			select {
+			case <-doneChan:
+			case <-ctx.Done():
+				logger.Error("timeout waiting for UI-Exec to return",
+					zap.String("C", registry.ConstructorName(it.constructor)),
+					zap.String("Kind", it.kind.String()),
+				)
+			}
+			cf() // Cancel func
+			endTime := tools.NanoTime()
+			if d := time.Duration(endTime - it.insertTime); d > maxDelay {
+				logger.Error("Too Long UIExec",
+					zap.String("C", registry.ConstructorName(it.constructor)),
+					zap.String("Kind", it.kind.String()),
+					zap.Duration("ExecT", time.Duration(endTime-startTime)),
+					zap.Duration("WaitT", time.Duration(endTime-it.insertTime)),
+				)
+			}
+		}(it)
+
 	}
 }
 
