@@ -1,6 +1,8 @@
 package riversdk
 
-import messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
+import (
+	"git.ronaksoft.com/river/sdk/internal/hole"
+)
 
 /*
    Creation Time: 2019 - Jul - 09
@@ -12,54 +14,54 @@ import messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 */
 
 type MessageHole struct {
-	lists map[string]*messageHole.HoleManager
+	lists map[string]*hole.Detector
 }
 
 func (mh *MessageHole) Init() {
-	mh.lists = make(map[string]*messageHole.HoleManager)
+	mh.lists = make(map[string]*hole.Detector)
 }
 
-func (mh *MessageHole) getManager(key string) *messageHole.HoleManager {
+func (mh *MessageHole) detector(key string) *hole.Detector {
 	hm, ok := mh.lists[key]
 	if !ok {
-		hm = &messageHole.HoleManager{}
+		hm = &hole.Detector{}
 		mh.lists[key] = hm
 	}
 	return hm
 }
 
 func (mh *MessageHole) InsertHole(key string, min, max int64) {
-	m := mh.getManager(key)
-	m.InsertBar(messageHole.Bar{Min: min, Max: max, Type: messageHole.Hole})
+	m := mh.detector(key)
+	m.InsertBar(hole.Bar{Min: min, Max: max, Type: hole.Hole})
 }
 
 func (mh *MessageHole) InsertFill(key string, min, max int64) {
-	m := mh.getManager(key)
-	m.InsertBar(messageHole.Bar{Min: min, Max: max, Type: messageHole.Filled})
+	m := mh.detector(key)
+	m.InsertBar(hole.Bar{Min: min, Max: max, Type: hole.Filled})
 }
 
 func (mh *MessageHole) IsInHole(key string, msgID int64) bool {
-	m := mh.getManager(key)
+	m := mh.detector(key)
 	return m.IsPointHole(msgID)
 }
 
 func (mh *MessageHole) IsRangeFilled(key string, min, max int64) bool {
-	m := mh.getManager(key)
+	m := mh.detector(key)
 	return m.IsRangeFilled(min, max)
 }
 
 func (mh *MessageHole) SetLowerFilled(key string) {
-	m := mh.getManager(key)
+	m := mh.detector(key)
 	m.SetLowerFilled()
 }
 
 func (mh *MessageHole) SetUpperFilled(key string, maxID int64) {
-	m := mh.getManager(key)
+	m := mh.detector(key)
 	m.SetUpperFilled(maxID)
 }
 
 func (mh *MessageHole) String(key string) string {
-	m := mh.getManager(key)
+	m := mh.detector(key)
 	return m.String()
 }
 

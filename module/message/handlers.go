@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/hole"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
@@ -580,13 +580,13 @@ func (r *message) messagesGetHistory(da request.Callback) {
 		req.MaxID = dialog.TopMessageID
 		fallthrough
 	case req.MinID == 0 && req.MaxID != 0:
-		b, bar := messageHole.GetLowerFilled(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID)
+		b, bar := hole.GetLowerFilled(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0, req.MaxID)
 		if !b {
 			r.Log().Info("detected hole (With MaxID Only)",
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0)),
+				zap.String("Holes", hole.PrintHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
 			r.SDK().QueueCtrl().EnqueueCommand(da)
 			return
@@ -594,13 +594,13 @@ func (r *message) messagesGetHistory(da request.Callback) {
 		messages, users, groups := repo.Messages.GetMessageHistory(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, bar.Max, req.Limit)
 		fillMessagesMany(da, messages, users, groups)
 	case req.MinID != 0 && req.MaxID == 0:
-		b, bar := messageHole.GetUpperFilled(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID)
+		b, bar := hole.GetUpperFilled(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID)
 		if !b {
 			r.Log().Info("detected hole (With MinID Only)",
 				zap.Int64("MinID", req.MinID),
 				zap.Int64("PeerID", req.Peer.ID),
 				zap.Int64("TopMsgID", dialog.TopMessageID),
-				zap.String("Holes", messageHole.PrintHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0)),
+				zap.String("Holes", hole.PrintHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0)),
 			)
 			r.SDK().QueueCtrl().EnqueueCommand(da)
 			return
@@ -608,7 +608,7 @@ func (r *message) messagesGetHistory(da request.Callback) {
 		messages, users, groups := repo.Messages.GetMessageHistory(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), bar.Min, 0, req.Limit)
 		fillMessagesMany(da, messages, users, groups)
 	default:
-		b := messageHole.IsHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID, req.MaxID)
+		b := hole.IsHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0, req.MinID, req.MaxID)
 		if b {
 			r.Log().Info("detected hole (With Min & Max)",
 				zap.Int64("MinID", req.MinID),
@@ -654,11 +654,11 @@ func (r *message) genGetHistoryCB(
 			if msgCount := len(x.Messages); msgCount > 0 {
 				switch {
 				case minID == 0 && maxID != 0:
-					messageHole.InsertFill(teamID, peerID, peerType, 0, x.Messages[msgCount-1].ID, maxID)
+					hole.InsertFill(teamID, peerID, peerType, 0, x.Messages[msgCount-1].ID, maxID)
 				case minID != 0 && maxID == 0:
-					messageHole.InsertFill(teamID, peerID, peerType, 0, minID, x.Messages[0].ID)
+					hole.InsertFill(teamID, peerID, peerType, 0, minID, x.Messages[0].ID)
 				case minID == 0 && maxID == 0:
-					messageHole.InsertFill(teamID, peerID, peerType, 0, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+					hole.InsertFill(teamID, peerID, peerType, 0, x.Messages[msgCount-1].ID, x.Messages[0].ID)
 				}
 			}
 
@@ -705,7 +705,7 @@ func (r *message) messagesGetMediaHistory(da request.Callback) {
 
 	// Prepare the the result before sending back to the client
 	da.SetPreComplete(r.genGetMediaHistoryCB(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Cat))
-	b, bar := messageHole.GetLowerFilled(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.Cat, req.MaxID)
+	b, bar := hole.GetLowerFilled(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.Cat, req.MaxID)
 	if !b {
 		r.Log().Info("detected hole (With MaxID Only)",
 			zap.Int64("MaxID", req.MaxID),
@@ -713,7 +713,7 @@ func (r *message) messagesGetMediaHistory(da request.Callback) {
 			zap.String("PeerType", req.Peer.Type.String()),
 			zap.String("Cat", req.Cat.String()),
 			zap.Int64("TopMsgID", dialog.TopMessageID),
-			zap.String("Holes", messageHole.PrintHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.Cat)),
+			zap.String("Holes", hole.PrintHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.Cat)),
 		)
 		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
@@ -740,9 +740,9 @@ func (r *message) genGetMediaHistoryCB(
 			// fill messages hole based on the server response
 			if msgCount := len(x.Messages); msgCount > 0 {
 				if maxID == 0 {
-					messageHole.InsertFill(teamID, peerID, peerType, cat, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+					hole.InsertFill(teamID, peerID, peerType, cat, x.Messages[msgCount-1].ID, x.Messages[0].ID)
 				} else {
-					messageHole.InsertFill(teamID, peerID, peerType, cat, x.Messages[msgCount-1].ID, maxID)
+					hole.InsertFill(teamID, peerID, peerType, cat, x.Messages[msgCount-1].ID, maxID)
 				}
 			}
 

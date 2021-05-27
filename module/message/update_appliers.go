@@ -3,7 +3,7 @@ package message
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
-	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
+	"git.ronaksoft.com/river/sdk/internal/hole"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
@@ -81,7 +81,7 @@ func (r *message) updateNewMessage(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 	go func() {
 		err = repo.Messages.SaveNew(x.Message, r.SDK().SyncCtrl().GetUserID())
 		r.Log().WarnOnErr("got error on saving new message while applying new message", err, zap.Int64("SenderID", x.Sender.ID))
-		messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, x.Message.ID)
+		hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, x.Message.ID)
 		waitGroup.Done()
 	}()
 
@@ -224,7 +224,7 @@ func (r *message) handleMessageAction(x *msg.UpdateNewMessage, u *msg.UpdateEnve
 			// 3. Get dialog and create first hole
 			dialog, _ := repo.Dialogs.Get(x.Message.TeamID, x.Message.PeerID, x.Message.PeerType)
 			if dialog != nil {
-				messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, dialog.TopMessageID)
+				hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, dialog.TopMessageID)
 			}
 		}
 	}

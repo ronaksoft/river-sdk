@@ -6,8 +6,8 @@ import (
 	"encoding/binary"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/hole"
 	"git.ronaksoft.com/river/sdk/internal/logs"
-	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
 	mon "git.ronaksoft.com/river/sdk/internal/monitoring"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
@@ -554,7 +554,7 @@ func (r *River) AppStart() error {
 	logger.Info("Starting")
 
 	// Initialize MessageHole
-	messageHole.Init()
+	hole.Init()
 
 	// Initialize DB replaced with ORM
 	err := repo.Init(r.dbPath, r.optimizeForLowMemory)

@@ -2,7 +2,7 @@ package message
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
-	messageHole "git.ronaksoft.com/river/sdk/internal/message_hole"
+	"git.ronaksoft.com/river/sdk/internal/hole"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
@@ -43,7 +43,7 @@ func (r *message) messagesDialogs(e *rony.MessageEnvelope) {
 		} else {
 			err := repo.Dialogs.SaveNew(dialog, topMessage.CreatedOn)
 			r.Log().WarnOnErr("got error on save new dialog", err)
-			messageHole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, dialog.TopMessageID)
+			hole.InsertFill(dialog.TeamID, dialog.PeerID, dialog.PeerType, 0, dialog.TopMessageID, dialog.TopMessageID)
 		}
 	}
 	// save Groups & Users & Messages

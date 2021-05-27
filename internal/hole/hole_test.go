@@ -1,4 +1,4 @@
-package messageHole
+package hole
 
 import (
 	"git.ronaksoft.com/river/sdk/internal/repo"

@@ -21,7 +21,7 @@ var (
 	updateCB     domain.UpdateReceivedCallback
 	dataSyncedCB domain.DataSyncedCallback
 	callbackChan = make(chan execItem, 128)
-	rateLimit = make(chan struct{}, 5)
+	rateLimit    = make(chan struct{}, 5)
 	logger       *logs.Logger
 )
 
@@ -64,7 +64,7 @@ func executor() {
 		rateLimit <- struct{}{}
 		go func(it execItem) {
 			defer func() {
-				<- rateLimit
+				<-rateLimit
 			}()
 			startTime := tools.NanoTime()
 			ctx, cf := context.WithTimeout(context.Background(), time.Second)

@@ -1,4 +1,4 @@
-package messageHole
+package hole
 
 import (
 	"encoding/json"
@@ -44,18 +44,14 @@ type Bar struct {
 	Type BarType
 }
 
-type HoleManager struct {
-	mtxLock  sync.Mutex
+type Detector struct {
+	mtx      sync.Mutex
 	MaxIndex int64
 	Bars     []Bar
 }
 
-func newHoleManager() *HoleManager {
-	m := new(HoleManager)
-	return m
-}
-
-func (m *HoleManager) LoadFromDB(teamID, peerID int64, peerType int32, cat msg.MediaCategory) {
+func readFromDB(teamID, peerID int64, peerType int32, cat msg.MediaCategory) *Detector {
+	m := &Detector{}
 	b := repo.MessagesExtra.GetHoles(teamID, peerID, peerType, cat)
 	_ = json.Unmarshal(b, &m.Bars)
 	m.MaxIndex = 0
@@ -64,11 +60,45 @@ func (m *HoleManager) LoadFromDB(teamID, peerID int64, peerType int32, cat msg.M
 			m.MaxIndex = m.Bars[idx].Max
 		}
 	}
+	return m
 }
 
-func (m *HoleManager) InsertBar(b Bar) {
-	m.mtxLock.Lock()
-	defer m.mtxLock.Unlock()
+func writeToDB(teamID, peerID int64, peerType int32, cat msg.MediaCategory, hm *Detector) {
+	b, err := json.Marshal(hm.Bars)
+	if err != nil {
+		logger.Error("got error on marshalling hole", zap.Error(err))
+		return
+	}
+	repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, cat, b)
+}
+
+func load(teamID, peerID int64, peerType int32, cat msg.MediaCategory) *Detector {
+	keyID := fmt.Sprintf("%d.%d", peerID, peerType)
+	cache.mtx.Lock()
+	defer cache.mtx.Unlock()
+	hm, ok := cache.list[keyID]
+	if !ok {
+		hm = readFromDB(teamID, peerID, peerType, cat)
+		cache.list[keyID] = hm
+	}
+
+	if !hm.Valid() {
+		logger.Error("load invalid data, we reset hole",
+			zap.Int64("TeamID", teamID),
+			zap.Int64("PeerID", peerID),
+			zap.String("Dump", hm.String()),
+		)
+		hm = &Detector{}
+		b, _ := json.Marshal(hm)
+		repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, cat, b)
+		cache.list[keyID] = hm
+	}
+	return hm
+}
+
+func (m *Detector) InsertBar(b Bar) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
 
 	// If it is the first bar
 	if len(m.Bars) == 0 {
@@ -161,7 +191,7 @@ InsertLoop:
 	}
 }
 
-func (m *HoleManager) appendBar(bars ...Bar) {
+func (m *Detector) appendBar(bars ...Bar) {
 	for _, b := range bars {
 		lastIndex := len(m.Bars) - 1
 		if lastIndex >= 0 && m.Bars[lastIndex].Type == b.Type {
@@ -172,9 +202,9 @@ func (m *HoleManager) appendBar(bars ...Bar) {
 	}
 }
 
-func (m *HoleManager) IsRangeFilled(min, max int64) bool {
-	m.mtxLock.Lock()
-	defer m.mtxLock.Unlock()
+func (m *Detector) IsRangeFilled(min, max int64) bool {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
 	for idx := range m.Bars {
 		if m.Bars[idx].Type == Hole {
 			continue
@@ -186,9 +216,9 @@ func (m *HoleManager) IsRangeFilled(min, max int64) bool {
 	return false
 }
 
-func (m *HoleManager) IsPointHole(pt int64) bool {
-	m.mtxLock.Lock()
-	defer m.mtxLock.Unlock()
+func (m *Detector) IsPointHole(pt int64) bool {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
 	for idx := range m.Bars {
 		if pt >= m.Bars[idx].Min && pt <= m.Bars[idx].Max {
 			switch m.Bars[idx].Type {
@@ -202,9 +232,9 @@ func (m *HoleManager) IsPointHole(pt int64) bool {
 	return true
 }
 
-func (m *HoleManager) GetUpperFilled(pt int64) (bool, Bar) {
-	m.mtxLock.Lock()
-	defer m.mtxLock.Unlock()
+func (m *Detector) GetUpperFilled(pt int64) (bool, Bar) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
 	for idx := range m.Bars {
 		if pt >= m.Bars[idx].Min && pt <= m.Bars[idx].Max {
 			switch m.Bars[idx].Type {
@@ -218,9 +248,9 @@ func (m *HoleManager) GetUpperFilled(pt int64) (bool, Bar) {
 	return false, Bar{}
 }
 
-func (m *HoleManager) GetLowerFilled(pt int64) (bool, Bar) {
-	m.mtxLock.Lock()
-	defer m.mtxLock.Unlock()
+func (m *Detector) GetLowerFilled(pt int64) (bool, Bar) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
 	for idx := range m.Bars {
 		if pt >= m.Bars[idx].Min && pt <= m.Bars[idx].Max {
 			switch m.Bars[idx].Type {
@@ -234,7 +264,7 @@ func (m *HoleManager) GetLowerFilled(pt int64) (bool, Bar) {
 	return false, Bar{}
 }
 
-func (m *HoleManager) SetUpperFilled(pt int64) bool {
+func (m *Detector) SetUpperFilled(pt int64) bool {
 	if pt <= m.MaxIndex {
 		return false
 	}
@@ -242,7 +272,7 @@ func (m *HoleManager) SetUpperFilled(pt int64) bool {
 	return true
 }
 
-func (m *HoleManager) SetLowerFilled() {
+func (m *Detector) SetLowerFilled() {
 	for _, b := range m.Bars {
 		if b.Type == Filled {
 			if b.Min != 0 {
@@ -252,7 +282,7 @@ func (m *HoleManager) SetLowerFilled() {
 	}
 }
 
-func (m *HoleManager) String() string {
+func (m *Detector) String() string {
 	sb := strings.Builder{}
 	for _, bar := range m.Bars {
 		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))
@@ -260,9 +290,9 @@ func (m *HoleManager) String() string {
 	return sb.String()
 }
 
-func (m *HoleManager) Valid() bool {
-	m.mtxLock.Lock()
-	defer m.mtxLock.Unlock()
+func (m *Detector) Valid() bool {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
 	idx := int64(-1)
 	for _, bar := range m.Bars {
 		if bar.Min > bar.Max {
@@ -276,78 +306,48 @@ func (m *HoleManager) Valid() bool {
 	return true
 }
 
-var holder = struct {
+var cache = struct {
 	mtx  sync.Mutex
-	list map[string]*HoleManager
+	list map[string]*Detector
 }{
-	list: make(map[string]*HoleManager),
+	list: make(map[string]*Detector),
 }
 
 func Init() {
-	holder.list = make(map[string]*HoleManager)
-}
-
-func loadManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory) *HoleManager {
-	keyID := fmt.Sprintf("%d.%d", peerID, peerType)
-	holder.mtx.Lock()
-	defer holder.mtx.Unlock()
-	hm, ok := holder.list[keyID]
-	if !ok {
-		hm = newHoleManager()
-		hm.LoadFromDB(teamID, peerID, peerType, cat)
-		holder.list[keyID] = hm
-	}
-
-	if !hm.Valid() {
-		logger.Error("HoleManager Not Valid", zap.String("Dump", hm.String()))
-		hm = newHoleManager()
-		b, _ := json.Marshal(hm)
-		repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, cat, b)
-		holder.list[keyID] = hm
-	}
-	return hm
-}
-
-func saveManager(teamID, peerID int64, peerType int32, cat msg.MediaCategory, hm *HoleManager) {
-	b, err := json.Marshal(hm.Bars)
-	if err != nil {
-		logger.Error("Error On HoleManager", zap.Error(err))
-		return
-	}
-	repo.MessagesExtra.SaveHoles(teamID, peerID, peerType, cat, b)
+	cache.list = make(map[string]*Detector)
 }
 
 func InsertFill(teamID, peerID int64, peerType int32, cat msg.MediaCategory, minID, maxID int64) {
 	if minID > maxID {
 		return
 	}
-	hm := loadManager(teamID, peerID, peerType, cat)
+	hm := load(teamID, peerID, peerType, cat)
 	hm.InsertBar(Bar{Type: Filled, Min: minID, Max: maxID})
-	saveManager(teamID, peerID, peerType, cat, hm)
+	writeToDB(teamID, peerID, peerType, cat, hm)
 }
 
 // IsHole Checks if there is any hole in the range [minID-maxID].
 func IsHole(teamID, peerID int64, peerType int32, cat msg.MediaCategory, minID, maxID int64) bool {
-	hm := loadManager(teamID, peerID, peerType, cat)
+	hm := load(teamID, peerID, peerType, cat)
 	return hm.IsRangeFilled(minID, maxID)
 }
 
 // GetUpperFilled It returns a LabelBar starts from minID to the highest possible index,
 // which makes a continuous Filled section, otherwise it returns false.
 func GetUpperFilled(teamID, peerID int64, peerType int32, cat msg.MediaCategory, minID int64) (bool, Bar) {
-	hm := loadManager(teamID, peerID, peerType, cat)
+	hm := load(teamID, peerID, peerType, cat)
 	return hm.GetUpperFilled(minID)
 }
 
 // GetLowerFilled It returns a LabelBar starts from the lowest possible index to maxID,
 // which makes a continuous Filled section, otherwise it returns false.
 func GetLowerFilled(teamID, peerID int64, peerType int32, cat msg.MediaCategory, maxID int64) (bool, Bar) {
-	hm := loadManager(teamID, peerID, peerType, cat)
+	hm := load(teamID, peerID, peerType, cat)
 	return hm.GetLowerFilled(maxID)
 }
 
 func PrintHole(teamID, peerID int64, peerType int32, cat msg.MediaCategory) string {
-	hm := loadManager(teamID, peerID, peerType, cat)
+	hm := load(teamID, peerID, peerType, cat)
 	sb := strings.Builder{}
 	for _, bar := range hm.Bars {
 		sb.WriteString(fmt.Sprintf("[%s: %d - %d]", bar.Type.String(), bar.Min, bar.Max))
