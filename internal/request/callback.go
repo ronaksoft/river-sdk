@@ -35,7 +35,7 @@ type Callback interface {
 	OnComplete(m *rony.MessageEnvelope)
 	OnProgress(percent int64)
 	OnTimeout()
-	ReplaceCompleteCB(h domain.MessageHandler) Callback
+	SetPreComplete(h domain.MessageHandler) Callback
 	RequestData(req Unmarshaller) error
 	RequestID() uint64
 	ResponseChan() chan *rony.MessageEnvelope
@@ -58,16 +58,17 @@ type serializedCallback struct {
 }
 
 type callback struct {
-	envelope   *rony.MessageEnvelope
-	onComplete func(m *rony.MessageEnvelope)
-	onTimeout  func()
-	onProgress func(percent int64)
-	ui         bool
-	createdOn  int64
-	sentOn     int64
-	flags      DelegateFlag
-	timeout    time.Duration
-	resChan    chan *rony.MessageEnvelope
+	envelope    *rony.MessageEnvelope
+	preComplete domain.MessageHandler
+	onComplete  domain.MessageHandler
+	onTimeout   domain.TimeoutCallback
+	onProgress  func(percent int64)
+	ui          bool
+	createdOn   int64
+	sentOn      int64
+	flags       DelegateFlag
+	timeout     time.Duration
+	resChan     chan *rony.MessageEnvelope
 }
 
 func (c *callback) Flags() DelegateFlag {
@@ -92,6 +93,9 @@ func (c *callback) Constructor() int64 {
 
 func (c *callback) OnComplete(m *rony.MessageEnvelope) {
 	unregister(c.envelope.RequestID)
+	if c.preComplete != nil {
+		c.preComplete(m)
+	}
 	if c.onComplete == nil {
 		return
 	}
@@ -165,8 +169,8 @@ func (c *callback) SentOn() int64 {
 	return c.sentOn
 }
 
-func (c *callback) ReplaceCompleteCB(h domain.MessageHandler) Callback {
-	c.onComplete = h
+func (c *callback) SetPreComplete(h domain.MessageHandler) Callback {
+	c.preComplete = h
 	return c
 }
 

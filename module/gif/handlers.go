@@ -89,9 +89,6 @@ func (r *gif) gifGetSaved(da request.Callback) {
 			return
 		}
 		da.Response(msg.C_SavedGifs, res)
-
-		// ignore success cb because we notify views on message handler
-		da.ReplaceCompleteCB(func(m *rony.MessageEnvelope) {})
 	}
 
 	// TODO:: set ui to false

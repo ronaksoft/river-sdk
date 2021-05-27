@@ -2,6 +2,7 @@ package label
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
 	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
@@ -75,39 +76,7 @@ func (r *label) labelsListItems(da request.Callback) {
 		return
 	}
 
-	da.ReplaceCompleteCB(func(m *rony.MessageEnvelope) {
-		switch m.Constructor {
-		case msg.C_LabelItems:
-			x := &msg.LabelItems{}
-			err := x.Unmarshal(m.Message)
-			r.Log().WarnOnErr("Error On Unmarshal LabelItems", err)
-
-			// 1st sort the received messages by id
-			sort.Slice(x.Messages, func(i, j int) bool {
-				return x.Messages[i].ID > x.Messages[j].ID
-			})
-
-			// Fill Messages Hole
-			if msgCount := len(x.Messages); msgCount > 0 {
-				r.Log().Debug("Update Label Range",
-					zap.Int32("LabelID", x.LabelID),
-					zap.Int64("MinID", x.Messages[msgCount-1].ID),
-					zap.Int64("MaxID", x.Messages[0].ID),
-				)
-
-				switch {
-				case req.MinID == 0 && req.MaxID != 0:
-					_ = repo.Labels.Fill(da.TeamID(), req.LabelID, x.Messages[msgCount-1].ID, req.MaxID)
-				case req.MinID != 0 && req.MaxID == 0:
-					_ = repo.Labels.Fill(da.TeamID(), req.LabelID, req.MinID, x.Messages[0].ID)
-				case req.MinID == 0 && req.MaxID == 0:
-					_ = repo.Labels.Fill(da.TeamID(), req.LabelID, x.Messages[msgCount-1].ID, x.Messages[0].ID)
-				}
-			}
-		default:
-			r.Log().Warn("LabelModule received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
-		}
-	})
+	da.SetPreComplete(r.getLabelsListItemsCB(da.TeamID(), req.MinID, req.MaxID, req.LabelID))
 	switch {
 	case req.MinID == 0 && req.MaxID == 0:
 		r.SDK().QueueCtrl().EnqueueCommand(da)
@@ -140,6 +109,41 @@ func (r *label) labelsListItems(da request.Callback) {
 	default:
 		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
+	}
+}
+func (r *label) getLabelsListItemsCB(teamID int64, minID, maxID int64, labelID int32) domain.MessageHandler {
+	return func(m *rony.MessageEnvelope) {
+		switch m.Constructor {
+		case msg.C_LabelItems:
+			x := &msg.LabelItems{}
+			err := x.Unmarshal(m.Message)
+			r.Log().WarnOnErr("Error On Unmarshal LabelItems", err)
+
+			// 1st sort the received messages by id
+			sort.Slice(x.Messages, func(i, j int) bool {
+				return x.Messages[i].ID > x.Messages[j].ID
+			})
+
+			// Fill Messages Hole
+			if msgCount := len(x.Messages); msgCount > 0 {
+				r.Log().Debug("Update Label Range",
+					zap.Int32("LabelID", x.LabelID),
+					zap.Int64("MinID", x.Messages[msgCount-1].ID),
+					zap.Int64("MaxID", x.Messages[0].ID),
+				)
+
+				switch {
+				case minID == 0 && maxID != 0:
+					_ = repo.Labels.Fill(teamID, labelID, x.Messages[msgCount-1].ID, maxID)
+				case minID != 0 && maxID == 0:
+					_ = repo.Labels.Fill(teamID, labelID, minID, x.Messages[0].ID)
+				case minID == 0 && maxID == 0:
+					_ = repo.Labels.Fill(teamID, labelID, x.Messages[msgCount-1].ID, x.Messages[0].ID)
+				}
+			}
+		default:
+			r.Log().Warn("LabelModule received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
+		}
 	}
 }
 

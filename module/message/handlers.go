@@ -560,7 +560,7 @@ func (r *message) messagesGetHistory(da request.Callback) {
 	}
 
 	// Prepare the the result before sending back to the client
-	da.ReplaceCompleteCB(r.genGetHistoryCB(da.OnComplete, da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID))
+	da.SetPreComplete(r.genGetHistoryCB(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, dialog.TopMessageID))
 	// We are Offline/Disconnected
 	if !r.SDK().NetCtrl().Connected() {
 		messages, users, groups := repo.Messages.GetMessageHistory(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MinID, req.MaxID, req.Limit)
@@ -635,7 +635,7 @@ func fillMessagesMany(
 	)
 }
 func (r *message) genGetHistoryCB(
-	cb domain.MessageHandler, teamID, peerID int64, peerType int32, minID, maxID int64, topMessageID int64,
+	teamID, peerID int64, peerType int32, minID, maxID int64, topMessageID int64,
 ) domain.MessageHandler {
 	return func(m *rony.MessageEnvelope) {
 		pendingMessages := repo.PendingMessages.GetByPeer(teamID, peerID, peerType)
@@ -673,9 +673,6 @@ func (r *message) genGetHistoryCB(
 			r.Log().Warn("received error on GetHistory", zap.Error(domain.ParseServerError(m.Message)))
 		default:
 		}
-
-		// Call the actual success callback function
-		cb(m)
 	}
 }
 
@@ -707,7 +704,7 @@ func (r *message) messagesGetMediaHistory(da request.Callback) {
 	}
 
 	// Prepare the the result before sending back to the client
-	da.ReplaceCompleteCB(r.genGetMediaHistoryCB(da.OnComplete, da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Cat))
+	da.SetPreComplete(r.genGetMediaHistoryCB(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MaxID, req.Cat))
 	b, bar := messageHole.GetLowerFilled(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.Cat, req.MaxID)
 	if !b {
 		r.Log().Info("detected hole (With MaxID Only)",
@@ -726,7 +723,7 @@ func (r *message) messagesGetMediaHistory(da request.Callback) {
 	fillMessagesMany(da, messages, users, groups)
 }
 func (r *message) genGetMediaHistoryCB(
-	cb domain.MessageHandler, teamID, peerID int64, peerType int32, maxID int64, cat msg.MediaCategory,
+	teamID, peerID int64, peerType int32, maxID int64, cat msg.MediaCategory,
 ) domain.MessageHandler {
 	return func(m *rony.MessageEnvelope) {
 		switch m.Constructor {
@@ -754,9 +751,6 @@ func (r *message) genGetMediaHistoryCB(
 			r.Log().Warn("received error on GetMediaHistory", zap.Error(domain.ParseServerError(m.Message)))
 		default:
 		}
-
-		// Call the actual success callback function
-		cb(m)
 	}
 }
 

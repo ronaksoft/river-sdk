@@ -21,11 +21,8 @@ import (
 
 var (
 	logger *logs.Logger
+	Stats  stats
 )
-
-func init() {
-	logger = logs.With("Monitoring")
-}
 
 const (
 	serverLongThreshold = 2 * time.Second
@@ -52,11 +49,11 @@ type stats struct {
 	lastDataTransfer   time.Time
 }
 
-var Stats stats
-
 func init() {
 	Stats.StartTime = time.Now()
 	Stats.mtx = &sync.RWMutex{}
+
+	logger = logs.With("Monitoring")
 }
 
 func DataTransfer(totalUploadBytes, totalDownloadBytes int, d time.Duration) {
