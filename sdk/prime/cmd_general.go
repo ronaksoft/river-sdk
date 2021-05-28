@@ -117,9 +117,11 @@ func (r *River) executeRemoteCommand(reqCB request.Callback) {
 
 		go func() {
 			<-time.After(reqCB.Timeout())
-
-			reqCB.OnTimeout()
-			r.CancelRequest(int64(reqCB.RequestID()))
+			reqCB := request.GetCallback(reqCB.RequestID())
+			if reqCB != nil {
+				reqCB.OnTimeout()
+				r.CancelRequest(int64(reqCB.RequestID()))
+			}
 		}()
 	}
 	if reqCB.Flags()&request.Realtime != 0 {

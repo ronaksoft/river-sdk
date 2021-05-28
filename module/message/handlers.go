@@ -833,7 +833,7 @@ func (r *message) messagesGet(da request.Callback) {
 			Messages: messages,
 			Users:    users,
 		}
-		da.Response(msg.C_MessagesDialogs, res)
+		da.Response(msg.C_MessagesMany, res)
 		return
 	}
 
