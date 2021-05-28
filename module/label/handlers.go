@@ -83,7 +83,7 @@ func (r *label) labelsListItems(da request.Callback) {
 	case req.MinID == 0 && req.MaxID != 0:
 		b, _ := repo.Labels.GetLowerFilled(da.TeamID(), req.LabelID, req.MaxID)
 		if !b {
-			r.Log().Info("LabelModule detected label hole (With MaxID Only)",
+			r.Log().Info("detected label hole (With MaxID Only)",
 				zap.Int32("LabelID", req.LabelID),
 				zap.Int64("MaxID", req.MaxID),
 				zap.Int64("MinID", req.MinID),
@@ -142,7 +142,7 @@ func (r *label) getLabelsListItemsCB(teamID int64, minID, maxID int64, labelID i
 				}
 			}
 		default:
-			r.Log().Warn("LabelModule received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
+			r.Log().Warn("received unexpected response", zap.String("C", registry.ConstructorName(m.Constructor)))
 		}
 	}
 }

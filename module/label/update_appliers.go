@@ -22,7 +22,7 @@ func (r *label) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvel
 		return nil, err
 	}
 
-	r.Log().Debug("LabelModule applies UpdateLabelItemsAdded",
+	r.Log().Debug("applies UpdateLabelItemsAdded",
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64s("MsgIDs", x.MessageIDs),
 		zap.Int32s("LabelIDs", x.LabelIDs),
@@ -33,17 +33,6 @@ func (r *label) updateLabelItemsAdded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvel
 		if err != nil {
 			return nil, err
 		}
-		for _, labelID := range x.LabelIDs {
-			bar := repo.Labels.GetFilled(x.TeamID, labelID)
-			for _, msgID := range x.MessageIDs {
-				if msgID > bar.MaxID {
-					repo.Labels.Fill(x.TeamID, labelID, bar.MaxID, msgID)
-				} else if msgID < bar.MinID {
-					repo.Labels.Fill(x.TeamID, labelID, msgID, bar.MinID)
-				}
-			}
-		}
-
 	}
 
 	err = repo.Labels.Save(x.TeamID, x.Labels...)
@@ -60,7 +49,7 @@ func (r *label) updateLabelItemsRemoved(u *msg.UpdateEnvelope) ([]*msg.UpdateEnv
 		return nil, err
 	}
 
-	r.Log().Debug("LabelModule applies UpdateLabelItemsRemoved",
+	r.Log().Debug("applies UpdateLabelItemsRemoved",
 		zap.Int64("UpdateID", x.UpdateID),
 		zap.Int64s("MsgIDs", x.MessageIDs),
 		zap.Int32s("LabelIDs", x.LabelIDs),
@@ -88,7 +77,7 @@ func (r *label) updateLabelSet(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, er
 		return nil, err
 	}
 
-	r.Log().Debug("LabelModule applies UpdateLabelSet",
+	r.Log().Debug("applies UpdateLabelSet",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
@@ -106,7 +95,7 @@ func (r *label) updateLabelDeleted(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope
 		return nil, err
 	}
 
-	r.Log().Debug("LabelModule applies UpdateLabelDeleted",
+	r.Log().Debug("applies UpdateLabelDeleted",
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 

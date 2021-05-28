@@ -21,25 +21,25 @@ func (r *label) labelsMany(e *rony.MessageEnvelope) {
 	u := &msg.LabelsMany{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		r.Log().Error("LabelModule couldn't unmarshal LabelsMany", zap.Error(err))
+		r.Log().Error("couldn't unmarshal LabelsMany", zap.Error(err))
 		return
 	}
 
-	r.Log().Debug("LabelModule applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
+	r.Log().Debug("applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
 
 	err = repo.Labels.Save(domain.GetTeamID(e), u.Labels...)
-	r.Log().WarnOnErr("LabelModule got error on applying LabelsMany", err)
+	r.Log().WarnOnErr("got error on applying LabelsMany", err)
 }
 
 func (r *label) labelItems(e *rony.MessageEnvelope) {
 	u := &msg.LabelItems{}
 	err := u.Unmarshal(e.Message)
 	if err != nil {
-		r.Log().Error("LabelModule couldn't unmarshal LabelItems", zap.Error(err))
+		r.Log().Error("couldn't unmarshal LabelItems", zap.Error(err))
 		return
 	}
 
-	r.Log().Debug("LabelModule applies LabelItems")
+	r.Log().Debug("applies LabelItems")
 
 	_ = repo.Messages.Save(u.Messages...)
 	_ = repo.Users.Save(u.Users...)
