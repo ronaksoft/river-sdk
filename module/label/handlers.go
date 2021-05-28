@@ -159,16 +159,6 @@ func (r *label) labelAddToMessage(da request.Callback) {
 	)
 	if len(req.MessageIDs) != 0 {
 		_ = repo.Labels.AddLabelsToMessages(req.LabelIDs, da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.MessageIDs)
-		for _, labelID := range req.LabelIDs {
-			bar := repo.Labels.GetFilled(da.TeamID(), labelID)
-			for _, msgID := range req.MessageIDs {
-				if msgID > bar.MaxID {
-					_ = repo.Labels.Fill(da.TeamID(), labelID, bar.MaxID, msgID)
-				} else if msgID < bar.MinID {
-					_ = repo.Labels.Fill(da.TeamID(), labelID, msgID, bar.MinID)
-				}
-			}
-		}
 	}
 
 	// send the request to server
