@@ -73,7 +73,7 @@ func writeToDB(teamID, peerID int64, peerType int32, cat msg.MediaCategory, hm *
 }
 
 func load(teamID, peerID int64, peerType int32, cat msg.MediaCategory) *Detector {
-	keyID := fmt.Sprintf("%d.%d", peerID, peerType)
+	keyID := fmt.Sprintf("%d.%d.%d.%d", teamID, peerID, peerType, cat)
 	cache.mtx.Lock()
 	defer cache.mtx.Unlock()
 	hm, ok := cache.list[keyID]

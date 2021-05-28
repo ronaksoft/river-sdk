@@ -476,11 +476,12 @@ func (r *River) updateReceiver() {
 			outOfSync = true
 		}
 
-		r.syncCtrl.UpdateApplier(updateContainer, outOfSync)
-
 		if outOfSync {
 			go r.syncCtrl.Sync()
+			continue
 		}
+
+		r.syncCtrl.UpdateApplier(updateContainer, outOfSync)
 	}
 }
 

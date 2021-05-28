@@ -281,12 +281,6 @@ func UnmarshalCallback(data []byte) (*callback, error) {
 	return cb, nil
 }
 
-func EmptyCallback() *callback {
-	return &callback{
-		envelope: &rony.MessageEnvelope{},
-	}
-}
-
 var (
 	callbacksMtx     sync.Mutex
 	requestCallbacks map[uint64]*callback

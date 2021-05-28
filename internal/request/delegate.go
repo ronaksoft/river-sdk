@@ -38,7 +38,12 @@ func DelegateFlagToString(rdf DelegateFlag) string {
 	if rdf&Batch == Batch {
 		sb.WriteString("|Batch")
 	}
-	sb.WriteRune('|')
+	if rdf&RetryUntilCanceled == RetryUntilCanceled {
+		sb.WriteString("|RetryUntilCancel")
+	}
+	if rdf > 0 {
+		sb.WriteRune('|')
+	}
 	return sb.String()
 }
 

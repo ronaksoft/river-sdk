@@ -717,6 +717,15 @@ func (r *message) messagesGetMediaHistory(da request.Callback) {
 		)
 		r.SDK().QueueCtrl().EnqueueCommand(da)
 		return
+	} else {
+		r.Log().Info("retrieve data locally",
+			zap.Int64("MaxID", req.MaxID),
+			zap.Int64("PeerID", req.Peer.ID),
+			zap.String("PeerType", req.Peer.Type.String()),
+			zap.String("Cat", req.Cat.String()),
+			zap.Int64("TopMsgID", dialog.TopMessageID),
+			zap.String("Holes", hole.PrintHole(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), req.Cat)),
+		)
 	}
 
 	messages, users, groups := repo.Messages.GetMediaMessageHistory(da.TeamID(), req.Peer.ID, int32(req.Peer.Type), 0, bar.Max, req.Limit, req.Cat)

@@ -159,7 +159,6 @@ func (ctrl *Controller) Sync() {
 
 		// Update the sync controller status
 		updateSyncStatus(ctrl, domain.Syncing)
-		defer updateSyncStatus(ctrl, domain.Synced)
 
 		ctrlUpdateID := ctrl.GetUpdateID()
 		if ctrlUpdateID == 0 || (serverUpdateID-ctrlUpdateID) > domain.SnapshotSyncThreshold {
@@ -169,7 +168,7 @@ func (ctrl *Controller) Sync() {
 			waitGroup := &sync.WaitGroup{}
 			waitGroup.Add(8)
 			go ctrl.GetContacts(waitGroup, 0, 0)
-			go ctrl.GetAllDialogs(waitGroup, 0, 0, 0, 100)
+			go ctrl.GetAllDialogs(waitGroup, 0, 0, 0, 250)
 			go ctrl.GetLabels(waitGroup, 0, 0)
 			go ctrl.GetAllTopPeers(waitGroup, 0, 0, msg.TopPeerCategory_Users, 0, 100)
 			go ctrl.GetAllTopPeers(waitGroup, 0, 0, msg.TopPeerCategory_Groups, 0, 100)
@@ -182,9 +181,11 @@ func (ctrl *Controller) Sync() {
 				logger.Error("couldn't save the current GetUpdateID", zap.Error(err))
 				return
 			}
+			updateSyncStatus(ctrl, domain.Synced)
 		} else if serverUpdateID >= ctrl.GetUpdateID()+1 {
 			logger.Info("goes for a Sequential sync")
 			getUpdateDifference(ctrl, serverUpdateID)
+			updateSyncStatus(ctrl, domain.Synced)
 		}
 		return nil, nil
 	})
@@ -416,7 +417,7 @@ func (ctrl *Controller) TeamSync(teamID int64, accessHash uint64, forceUpdate bo
 	waitGroup := &sync.WaitGroup{}
 	waitGroup.Add(8)
 	go ctrl.GetContacts(waitGroup, teamID, accessHash)
-	go ctrl.GetAllDialogs(waitGroup, teamID, accessHash, 0, 100)
+	go ctrl.GetAllDialogs(waitGroup, teamID, accessHash, 0, 250)
 	go ctrl.GetLabels(waitGroup, teamID, accessHash)
 	go ctrl.GetAllTopPeers(waitGroup, teamID, accessHash, msg.TopPeerCategory_Users, 0, 100)
 	go ctrl.GetAllTopPeers(waitGroup, teamID, accessHash, msg.TopPeerCategory_Groups, 0, 100)
