@@ -45,7 +45,6 @@ func (r *River) messagesGetDialogs(da request.Callback) {
 
 	res := &msg.MessagesDialogs{}
 	res.Dialogs, _ = minirepo.Dialogs.List(da.TeamID(), req.Offset, req.Limit)
-	// res.Count = minirepo.Dialogs.CountDialogs(da.TeamID())
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {

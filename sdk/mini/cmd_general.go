@@ -89,8 +89,6 @@ func (r *River) ExecuteCommand(constructor int64, commandBytes []byte, delegate 
 		),
 	)
 	return requestID, err
-
-	// return r.executeCommand(domain.GetCurrTeamID(), domain.GetCurrTeamAccess(), constructor, commandBytes, delegate)
 }
 
 // ExecuteCommandWithTeam is similar to ExecuteTeam but explicitly defines the target team
@@ -109,18 +107,18 @@ func (r *River) executeCommand(reqCB request.Callback) (err error) {
 		return domain.ErrInvalidConstructor
 	}
 
-	serverForce := reqCB.Flags()&request.ServerForced != 0
-	// rda := request.DelegateAdapter(teamID, teamAccess, uint64(requestID), constructor, commandBytes, delegate, delegate.OnProgress)
+	logger.Debug("executes command",
+		zap.Uint64("ReqID", reqCB.RequestID()),
+		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
+		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
+	)
 
-	// If this request must be sent to the server then executeRemoteCommand
-	if serverForce {
-		r.executeRemoteCommand(reqCB)
-		return
-	}
+
+	serverForce := reqCB.Flags()&request.ServerForced != 0
 
 	// If the constructor is a local command then
 	handler, ok := r.localCommands[reqCB.Constructor()]
-	if ok {
+	if ok && !serverForce {
 		r.executeLocalCommand(handler, reqCB)
 		return
 	}
@@ -131,16 +129,21 @@ func (r *River) executeCommand(reqCB request.Callback) (err error) {
 	return
 }
 func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.Callback) {
-	logger.Debug("execute local command",
+	logger.Info("execute local command",
+		zap.Uint64("ReqID", reqCB.RequestID()),
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
+		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
 	)
 
 	handler(reqCB)
 }
 func (r *River) executeRemoteCommand(reqCB request.Callback) {
-	logger.Debug("execute remote command",
+	logger.Info("execute remote command",
+		zap.Uint64("ReqID", reqCB.RequestID()),
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
+		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
 	)
+
 
 	ctx, cf := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
 	defer cf()

@@ -129,6 +129,7 @@ func (r *River) SetConfig(conf *RiverConfig) {
 			CountryCode: conf.CountryCode,
 		},
 	)
+	r.network.UpdateEndpoint("")
 	r.network.OnNetworkStatusChange = func(newQuality domain.NetworkStatus) {}
 	r.network.OnGeneralError = r.onGeneralError
 	r.network.UpdateChan = r.updateChan

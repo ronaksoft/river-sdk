@@ -172,7 +172,7 @@ func main() {
 			_, _ = _SDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, delegate)
 		}
 		loadCommands(
-			Account, Auth, Bot, Contact, Debug, File, Gif, Group, Init, Label, Message, Mini, SDK, System, Team, User, WallPaper, Call,
+			Account, Auth, Bot, Contact, Debug, File, Gif, Group, Init, Label, Message, SDK, System, Team, User, WallPaper, Call,
 		)
 
 	}
