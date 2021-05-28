@@ -106,7 +106,7 @@ var MiniMessageSendMediaToSelf = &ishell.Cmd{
 		attrPhotoBytes, _ := attrPhoto.Marshal()
 		req := msg.ClientSendMessageMedia{
 			Peer: &msg.InputPeer{
-				ID:         _SDK.ConnInfo.UserID,
+				ID:         _MiniSDK.ConnInfo.UserID,
 				Type:       msg.PeerType_PeerUser,
 				AccessHash: 0,
 			},

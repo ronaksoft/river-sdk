@@ -113,7 +113,6 @@ func (r *River) executeCommand(reqCB request.Callback) (err error) {
 		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
 	)
 
-
 	serverForce := reqCB.Flags()&request.ServerForced != 0
 
 	// If the constructor is a local command then
@@ -143,7 +142,6 @@ func (r *River) executeRemoteCommand(reqCB request.Callback) {
 		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
 		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
 	)
-
 
 	ctx, cf := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
 	defer cf()

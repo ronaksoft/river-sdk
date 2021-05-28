@@ -64,7 +64,7 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 	}
 
 	if thumbID != 0 {
-		err := r.uploadFile(nil, thumbID, reqMedia.ThumbFilePath)
+		err := r.uploadFile(da, thumbID, reqMedia.ThumbFilePath, false)
 		if err != nil {
 			da.Response(rony.C_Error, errors.New("00", err.Error()))
 			return
@@ -108,8 +108,9 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 			}
 		}
 		x.MediaData, _ = doc.Marshal()
+		da.OnProgress(100)
 	} else {
-		err := r.uploadFile(da, fileID, reqMedia.FilePath)
+		err := r.uploadFile(da, fileID, reqMedia.FilePath, true)
 		if err != nil {
 			da.Response(rony.C_Error, errors.New("00", err.Error()))
 			return
@@ -138,14 +139,11 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 		x.MediaData, _ = doc.Marshal()
 	}
 
-	reqBuff, _ := x.Marshal()
+	me := rony.PoolMessageEnvelope.Get()
+	defer rony.PoolMessageEnvelope.Put(me)
+	me.Fill(uint64(x.RandomID), msg.C_MessagesSendMedia, x, domain.TeamHeader(da.TeamID(), da.TeamAccess())...)
 	r.network.HttpCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_MessagesSendMedia,
-			RequestID:   uint64(x.RandomID),
-			Message:     reqBuff,
-			Header:      domain.TeamHeader(da.TeamID(), da.TeamAccess()),
-		},
+		me,
 		da.OnTimeout, da.OnComplete,
 	)
 
@@ -193,7 +191,7 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation,
 	}
 	return nil, domain.ErrServer
 }
-func (r *River) uploadFile(da request.Callback, fileID int64, filePath string) error {
+func (r *River) uploadFile(da request.Callback, fileID int64, filePath string, progress bool) error {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -236,7 +234,7 @@ func (r *River) uploadFile(da request.Callback, fileID int64, filePath string) e
 			return err
 		}
 
-		if da != nil {
+		if progress {
 			da.OnProgress(int64(float64(partIndex) / float64(totalParts) * 100))
 		}
 	}
