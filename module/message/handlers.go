@@ -837,7 +837,7 @@ func (r *message) messagesGet(da request.Callback) {
 		return
 	}
 
-	// WebsocketSend the request to the server
+	// websocketSend the request to the server
 	r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 

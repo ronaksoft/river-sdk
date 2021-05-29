@@ -540,7 +540,7 @@ func (ctrl *Controller) Connect() {
 			ctrl.wsConn = wsConn
 
 			// it should be started here cuz we need receiver to get AuthRecall answer
-			// WebsocketSend Signal to start the 'receiver' and 'keepAlive' routines
+			// websocketSend Signal to start the 'receiver' and 'keepAlive' routines
 			ctrl.connectChannel <- true
 			logger.Info("connected")
 			ctrl.updateNetworkStatus(domain.NetworkConnected)
@@ -610,10 +610,58 @@ func (ctrl *Controller) incMessageSeq() int64 {
 	return atomic.AddInt64(&ctrl.messageSeq, 1)
 }
 
-// WebsocketSend if 'direct' sends immediately otherwise it put it in flusher
-func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, flag request.DelegateFlag) error {
+// WebsocketCommand run request immediately. It is blocking call
+func (ctrl *Controller) WebsocketCommand(reqCB request.Callback) {
 	defer logger.RecoverPanic(
-		"NetCtrl::WebsocketSend",
+		"NetCtrl::WebsocketCommandWithTimeout",
+		domain.M{
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
+			"C":   reqCB.Constructor(),
+		},
+		nil,
+	)
+
+	logger.Debug("execute command over websocket",
+		zap.Uint64("ReqID", reqCB.RequestID()),
+		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
+	)
+
+	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
+		err := ctrl.websocketSend(req, reqCB.Flags())
+		if err != nil {
+			logger.Warn("got error from NetCtrl",
+				zap.Uint64("ReqID", req.RequestID),
+				zap.String("C", registry.ConstructorName(req.Constructor)),
+				zap.Error(err),
+			)
+			reqCB.OnTimeout()
+
+			return
+		}
+
+		select {
+		case <-time.After(reqCB.Timeout()):
+			logger.Debug("got timeout on websocket command",
+				zap.String("C", registry.ConstructorName(req.Constructor)),
+				zap.Uint64("ReqID", req.RequestID),
+			)
+			reqCB.OnTimeout()
+			return
+		case res := <-reqCB.ResponseChan():
+			logger.Debug("got response for websocket command",
+				zap.Uint64("ReqID", req.RequestID),
+				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
+				zap.String("ResC", registry.ConstructorName(res.Constructor)),
+			)
+			reqCB.OnComplete(res)
+		}
+	}
+	execBlock(reqCB.RequestID(), reqCB.Envelope())
+}
+func (ctrl *Controller) websocketSend(msgEnvelope *rony.MessageEnvelope, flag request.DelegateFlag) error {
+	defer logger.RecoverPanic(
+		"NetCtrl::websocketSend",
 		domain.M{
 			"AuthID": ctrl.authID,
 			"OS":     domain.ClientOS,
@@ -721,58 +769,28 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 	return nil
 }
 
-// WebsocketCommand run request immediately. It is blocking call
-func (ctrl *Controller) WebsocketCommand(reqCB request.Callback) {
-	defer logger.RecoverPanic(
-		"NetCtrl::WebsocketCommandWithTimeout",
-		domain.M{
-			"OS":  domain.ClientOS,
-			"Ver": domain.ClientVersion,
-			"C":   reqCB.Constructor(),
-		},
-		nil,
-	)
-
-	logger.Debug("execute command over websocket",
-		zap.Uint64("ReqID", reqCB.RequestID()),
-		zap.String("C", registry.ConstructorName(reqCB.Constructor())),
-	)
-
-	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
-		err := ctrl.WebsocketSend(req, reqCB.Flags())
-		if err != nil {
-			logger.Warn("got error from NetCtrl",
-				zap.Uint64("ReqID", req.RequestID),
-				zap.String("C", registry.ConstructorName(req.Constructor)),
-				zap.Error(err),
-			)
-			reqCB.OnTimeout()
-
-			return
-		}
-
-		select {
-		case <-time.After(reqCB.Timeout()):
-			logger.Debug("got timeout on websocket command",
-				zap.String("C", registry.ConstructorName(req.Constructor)),
-				zap.Uint64("ReqID", req.RequestID),
-			)
-			reqCB.OnTimeout()
-			return
-		case res := <-reqCB.ResponseChan():
-			logger.Debug("got response for websocket command",
-				zap.Uint64("ReqID", req.RequestID),
-				zap.String("ReqC", registry.ConstructorName(req.Constructor)),
-				zap.String("ResC", registry.ConstructorName(res.Constructor)),
-			)
-			reqCB.OnComplete(res)
-		}
+// HttpCommand run request immediately
+func (ctrl *Controller) HttpCommand(ctx context.Context, reqCB request.Callback) {
+	if ctx == nil {
+		var cf context.CancelFunc
+		ctx, cf = context.WithTimeout(context.Background(), reqCB.Timeout())
+		defer cf()
 	}
-	execBlock(reqCB.RequestID(), reqCB.Envelope())
-}
 
-// SendHttp encrypt and send request to server and receive and decrypt its response
-func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageEnvelope) (*rony.MessageEnvelope, error) {
+	res, err := ctrl.sendHttp(ctx, reqCB.Envelope())
+	switch err {
+	case nil:
+		reqCB.OnComplete(res)
+	case context.DeadlineExceeded:
+		reqCB.OnTimeout()
+	case context.Canceled:
+		reqCB.Response(rony.C_Error, errors.New("Canceled", err.Error()))
+	default:
+		reqCB.Response(rony.C_Error, errors.New("00", err.Error()))
+	}
+
+}
+func (ctrl *Controller) sendHttp(ctx context.Context, msgEnvelope *rony.MessageEnvelope) (*rony.MessageEnvelope, error) {
 	var (
 		totalUploadBytes, totalDownloadBytes int
 		startTime                            = tools.NanoTime()
@@ -863,7 +881,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		return nil, err
 	}
 
-	logger.Debug("SendHttp",
+	logger.Debug("sendHttp",
 		zap.String("URL", ctrl.curEndpoint),
 		zap.String("ReqC", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("ResC", registry.ConstructorName(receivedEncryptedPayload.Envelope.Constructor)),
@@ -871,28 +889,6 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 	)
 
 	return receivedEncryptedPayload.Envelope, nil
-}
-
-// HttpCommand run request immediately
-func (ctrl *Controller) HttpCommand(ctx context.Context, reqCB request.Callback) {
-	if ctx == nil {
-		var cf context.CancelFunc
-		ctx, cf = context.WithTimeout(context.Background(), reqCB.Timeout())
-		defer cf()
-	}
-
-	res, err := ctrl.SendHttp(ctx, reqCB.Envelope())
-	switch err {
-	case nil:
-		reqCB.OnComplete(res)
-	case context.DeadlineExceeded:
-		reqCB.OnTimeout()
-	case context.Canceled:
-		reqCB.Response(rony.C_Error, errors.New("Canceled", err.Error()))
-	default:
-		reqCB.Response(rony.C_Error, errors.New("00", err.Error()))
-	}
-
 }
 
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()

@@ -37,7 +37,8 @@ type Callback interface {
 	OnComplete(m *rony.MessageEnvelope)
 	OnProgress(percent int64)
 	OnTimeout()
-	SetPreComplete(h domain.MessageHandler) Callback
+	SetPreComplete(h domain.MessageHandler)
+	SetPreTimeout(h domain.TimeoutCallback)
 	RequestData(req Unmarshaller) error
 	RequestID() uint64
 	ResponseChan() chan *rony.MessageEnvelope
@@ -63,6 +64,7 @@ type callback struct {
 	envelope    *rony.MessageEnvelope
 	preComplete domain.MessageHandler
 	onComplete  domain.MessageHandler
+	preTimeout  domain.TimeoutCallback
 	onTimeout   domain.TimeoutCallback
 	onProgress  func(percent int64)
 	ui          bool
@@ -122,6 +124,9 @@ func (c *callback) OnTimeout() {
 		zap.Duration("D-FLY", time.Duration(tools.NanoTime()-c.sentOn)),
 	)
 	unregister(c.envelope.RequestID)
+	if c.preTimeout != nil {
+		c.preTimeout()
+	}
 	if c.onTimeout == nil {
 		return
 	}
@@ -182,9 +187,14 @@ func (c *callback) SentOn() int64 {
 	return c.sentOn
 }
 
-func (c *callback) SetPreComplete(h domain.MessageHandler) Callback {
+func (c *callback) SetPreComplete(h domain.MessageHandler) {
 	c.preComplete = h
-	return c
+	return
+}
+
+func (c *callback) SetPreTimeout(h domain.TimeoutCallback) {
+	c.preTimeout = h
+	return
 }
 
 func (c *callback) RequestData(u Unmarshaller) error {
@@ -267,8 +277,6 @@ func UnmarshalCallback(data []byte) (*callback, error) {
 	}
 	cb = &callback{
 		envelope:   scb.MessageEnvelope.Clone(),
-		onComplete: nil,
-		onTimeout:  nil,
 		onProgress: nil,
 		ui:         scb.UI,
 		createdOn:  scb.CreatedOn,

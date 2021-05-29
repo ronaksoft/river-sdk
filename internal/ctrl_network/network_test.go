@@ -103,10 +103,18 @@ func TestNewController(t *testing.T) {
 	ctrl.Connect()
 	go func() {
 		for {
-			err := ctrl.WebsocketSend(getServerTime(), request.SkipFlusher)
-			if err != nil {
-				t.Error(err)
-			}
+			ctrl.WebsocketCommand(
+				request.NewCallback(
+					0, 0, atomic.AddUint64(&requestID, 1), msg.C_SystemGetServerTime, &msg.SystemGetServerTime{},
+					func() {
+						t.Error(domain.ErrRequestTimeout)
+					},
+					func(res *rony.MessageEnvelope) {
+
+					},
+					nil, false, request.SkipFlusher, 0,
+				),
+			)
 			time.Sleep(time.Second)
 		}
 	}()
@@ -124,10 +132,18 @@ func TestStartStop(t *testing.T) {
 	ctrl.Start()
 	go func() {
 		for {
-			err := ctrl.WebsocketSend(getServerTime(), request.SkipFlusher)
-			if err != nil {
-				t.Error(err)
-			}
+			ctrl.WebsocketCommand(
+				request.NewCallback(
+					0, 0, atomic.AddUint64(&requestID, 1), msg.C_SystemGetServerTime, &msg.SystemGetServerTime{},
+					func() {
+						t.Error(domain.ErrRequestTimeout)
+					},
+					func(res *rony.MessageEnvelope) {
+
+					},
+					nil, false, request.SkipFlusher, 0,
+				),
+			)
 			time.Sleep(time.Second)
 		}
 	}()
