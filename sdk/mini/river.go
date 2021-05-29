@@ -180,6 +180,7 @@ func (r *River) updateReceiver() {
 
 func (r *River) registerCommandHandlers() {
 	r.localCommands = map[int64]request.LocalHandler{
+		msg.C_AccountGetTeams:        r.accountGetTeams,
 		msg.C_ClientSendMessageMedia: r.clientSendMessageMedia,
 		msg.C_ClientGlobalSearch:     r.clientGlobalSearch,
 		msg.C_MessagesSendMedia:      r.messagesSendMedia,
@@ -188,20 +189,20 @@ func (r *River) registerCommandHandlers() {
 	}
 }
 
-func (r *River) setLastUpdateID(updateID int64) error {
-	return minirepo.General.SaveInt64(tools.S2B(domain.SkUpdateID), updateID)
+func (r *River) setLastUpdateID(teamID, updateID int64) error {
+	return minirepo.General.SaveInt64(tools.S2B(fmt.Sprintf("%s.%d", domain.SkUpdateID, teamID)), updateID)
 }
 
-func (r *River) getLastUpdateID() int64 {
-	return minirepo.General.GetInt64(tools.S2B(domain.SkUpdateID))
+func (r *River) getLastUpdateID(teamID int64) int64 {
+	return minirepo.General.GetInt64(tools.S2B(fmt.Sprintf("%s.%d", domain.SkUpdateID, teamID)))
 }
 
-func (r *River) setContactsHash(h uint32) error {
-	return minirepo.General.SaveUInt32(tools.S2B(domain.SkContactsGetHash), h)
+func (r *River) setContactsHash(teamID int64, h uint32) error {
+	return minirepo.General.SaveUInt32(tools.S2B(fmt.Sprintf("%s.%d", domain.SkContactsGetHash, teamID)), h)
 }
 
-func (r *River) getContactsHash() uint32 {
-	return minirepo.General.GetUInt32(tools.S2B(domain.SkContactsGetHash))
+func (r *River) getContactsHash(teamID int64) uint32 {
+	return minirepo.General.GetUInt32(tools.S2B(fmt.Sprintf("%s.%d", domain.SkContactsGetHash, teamID)))
 }
 
 // RiverConnection connection info

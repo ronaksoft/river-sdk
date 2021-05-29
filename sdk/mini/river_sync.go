@@ -56,12 +56,12 @@ func (r *River) syncServerTime() (err error) {
 	return
 }
 
-func (r *River) syncUpdateState() (updated bool, err error) {
+func (r *River) syncUpdateState(teamID int64) (updated bool, err error) {
 	req := rony.PoolMessageEnvelope.Get()
 	defer rony.PoolMessageEnvelope.Put(req)
 	req.Fill(domain.NextRequestID(), msg.C_UpdateGetState, &msg.UpdateGetState{})
 
-	currentUpdateID := r.getLastUpdateID()
+	currentUpdateID := r.getLastUpdateID(teamID)
 	r.network.HttpCommand(
 		nil,
 		request.NewCallback(0, 0, domain.NextRequestID(), msg.C_UpdateGetState, &msg.UpdateGetState{},
@@ -80,7 +80,7 @@ func (r *River) syncUpdateState() (updated bool, err error) {
 					if x.UpdateID > currentUpdateID {
 						updated = true
 					}
-					err = r.setLastUpdateID(x.UpdateID)
+					err = r.setLastUpdateID(teamID, x.UpdateID)
 					if err != nil {
 						logger.Error("MiniRiver couldn't save LastUpdateID to the database", zap.Error(err))
 						return
@@ -96,11 +96,11 @@ func (r *River) syncUpdateState() (updated bool, err error) {
 	return
 }
 
-func (r *River) syncContacts() {
+func (r *River) syncContacts(teamID int64, teamAccess uint64) {
 	r.network.HttpCommand(
 		nil,
 		request.NewCallback(
-			0, 0, domain.NextRequestID(), msg.C_ContactsGet, &msg.ContactsGet{Crc32Hash: r.getContactsHash()},
+			teamID, teamAccess, domain.NextRequestID(), msg.C_ContactsGet, &msg.ContactsGet{Crc32Hash: r.getContactsHash(teamID)},
 			func() {},
 			func(m *rony.MessageEnvelope) {
 				switch m.Constructor {
@@ -110,12 +110,12 @@ func (r *River) syncContacts() {
 					if !x.Modified {
 						return
 					}
-					err := minirepo.Users.SaveAllContacts(x)
+					err := minirepo.Users.SaveAllContacts(teamID, x)
 					if err != nil {
 						logger.Warn("MiniRiver got error on saving contacts", zap.Error(err))
 						return
 					}
-					err = r.setContactsHash(x.Hash)
+					err = r.setContactsHash(teamID, x.Hash)
 					if err != nil {
 						logger.Warn("MiniRiver got error on saving contacts hash", zap.Error(err))
 					}
@@ -134,13 +134,13 @@ func (r *River) syncContacts() {
 
 }
 
-func (r *River) syncDialogs() {
+func (r *River) syncDialogs(teamID int64, teamAccess uint64) {
 	var (
 		keepGoing       = true
 		offset    int32 = 0
 	)
 
-	updated, err := r.syncUpdateState()
+	updated, err := r.syncUpdateState(teamID)
 	if err != nil {
 		logger.Warn("MiniRiver got error on UpdateSync", zap.Error(err))
 	}
@@ -151,7 +151,7 @@ func (r *River) syncDialogs() {
 		r.network.HttpCommand(
 			nil,
 			request.NewCallback(
-				0, 0, domain.NextRequestID(), msg.C_MessagesGetDialogs,
+				teamID, teamAccess, domain.NextRequestID(), msg.C_MessagesGetDialogs,
 				&msg.MessagesGetDialogs{
 					Limit:         250,
 					Offset:        offset,
@@ -164,7 +164,7 @@ func (r *River) syncDialogs() {
 						x := &msg.MessagesDialogs{}
 						_ = x.Unmarshal(m.Message)
 						_ = minirepo.Dialogs.Save(x.Dialogs...)
-						_ = minirepo.Users.SaveUser(x.Users...)
+						_ = minirepo.Users.SaveUser(teamID, x.Users...)
 						_ = minirepo.Groups.Save(x.Groups...)
 						offset += int32(len(x.Dialogs))
 						if len(x.Dialogs) == 0 {
@@ -184,4 +184,40 @@ func (r *River) syncDialogs() {
 	}
 
 	r.mainDelegate.DataSynced(true, false, false)
+}
+
+func (r *River) syncTeams() {
+	r.network.HttpCommand(
+		nil,
+		request.NewCallback(
+			0, 0, domain.NextRequestID(), msg.C_AccountGetTeams, &msg.AccountGetTeams{},
+			func() {},
+			func(m *rony.MessageEnvelope) {
+				switch m.Constructor {
+				case msg.C_TeamsMany:
+					x := &msg.TeamsMany{}
+					_ = x.Unmarshal(m.Message)
+
+					err := minirepo.Teams.Save(x.Teams...)
+					if err != nil {
+						logger.Warn("got error on saving teams [Teams]", zap.Error(err))
+						return
+					}
+					err = minirepo.Users.SaveUser(0, x.Users...)
+					if err != nil {
+						logger.Warn("got error on saving teams [Users]", zap.Error(err))
+						return
+					}
+				case rony.C_Error:
+					x := &rony.Error{}
+					_ = x.Unmarshal(m.Message)
+					logger.Warn("MiniRiver got server error on syncing contacts", zap.Error(x))
+				default:
+					logger.Warn("MiniRiver got unknown server response")
+				}
+			},
+			nil, false, 0, 0,
+		),
+	)
+
 }

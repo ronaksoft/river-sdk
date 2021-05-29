@@ -102,11 +102,29 @@ func (r *River) contactsGet(da request.Callback) {
 		return
 	}
 
-	res, err := minirepo.Users.ReadAllContacts()
+	res, err := minirepo.Users.ReadAllContacts(da.TeamID())
 	if err != nil {
 		da.Response(rony.C_Error, errors.New("00", err.Error()))
 		return
 	}
 
 	da.Response(msg.C_ContactsMany, res)
+}
+
+func (r *River) accountGetTeams(da request.Callback) {
+	req := &msg.AccountGetTeams{}
+	if err := da.RequestData(req); err != nil {
+		return
+	}
+
+	teams, err := minirepo.Teams.List()
+	if err != nil {
+		da.Response(rony.C_Error, errors.New("00", err.Error()))
+		return
+	}
+
+	res := &msg.TeamsMany{
+		Teams: teams,
+	}
+	da.Response(msg.C_TeamsMany, res)
 }

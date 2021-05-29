@@ -54,23 +54,28 @@ func (r *River) AppStart() error {
 	go r.messageReceiver()
 	go r.updateReceiver()
 
-	if r.getLastUpdateID() == 0 {
+	if r.getLastUpdateID(0) == 0 {
 		// run in sync for the first time
 		wg := sync.WaitGroup{}
-		wg.Add(2)
+		wg.Add(3)
 		go func() {
-			r.syncContacts()
+			r.syncTeams()
 			wg.Done()
 		}()
 		go func() {
-			r.syncDialogs()
+			r.syncContacts(0, 0)
+			wg.Done()
+		}()
+		go func() {
+			r.syncDialogs(0, 0)
 			wg.Done()
 		}()
 		wg.Wait()
 	} else {
 		// run in background
-		go r.syncContacts()
-		go r.syncDialogs()
+		go r.syncContacts(0, 0)
+		go r.syncDialogs(0, 0)
+		go r.syncTeams()
 	}
 
 	return nil
@@ -145,4 +150,23 @@ func (r *River) executeRemoteCommand(reqCB request.Callback) {
 
 func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
 	domain.SetCurrentTeam(teamID, uint64(teamAccessHash))
+	if r.getLastUpdateID(teamID) == 0 {
+		// run in sync for the first time
+		wg := sync.WaitGroup{}
+		wg.Add(2)
+		go func() {
+			r.syncContacts(teamID, uint64(teamAccessHash))
+			wg.Done()
+		}()
+		go func() {
+			r.syncDialogs(teamID, uint64(teamAccessHash))
+			wg.Done()
+		}()
+		wg.Wait()
+	} else {
+		// run in background
+		go r.syncContacts(teamID, uint64(teamAccessHash))
+		go r.syncDialogs(teamID, uint64(teamAccessHash))
+	}
+
 }

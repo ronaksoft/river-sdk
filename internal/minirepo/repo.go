@@ -25,6 +25,7 @@ var (
 	Users   *repoUsers
 	Groups  *repoGroups
 	General *repoGenerals
+	Teams   *repoTeams
 	logger  *logs.Logger
 )
 
@@ -60,7 +61,7 @@ func Init(dbPath string) (err error) {
 	}
 	_ = r.db.Update(func(tx *bolt.Tx) error {
 		buckets := [][]byte{
-			bucketGroups, bucketUsers, bucketGenerals, bucketContacts, bucketDialogs,
+			bucketGroups, bucketUsers, bucketGenerals, bucketContacts, bucketDialogs, bucketTeams,
 		}
 		for _, b := range buckets {
 			_, err = tx.CreateBucketIfNotExists(b)
@@ -90,6 +91,6 @@ func Init(dbPath string) (err error) {
 	Users = newUser(r)
 	Groups = newGroup(r)
 	General = newGeneral(r)
-
+	Teams = newTeam(r)
 	return
 }

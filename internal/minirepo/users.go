@@ -1,6 +1,7 @@
 package minirepo
 
 import (
+	"encoding/binary"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
@@ -52,10 +53,10 @@ func (d *repoUsers) getUser(alloc *tools.Allocator, b *bolt.Bucket, userID int64
 	return u, nil
 }
 
-func (d *repoUsers) saveContact(alloc *tools.Allocator, tx *bolt.Tx, contact *msg.ContactUser, lastSeen int64) error {
+func (d *repoUsers) saveContact(alloc *tools.Allocator, tx *bolt.Tx, teamID int64, contact *msg.ContactUser, lastSeen int64) error {
 	b := tx.Bucket(bucketContacts)
 	err := b.Put(
-		alloc.Gen(contact.ID),
+		alloc.Gen(teamID, contact.ID),
 		alloc.Marshal(contact),
 	)
 	if err != nil {
@@ -63,7 +64,7 @@ func (d *repoUsers) saveContact(alloc *tools.Allocator, tx *bolt.Tx, contact *ms
 	}
 	err = d.index.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(
-			fmt.Sprintf("%s.%d", prefixContacts, contact.ID),
+			fmt.Sprintf("%s.%d.%d", prefixContacts, teamID, contact.ID),
 			tools.Int64ToStr(lastSeen),
 			nil,
 		)
@@ -75,15 +76,15 @@ func (d *repoUsers) saveContact(alloc *tools.Allocator, tx *bolt.Tx, contact *ms
 	return nil
 }
 
-func (d *repoUsers) DeleteContact(userID int64) {
+func (d *repoUsers) DeleteContact(teamID int64, userID int64) {
 	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	_ = d.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketContacts)
-		_ = b.Delete(alloc.Gen(userID))
+		_ = b.Delete(alloc.Gen(teamID, userID))
 		_ = d.index.Update(func(tx *buntdb.Tx) error {
-			_, err := tx.Delete(fmt.Sprintf("%s.%d", prefixContacts, userID))
+			_, err := tx.Delete(fmt.Sprintf("%s.%d.%d", prefixContacts, teamID, userID))
 			return err
 		})
 		return nil
@@ -91,24 +92,24 @@ func (d *repoUsers) DeleteContact(userID int64) {
 
 }
 
-func (d *repoUsers) SaveUser(users ...*msg.User) error {
+func (d *repoUsers) SaveUser(teamID int64, users ...*msg.User) error {
 	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b1 := tx.Bucket(bucketUsers)
 		for _, user := range users {
-			err := b1.Put(alloc.Gen(user.ID), alloc.Marshal(user))
+			err := b1.Put(alloc.Gen(teamID, user.ID), alloc.Marshal(user))
 			if err != nil {
 				return err
 			}
 
 			b2 := tx.Bucket(bucketContacts)
-			v1 := b2.Get(alloc.Gen(user.ID))
+			v1 := b2.Get(alloc.Gen(teamID, user.ID))
 			if len(v1) > 0 {
 				err = d.index.Update(func(tx *buntdb.Tx) error {
 					_, _, err := tx.Set(
-						fmt.Sprintf("%s.%d", prefixContacts, user.ID),
+						fmt.Sprintf("%s.%d.%d", prefixContacts, teamID, user.ID),
 						tools.Int64ToStr(user.LastSeen),
 						nil,
 					)
@@ -123,7 +124,7 @@ func (d *repoUsers) SaveUser(users ...*msg.User) error {
 	})
 }
 
-func (d *repoUsers) SaveAllContacts(newContacts *msg.ContactsMany) error {
+func (d *repoUsers) SaveAllContacts(teamID int64, newContacts *msg.ContactsMany) error {
 	if !newContacts.Modified {
 		return nil
 	}
@@ -131,7 +132,7 @@ func (d *repoUsers) SaveAllContacts(newContacts *msg.ContactsMany) error {
 	for idx := range newContacts.Users {
 		newContactsMap[newContacts.ContactUsers[idx].ID] = newContacts.Users[idx].LastSeen
 	}
-	oldContacts, err := d.ReadAllContacts()
+	oldContacts, err := d.ReadAllContacts(teamID)
 	if err == nil {
 		oldContactsMap := make(map[int64]bool, len(oldContacts.ContactUsers))
 		for idx := range oldContacts.ContactUsers {
@@ -139,7 +140,7 @@ func (d *repoUsers) SaveAllContacts(newContacts *msg.ContactsMany) error {
 		}
 		for userID := range oldContactsMap {
 			if _, ok := newContactsMap[userID]; !ok {
-				d.DeleteContact(userID)
+				d.DeleteContact(teamID, userID)
 			}
 		}
 	}
@@ -148,19 +149,23 @@ func (d *repoUsers) SaveAllContacts(newContacts *msg.ContactsMany) error {
 	defer alloc.ReleaseAll()
 	err = d.db.Update(func(tx *bolt.Tx) error {
 		for _, cu := range newContacts.ContactUsers {
-			err = d.saveContact(alloc, tx, cu, newContactsMap[cu.ID])
+			err = d.saveContact(alloc, tx, teamID, cu, newContactsMap[cu.ID])
 		}
 		return nil
 	})
 	return nil
 }
 
-func (d *repoUsers) ReadAllContacts() (*msg.ContactsMany, error) {
+func (d *repoUsers) ReadAllContacts(teamID int64) (*msg.ContactsMany, error) {
 	res := &msg.ContactsMany{}
 
 	err := d.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketContacts)
 		_ = b.ForEach(func(k, v []byte) error {
+			if binary.BigEndian.Uint64(k[:8]) != uint64(teamID) {
+				return nil
+			}
+
 			c := &msg.ContactUser{}
 			_ = c.Unmarshal(v)
 			res.ContactUsers = append(res.ContactUsers, c)
