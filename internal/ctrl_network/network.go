@@ -540,7 +540,7 @@ func (ctrl *Controller) Connect() {
 			ctrl.wsConn = wsConn
 
 			// it should be started here cuz we need receiver to get AuthRecall answer
-			// websocketSend Signal to start the 'receiver' and 'keepAlive' routines
+			// WebsocketSend Signal to start the 'receiver' and 'keepAlive' routines
 			ctrl.connectChannel <- true
 			logger.Info("connected")
 			ctrl.updateNetworkStatus(domain.NetworkConnected)
@@ -628,7 +628,7 @@ func (ctrl *Controller) WebsocketCommand(reqCB request.Callback) {
 	)
 
 	execBlock := func(reqID uint64, req *rony.MessageEnvelope) {
-		err := ctrl.websocketSend(req, reqCB.Flags())
+		err := ctrl.WebsocketSend(req, reqCB.Flags())
 		if err != nil {
 			logger.Warn("got error from NetCtrl",
 				zap.Uint64("ReqID", req.RequestID),
@@ -659,9 +659,9 @@ func (ctrl *Controller) WebsocketCommand(reqCB request.Callback) {
 	}
 	execBlock(reqCB.RequestID(), reqCB.Envelope())
 }
-func (ctrl *Controller) websocketSend(msgEnvelope *rony.MessageEnvelope, flag request.DelegateFlag) error {
+func (ctrl *Controller) WebsocketSend(msgEnvelope *rony.MessageEnvelope, flag request.DelegateFlag) error {
 	defer logger.RecoverPanic(
-		"NetCtrl::websocketSend",
+		"NetCtrl::WebsocketSend",
 		domain.M{
 			"AuthID": ctrl.authID,
 			"OS":     domain.ClientOS,

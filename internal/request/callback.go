@@ -3,6 +3,7 @@ package request
 import (
 	"encoding/json"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/uiexec"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
@@ -96,12 +97,18 @@ func (c *callback) Constructor() int64 {
 }
 
 func (c *callback) OnComplete(m *rony.MessageEnvelope) {
-	logger.Info("onComplete called",
+	fields := []logs.Field{
 		zap.Uint64("ReqID", c.envelope.RequestID),
 		zap.String("ReqC", registry.ConstructorName(c.envelope.Constructor)),
 		zap.String("ResC", registry.ConstructorName(m.Constructor)),
 		zap.Duration("D", time.Duration(tools.NanoTime()-c.createdOn)),
-	)
+	}
+	if c.createdOn != c.sentOn {
+		fields = append(fields,
+			zap.Duration("D-FLY", time.Duration(tools.NanoTime()-c.sentOn)),
+		)
+	}
+	logger.Info("onComplete", fields...)
 	unregister(c.envelope.RequestID)
 	if c.preComplete != nil {
 		c.preComplete(m)
@@ -117,12 +124,17 @@ func (c *callback) OnComplete(m *rony.MessageEnvelope) {
 }
 
 func (c *callback) OnTimeout() {
-	logger.Info("onTimeout called",
+	fields := []logs.Field{
 		zap.Uint64("ReqID", c.envelope.RequestID),
 		zap.String("ReqC", registry.ConstructorName(c.envelope.Constructor)),
 		zap.Duration("D", time.Duration(tools.NanoTime()-c.createdOn)),
-		zap.Duration("D-FLY", time.Duration(tools.NanoTime()-c.sentOn)),
-	)
+	}
+	if c.createdOn != c.sentOn {
+		fields = append(fields,
+			zap.Duration("D-FLY", time.Duration(tools.NanoTime()-c.sentOn)),
+		)
+	}
+	logger.Info("onTimeout", fields...)
 	unregister(c.envelope.RequestID)
 	if c.preTimeout != nil {
 		c.preTimeout()

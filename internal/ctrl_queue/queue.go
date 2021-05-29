@@ -99,49 +99,7 @@ func (ctrl *Controller) distributor() {
 			continue
 		}
 
-		reqCB.SetPreTimeout(func() {
-			switch reqCB.Constructor() {
-			case msg.C_MessagesSend, msg.C_MessagesSendMedia:
-				pm, _ := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
-				if pm != nil {
-					ctrl.addToWaitingList(reqCB)
-					return
-				}
-			default:
-				ctrl.addToWaitingList(reqCB)
-			}
-		})
-		reqCB.SetPreComplete(func(res *rony.MessageEnvelope) {
-			switch reqCB.Constructor() {
-			case msg.C_MessagesSend, msg.C_MessagesSendMedia, msg.C_MessagesForward:
-				switch res.Constructor {
-				case rony.C_Error:
-					errMsg := &rony.Error{}
-					_ = errMsg.Unmarshal(res.Message)
-					switch {
-					case domain.CheckError(errMsg, msg.ErrCodeAlreadyExists, msg.ErrItemRandomID):
-						fallthrough
-					case domain.CheckError(errMsg, msg.ErrCodeAccess, "NON_TEAM_MEMBER"):
-						pm, _ := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
-						if pm != nil {
-							_ = repo.PendingMessages.Delete(pm.ID)
-						}
-					}
-				}
-			default:
-				switch res.Constructor {
-				case rony.C_Error:
-					errMsg := &rony.Error{}
-					_ = errMsg.Unmarshal(res.Message)
-					switch {
-					case domain.CheckError(errMsg, msg.ErrCodeInvalid, msg.ErrItemSalt):
-						ctrl.addToWaitingList(reqCB)
-					}
-				}
-			}
-		})
-
-		go ctrl.networkCtrl.HttpCommand(nil, reqCB)
+		go ctrl.executor(reqCB)
 	}
 }
 
@@ -162,6 +120,79 @@ func (ctrl *Controller) addToWaitingList(reqCB request.Callback) {
 		go ctrl.distributor()
 	}
 	ctrl.distributorLock.Unlock()
+}
+
+// executor
+// Sends the message to the networkController and waits for the response. If time is up then it call the
+// TimeoutCallback otherwise if response arrived in time, SuccessCallback will be called.
+func (ctrl *Controller) executor(reqCB request.Callback) {
+	defer logger.RecoverPanic(
+		"SyncCtrl::executor",
+		domain.M{
+			"OS":  domain.ClientOS,
+			"Ver": domain.ClientVersion,
+			"C":   reqCB.Constructor(),
+		},
+		nil,
+	)
+
+	// Try to send it over wire, if error happened put it back into the queue
+	if err := ctrl.networkCtrl.WebsocketSend(reqCB.Envelope(), 0); err != nil {
+		logger.Info("re-push the request into the queue", zap.Error(err))
+		ctrl.addToWaitingList(reqCB)
+		return
+	}
+
+	select {
+	case <-time.After(reqCB.Timeout()):
+		switch reqCB.Constructor() {
+		case msg.C_MessagesSend, msg.C_MessagesSendMedia:
+			pm, _ := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
+			if pm != nil {
+				ctrl.addToWaitingList(reqCB)
+				return
+			}
+		case msg.C_MessagesReadHistory, msg.C_MessagesGetHistory,
+			msg.C_ContactsImport, msg.C_ContactsGet,
+			msg.C_AuthSendCode, msg.C_AuthRegister, msg.C_AuthLogin,
+			msg.C_LabelsAddToMessage, msg.C_LabelsRemoveFromMessage:
+			ctrl.addToWaitingList(reqCB)
+			return
+		default:
+			reqCB.OnTimeout()
+		}
+	case res := <-reqCB.ResponseChan():
+		switch reqCB.Constructor() {
+		case msg.C_MessagesSend, msg.C_MessagesSendMedia, msg.C_MessagesForward:
+			switch res.Constructor {
+			case rony.C_Error:
+				errMsg := &rony.Error{}
+				_ = errMsg.Unmarshal(res.Message)
+
+				switch {
+				case domain.CheckError(errMsg, msg.ErrCodeAlreadyExists, msg.ErrItemRandomID):
+					fallthrough
+				case domain.CheckError(errMsg, msg.ErrCodeAccess, "NON_TEAM_MEMBER"):
+					pm, _ := repo.PendingMessages.GetByRandomID(int64(reqCB.RequestID()))
+					if pm != nil {
+						_ = repo.PendingMessages.Delete(pm.ID)
+					}
+
+				}
+			}
+		default:
+			switch res.Constructor {
+			case rony.C_Error:
+				errMsg := &rony.Error{}
+				_ = errMsg.Unmarshal(res.Message)
+				switch {
+				case domain.CheckError(errMsg, msg.ErrCodeInvalid, msg.ErrItemSalt):
+					ctrl.addToWaitingList(reqCB)
+				}
+			}
+		}
+		reqCB.OnComplete(res)
+	}
 }
 
 // EnqueueCommand put request in queue and distributor will execute it later
