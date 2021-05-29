@@ -139,7 +139,7 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 	}
 
 	da.Envelope().Fill(da.RequestID(), msg.C_MessagesSendMedia, x)
-	r.network.HttpCommand(da)
+	r.network.HttpCommand(nil, da)
 }
 func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (fl *msg.FileLocation, err error) {
 	h, _ := domain.CalculateSha256(req.FilePath)
@@ -160,33 +160,32 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (fl *msg.FileLocati
 		}
 	}
 
-	r.network.HttpCommand(
-		request.NewCallback(
-			0, 0, domain.NextRequestID(), msg.C_FileGetBySha256,
-			&msg.FileGetBySha256{
-				Sha256:   h,
-				FileSize: fileSize,
-			},
-			func() {
-				err = domain.ErrRequestTimeout
-			},
-			func(res *rony.MessageEnvelope) {
-				switch res.Constructor {
-				case msg.C_FileLocation:
-					fl = &msg.FileLocation{}
-					_ = fl.Unmarshal(res.Message)
-					return
-				case rony.C_Error:
-					x := &rony.Error{}
-					_ = x.Unmarshal(res.Message)
-					err = x
-				default:
-					err = domain.ErrServer
-				}
-			},
-			nil, false, 0, domain.HttpRequestTimeout,
-		),
+	reqCB := request.NewCallback(
+		0, 0, domain.NextRequestID(), msg.C_FileGetBySha256,
+		&msg.FileGetBySha256{
+			Sha256:   h,
+			FileSize: fileSize,
+		},
+		func() {
+			err = domain.ErrRequestTimeout
+		},
+		func(res *rony.MessageEnvelope) {
+			switch res.Constructor {
+			case msg.C_FileLocation:
+				fl = &msg.FileLocation{}
+				_ = fl.Unmarshal(res.Message)
+				return
+			case rony.C_Error:
+				x := &rony.Error{}
+				_ = x.Unmarshal(res.Message)
+				err = x
+			default:
+				err = domain.ErrServer
+			}
+		},
+		nil, false, 0, domain.HttpRequestTimeout,
 	)
+	r.network.HttpCommand(nil, reqCB)
 
 	return
 }
@@ -254,28 +253,27 @@ func (r *River) savePart(da request.Callback, f io.Reader, fileID int64, partInd
 	}
 	reqBuf := pools.Buffer.FromProto(req)
 	defer pools.Buffer.Put(reqBuf)
-	r.network.HttpCommand(
-		request.NewCallbackFromBytes(
-			da.TeamID(), da.TeamAccess(), domain.NextRequestID(), msg.C_FileSavePart, *reqBuf.Bytes(),
-			func() {
-				err = domain.ErrRequestTimeout
-			},
-			func(m *rony.MessageEnvelope) {
-				switch m.Constructor {
-				case msg.C_Bool:
-					err = nil
-				case rony.C_Error:
-					x := &rony.Error{}
-					_ = x.Unmarshal(m.Message)
-					err = x
-				default:
-					err = domain.ErrServer
-				}
-			},
-			nil,
-			false, 0, domain.HttpRequestTimeout,
-		),
+	reqCB := request.NewCallbackFromBytes(
+		da.TeamID(), da.TeamAccess(), domain.NextRequestID(), msg.C_FileSavePart, *reqBuf.Bytes(),
+		func() {
+			err = domain.ErrRequestTimeout
+		},
+		func(m *rony.MessageEnvelope) {
+			switch m.Constructor {
+			case msg.C_Bool:
+				err = nil
+			case rony.C_Error:
+				x := &rony.Error{}
+				_ = x.Unmarshal(m.Message)
+				err = x
+			default:
+				err = domain.ErrServer
+			}
+		},
+		nil,
+		false, 0, domain.HttpRequestTimeout,
 	)
+	r.network.HttpCommand(nil, reqCB)
 	return err
 }
 

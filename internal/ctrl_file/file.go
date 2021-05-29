@@ -8,6 +8,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
@@ -205,14 +206,59 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 	}
 	filePath = repo.Files.GetFilePath(clientFile)
 	switch clientFile.Type {
-	case msg.ClientFileType_GroupProfilePhoto:
-		return ctrl.downloadGroupPhoto(clientFile)
-	case msg.ClientFileType_AccountProfilePhoto:
-		return ctrl.downloadAccountPhoto(clientFile)
-	case msg.ClientFileType_Thumbnail:
-		return ctrl.downloadThumbnail(clientFile)
-	case msg.ClientFileType_Wallpaper:
-		return ctrl.downloadWallpaper(clientFile)
+	case msg.ClientFileType_GroupProfilePhoto, msg.ClientFileType_AccountProfilePhoto,
+		msg.ClientFileType_Thumbnail, msg.ClientFileType_Wallpaper:
+		req := &msg.FileGet{
+			Location: &msg.InputFileLocation{
+				ClusterID:  clientFile.ClusterID,
+				FileID:     clientFile.FileID,
+				AccessHash: clientFile.AccessHash,
+				Version:    clientFile.Version,
+			},
+			Offset: 0,
+			Limit:  0,
+		}
+		err = tools.Try(RetryMaxAttempts, RetryWaitTime, func() error {
+			reqCB := request.NewCallback(
+				0, 0, domain.NextRequestID(), msg.C_FileGet, req,
+				func() {
+					err = domain.ErrRequestTimeout
+				},
+				func(res *rony.MessageEnvelope) {
+					switch res.Constructor {
+					case rony.C_Error:
+						x := &rony.Error{}
+						_ = x.Unmarshal(res.Message)
+						err = x
+					case msg.C_File:
+						x := new(msg.File)
+						err = x.Unmarshal(res.Message)
+						if err != nil {
+							return
+						}
+
+						// write to file path
+						err = ioutil.WriteFile(filePath, x.Bytes, 0666)
+						if err != nil {
+							return
+						}
+
+						// save to DB
+						_ = repo.Files.Save(clientFile)
+						return
+					default:
+						err = domain.ErrServer
+						return
+					}
+
+				},
+				nil, false, 0, domain.HttpRequestTimeout,
+			)
+
+			ctrl.network.HttpCommand(nil, reqCB)
+			return err
+		})
+		return filePath, err
 	default:
 		err = ctrl.download(&DownloadRequest{
 			ClientFileRequest: msg.ClientFileRequest{
@@ -230,229 +276,6 @@ func (ctrl *Controller) DownloadSync(clusterID int32, fileID int64, accessHash u
 		}, true)
 	}
 
-	return
-}
-func (ctrl *Controller) downloadAccountPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = tools.Try(RetryMaxAttempts, RetryWaitTime, func() error {
-		req := &msg.FileGet{
-			Location: &msg.InputFileLocation{
-				ClusterID:  clientFile.ClusterID,
-				FileID:     clientFile.FileID,
-				AccessHash: clientFile.AccessHash,
-				Version:    clientFile.Version,
-			},
-			Offset: 0,
-			Limit:  0,
-		}
-
-		envelop := &rony.MessageEnvelope{}
-		envelop.Constructor = msg.C_FileGet
-		envelop.Message, _ = req.Marshal()
-		envelop.RequestID = uint64(domain.SequentialUniqueID())
-
-		filePath = repo.Files.GetFilePath(clientFile)
-		res, err := ctrl.network.SendHttp(nil, envelop)
-		if err != nil {
-			return err
-		}
-
-		switch res.Constructor {
-		case rony.C_Error:
-			strErr := ""
-			x := new(rony.Error)
-			if err := x.Unmarshal(res.Message); err == nil {
-				strErr = "Code :" + x.Code + ", Items :" + x.Items
-			}
-			return fmt.Errorf("received error response {userID: %d,  %s }", clientFile.UserID, strErr)
-		case msg.C_File:
-			x := new(msg.File)
-			err := x.Unmarshal(res.Message)
-			if err != nil {
-				return err
-			}
-
-			// write to file path
-			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
-			if err != nil {
-				return err
-			}
-
-			// save to DB
-			_ = repo.Files.Save(clientFile)
-			return nil
-		default:
-			return fmt.Errorf("received unknown response constructor {UserId : %d}", clientFile.UserID)
-		}
-
-	})
-	return
-}
-func (ctrl *Controller) downloadGroupPhoto(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = tools.Try(RetryMaxAttempts, RetryWaitTime, func() error {
-		req := &msg.FileGet{
-			Location: &msg.InputFileLocation{
-				ClusterID:  clientFile.ClusterID,
-				FileID:     clientFile.FileID,
-				AccessHash: clientFile.AccessHash,
-				Version:    clientFile.Version,
-			},
-			Offset: 0,
-			Limit:  0,
-		}
-
-		envelop := &rony.MessageEnvelope{}
-		envelop.Constructor = msg.C_FileGet
-		envelop.Message, _ = req.Marshal()
-		envelop.RequestID = uint64(domain.SequentialUniqueID())
-
-		filePath = repo.Files.GetFilePath(clientFile)
-		res, err := ctrl.network.SendHttp(nil, envelop)
-		if err != nil {
-			return err
-		}
-		switch res.Constructor {
-		case rony.C_Error:
-			strErr := ""
-			x := new(rony.Error)
-			if err := x.Unmarshal(res.Message); err == nil {
-				strErr = "Code :" + x.Code + ", Items :" + x.Items
-			}
-			return fmt.Errorf("received error response {GroupID: %d,  %s }", clientFile.GroupID, strErr)
-		case msg.C_File:
-			x := new(msg.File)
-			err := x.Unmarshal(res.Message)
-			if err != nil {
-				return err
-			}
-
-			// write to file path
-			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
-			if err != nil {
-				return err
-			}
-
-			// save to DB
-			_ = repo.Files.Save(clientFile)
-			return nil
-
-		default:
-			return fmt.Errorf("received unknown response constructor {GroupID : %d}", clientFile.GroupID)
-		}
-
-	})
-	return
-}
-func (ctrl *Controller) downloadWallpaper(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = tools.Try(RetryMaxAttempts, RetryWaitTime, func() error {
-		req := &msg.FileGet{
-			Location: &msg.InputFileLocation{
-				ClusterID:  clientFile.ClusterID,
-				FileID:     clientFile.FileID,
-				AccessHash: clientFile.AccessHash,
-				Version:    clientFile.Version,
-			},
-			Offset: 0,
-			Limit:  0,
-		}
-
-		envelop := &rony.MessageEnvelope{}
-		envelop.Constructor = msg.C_FileGet
-		envelop.Message, _ = req.Marshal()
-		envelop.RequestID = uint64(domain.SequentialUniqueID())
-
-		filePath = repo.Files.GetFilePath(clientFile)
-		res, err := ctrl.network.SendHttp(nil, envelop)
-		if err != nil {
-			return err
-		}
-
-		switch res.Constructor {
-		case rony.C_Error:
-			strErr := ""
-			x := new(rony.Error)
-			if err := x.Unmarshal(res.Message); err == nil {
-				strErr = "Code :" + x.Code + ", Items :" + x.Items
-			}
-			return fmt.Errorf("received error response {%s}", strErr)
-		case msg.C_File:
-			x := new(msg.File)
-			err := x.Unmarshal(res.Message)
-			if err != nil {
-				return err
-			}
-
-			// write to file path
-			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
-			if err != nil {
-				return err
-			}
-
-			// save to DB
-			_ = repo.Files.Save(clientFile)
-
-			return nil
-
-		default:
-			return nil
-		}
-
-	})
-	return
-}
-func (ctrl *Controller) downloadThumbnail(clientFile *msg.ClientFile) (filePath string, err error) {
-	err = tools.Try(RetryMaxAttempts, RetryWaitTime, func() error {
-		req := &msg.FileGet{
-			Location: &msg.InputFileLocation{
-				ClusterID:  clientFile.ClusterID,
-				FileID:     clientFile.FileID,
-				AccessHash: clientFile.AccessHash,
-				Version:    clientFile.Version,
-			},
-			Offset: 0,
-			Limit:  0,
-		}
-
-		envelop := &rony.MessageEnvelope{}
-		envelop.Constructor = msg.C_FileGet
-		envelop.Message, _ = req.Marshal()
-		envelop.RequestID = uint64(domain.SequentialUniqueID())
-
-		filePath = repo.Files.GetFilePath(clientFile) // getThumbnailPath(clientFile.FileID, clientFile.ClusterID)
-		res, err := ctrl.network.SendHttp(nil, envelop)
-		if err != nil {
-			return err
-		}
-
-		switch res.Constructor {
-		case rony.C_Error:
-			strErr := ""
-			x := new(rony.Error)
-			if err := x.Unmarshal(res.Message); err == nil {
-				strErr = "Code :" + x.Code + ", Items :" + x.Items
-			}
-			return fmt.Errorf("received error response {%s}", strErr)
-		case msg.C_File:
-			x := new(msg.File)
-			err := x.Unmarshal(res.Message)
-			if err != nil {
-				return err
-			}
-
-			// write to file path
-			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
-			if err != nil {
-				return err
-			}
-
-			// save to DB
-			_ = repo.Files.Save(clientFile)
-
-			return nil
-
-		default:
-			return nil
-		}
-	})
 	return
 }
 func (ctrl *Controller) download(req *DownloadRequest, blocking bool) error {

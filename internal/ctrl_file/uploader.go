@@ -7,6 +7,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/ctrl_file/executor"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
@@ -40,37 +41,38 @@ type UploadRequest struct {
 	startTime     time.Time
 }
 
-func (u *UploadRequest) checkSha256() error {
-	envelop := &rony.MessageEnvelope{
-		RequestID:   uint64(domain.SequentialUniqueID()),
-		Constructor: msg.C_FileGetBySha256,
-	}
+func (u *UploadRequest) checkSha256() (err error) {
 	req := &msg.FileGetBySha256{
 		Sha256:   u.cfr.FileSha256,
 		FileSize: int32(u.cfr.FileSize),
 	}
-	envelop.Message, _ = req.Marshal()
+	reqCB := request.NewCallback(
+		0, 0, domain.NextRequestID(), msg.C_FileGetBySha256, req,
+		func() {
+			err = domain.ErrRequestTimeout
+		},
+		func(res *rony.MessageEnvelope) {
+			switch res.Constructor {
+			case msg.C_FileLocation:
+				x := &msg.FileLocation{}
+				_ = x.Unmarshal(res.Message)
+				u.cfr.ClusterID = x.ClusterID
+				u.cfr.AccessHash = x.AccessHash
+				u.cfr.FileID = x.FileID
+				u.cfr.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
+				return
+			case rony.C_Error:
+				x := &rony.Error{}
+				_ = x.Unmarshal(res.Message)
+				err = x
+			}
+		},
+		nil, false, 0, domain.HttpRequestTimeout,
+	)
 
-	ctx, cancelFunc := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
-	defer cancelFunc()
-	res, err := u.ctrl.network.SendHttp(ctx, envelop)
-	if err != nil {
-		return err
-	}
-	switch res.Constructor {
-	case msg.C_FileLocation:
-		x := &msg.FileLocation{}
-		_ = x.Unmarshal(res.Message)
-		u.cfr.ClusterID = x.ClusterID
-		u.cfr.AccessHash = x.AccessHash
-		u.cfr.FileID = x.FileID
-		u.cfr.TotalParts = -1 // dirty hack, which queue.Start() knows the upload request is completed
-		return nil
-	case rony.C_Error:
-		x := &rony.Error{}
-		_ = x.Unmarshal(res.Message)
-	}
-	return domain.ErrServer
+	u.ctrl.network.HttpCommand(nil, reqCB)
+
+	return
 }
 
 func (u *UploadRequest) genFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *rony.MessageEnvelope {
@@ -402,38 +404,44 @@ func (a *UploadAction) Do(ctx context.Context) {
 		)
 	}
 
-	// Send the http request to server
-	ctx, cf := context.WithTimeout(ctx, domain.HttpRequestTimeout)
-	defer cf()
-	res, err := a.req.ctrl.network.SendHttp(
-		ctx, a.req.genFileSavePart(a.req.cfr.FileID, a.id+1, a.req.cfr.TotalParts, bytes[:n]),
+	req := &msg.FileSavePart{
+		TotalParts: a.req.cfr.TotalParts,
+		Bytes:      bytes[:n],
+		FileID:     a.req.cfr.FileID,
+		PartID:     a.id + 1,
+	}
+	reqCB := request.NewCallback(
+		0, 0, domain.NextRequestID(), msg.C_FileSavePart, req,
+		func() {
+			atomic.AddInt32(&a.req.failedActions, 1)
+			a.req.parts <- a.id
+		},
+		func(res *rony.MessageEnvelope) {
+			switch res.Constructor {
+			case msg.C_Bool:
+				a.req.addToUploaded(a.id)
+				logger.Debug("upload action done",
+					zap.String("ID", a.req.GetID()),
+					zap.Int32("PartID", a.ID()),
+					zap.Duration("D", domain.Now().Sub(startTime)),
+				)
+			case rony.C_Error:
+				x := &rony.Error{}
+				_ = x.Unmarshal(res.Message)
+				logger.Warn("received Error response (Upload)",
+					zap.Int32("PartID", a.id+1),
+					zap.String("Code", x.Code),
+					zap.String("Item", x.Items),
+				)
+				atomic.AddInt32(&a.req.failedActions, 1)
+				a.req.parts <- a.id
+			default:
+				logger.Fatal("received unexpected response (Upload)", zap.String("C", registry.ConstructorName(res.Constructor)))
+				return
+			}
+		},
+		nil, false, 0, domain.HttpRequestTimeout,
 	)
-	if err != nil {
-		logger.Warn("got error On SendHttp (Upload)", zap.Error(err))
-		atomic.AddInt32(&a.req.failedActions, 1)
-		a.req.parts <- a.id
-		return
-	}
-	switch res.Constructor {
-	case msg.C_Bool:
-		a.req.addToUploaded(a.id)
-		logger.Debug("upload action done",
-			zap.String("ID", a.req.GetID()),
-			zap.Int32("PartID", a.ID()),
-			zap.Duration("D", domain.Now().Sub(startTime)),
-		)
-	case rony.C_Error:
-		x := &rony.Error{}
-		_ = x.Unmarshal(res.Message)
-		logger.Warn("received Error response (Upload)",
-			zap.Int32("PartID", a.id+1),
-			zap.String("Code", x.Code),
-			zap.String("Item", x.Items),
-		)
-		atomic.AddInt32(&a.req.failedActions, 1)
-		a.req.parts <- a.id
-	default:
-		logger.Fatal("received unexpected response (Upload)", zap.String("C", registry.ConstructorName(res.Constructor)))
-		return
-	}
+
+	a.req.ctrl.network.HttpCommand(nil, reqCB)
 }

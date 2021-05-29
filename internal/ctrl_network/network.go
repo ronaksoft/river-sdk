@@ -874,9 +874,12 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 }
 
 // HttpCommand run request immediately
-func (ctrl *Controller) HttpCommand(reqCB request.Callback) {
-	ctx, cf := context.WithTimeout(context.Background(), reqCB.Timeout())
-	defer cf()
+func (ctrl *Controller) HttpCommand(ctx context.Context, reqCB request.Callback) {
+	if ctx == nil {
+		var cf context.CancelFunc
+		ctx, cf = context.WithTimeout(context.Background(), reqCB.Timeout())
+		defer cf()
+	}
 
 	res, err := ctrl.SendHttp(ctx, reqCB.Envelope())
 	switch err {

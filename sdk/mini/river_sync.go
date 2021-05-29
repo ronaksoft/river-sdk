@@ -21,6 +21,7 @@ import (
 
 func (r *River) syncServerTime() (err error) {
 	r.network.HttpCommand(
+		nil,
 		request.NewCallback(
 			0, 0, domain.NextRequestID(), msg.C_SystemGetServerTime, &msg.SystemGetServerTime{},
 			func() {
@@ -62,6 +63,7 @@ func (r *River) syncUpdateState() (updated bool, err error) {
 
 	currentUpdateID := r.getLastUpdateID()
 	r.network.HttpCommand(
+		nil,
 		request.NewCallback(0, 0, domain.NextRequestID(), msg.C_UpdateGetState, &msg.UpdateGetState{},
 			func() {
 				err = domain.ErrRequestTimeout
@@ -96,6 +98,7 @@ func (r *River) syncUpdateState() (updated bool, err error) {
 
 func (r *River) syncContacts() {
 	r.network.HttpCommand(
+		nil,
 		request.NewCallback(
 			0, 0, domain.NextRequestID(), msg.C_ContactsGet, &msg.ContactsGet{Crc32Hash: r.getContactsHash()},
 			func() {},
@@ -146,6 +149,7 @@ func (r *River) syncDialogs() {
 	}
 	for keepGoing {
 		r.network.HttpCommand(
+			nil,
 			request.NewCallback(
 				0, 0, domain.NextRequestID(), msg.C_MessagesGetDialogs,
 				&msg.MessagesGetDialogs{

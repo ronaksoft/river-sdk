@@ -6,6 +6,7 @@ import (
 	"git.ronaksoft.com/river/sdk/internal/ctrl_file/executor"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/repo"
+	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 	"go.uber.org/zap"
 	"os"
@@ -30,25 +31,6 @@ type DownloadRequest struct {
 	done     chan struct{}
 	progress int64
 	finished bool
-}
-
-func (d *DownloadRequest) generateFileGet(offset, limit int32) *rony.MessageEnvelope {
-	req := new(msg.FileGet)
-	req.Location = &msg.InputFileLocation{
-		ClusterID:  d.ClusterID,
-		FileID:     d.FileID,
-		AccessHash: d.AccessHash,
-		Version:    d.Version,
-	}
-	req.Offset = offset
-	req.Limit = limit
-
-	envelop := new(rony.MessageEnvelope)
-	envelop.Constructor = msg.C_FileGet
-	envelop.Message, _ = req.Marshal()
-	envelop.RequestID = uint64(domain.SequentialUniqueID())
-
-	return envelop
 }
 
 func (d *DownloadRequest) isDownloaded(partIndex int32) bool {
@@ -233,37 +215,51 @@ func (a *DownloadAction) Do(ctx context.Context) {
 	offset := a.id * a.req.ChunkSize
 	ctx, cf := context.WithTimeout(ctx, domain.HttpRequestTimeout)
 	defer cf()
-	res, err := a.req.ctrl.network.SendHttp(ctx, a.req.generateFileGet(offset, a.req.ChunkSize))
-	if err != nil {
-		a.req.parts <- a.id
-		return
+	req := &msg.FileGet{
+		Location: &msg.InputFileLocation{
+			ClusterID:  a.req.ClusterID,
+			FileID:     a.req.FileID,
+			AccessHash: a.req.AccessHash,
+			Version:    a.req.Version,
+		},
+		Offset: offset,
+		Limit:  a.req.ChunkSize,
 	}
-	switch res.Constructor {
-	case msg.C_File:
-		file := new(msg.File)
-		err = file.Unmarshal(res.Message)
-		if err != nil {
-			logger.Warn("Downloader couldn't unmarshal server response FileGet (File)",
-				zap.Error(err),
-				zap.Int32("Offset", offset),
-				zap.Int("Byte", len(file.Bytes)),
-			)
+
+	reqCB := request.NewCallback(
+		0, 0, domain.NextRequestID(), msg.C_FileGet, req,
+		func() {
 			a.req.parts <- a.id
-			return
-		}
-		_, err := a.req.file.WriteAt(file.Bytes, int64(offset))
-		if err != nil {
-			logger.Error("Downloader couldn't write to file, will retry...",
-				zap.Error(err),
-				zap.Int32("Offset", offset),
-				zap.Int("Byte", len(file.Bytes)),
-			)
-			a.req.parts <- a.id
-			return
-		}
-		a.req.addToDownloaded(a.id)
-	default:
-		a.req.parts <- a.id
-		return
-	}
+		},
+		func(res *rony.MessageEnvelope) {
+			switch res.Constructor {
+			case msg.C_File:
+				file := &msg.File{}
+				err := file.Unmarshal(res.Message)
+				if err != nil {
+					logger.Warn("couldn't unmarshal server response FileGet (File), will retry ...",
+						zap.Error(err),
+						zap.Int32("Offset", offset),
+						zap.Int("Byte", len(file.Bytes)),
+					)
+					a.req.parts <- a.id
+					return
+				}
+				_, err = a.req.file.WriteAt(file.Bytes, int64(offset))
+				if err != nil {
+					logger.Error("couldn't write to file, will retry...",
+						zap.Error(err),
+						zap.Int32("Offset", offset),
+						zap.Int("Byte", len(file.Bytes)),
+					)
+					a.req.parts <- a.id
+					return
+				}
+				a.req.addToDownloaded(a.id)
+			default:
+				a.req.parts <- a.id
+				return
+			}
+		}, nil, false, 0, domain.HttpRequestTimeout)
+	a.req.ctrl.network.HttpCommand(ctx, reqCB)
 }

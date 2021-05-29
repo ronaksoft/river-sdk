@@ -140,7 +140,7 @@ func (r *River) executeRemoteCommand(reqCB request.Callback) {
 		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
 	)
 
-	r.network.HttpCommand(reqCB)
+	r.network.HttpCommand(nil, reqCB)
 }
 
 func (r *River) SetTeam(teamID int64, teamAccessHash int64) {

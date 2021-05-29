@@ -27,7 +27,7 @@ func (r *River) messagesSendMedia(da request.Callback) {
 
 	req.RandomID = domain.SequentialUniqueID()
 	da.Envelope().Fill(da.RequestID(), msg.C_MessagesSendMedia, req)
-	r.network.HttpCommand(da)
+	r.network.HttpCommand(nil, da)
 }
 
 func (r *River) messagesGetDialogs(da request.Callback) {
@@ -41,7 +41,7 @@ func (r *River) messagesGetDialogs(da request.Callback) {
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		r.network.HttpCommand(da)
+		r.network.HttpCommand(nil, da)
 		return
 	}
 

@@ -53,35 +53,34 @@ func (r *River) FileDownloadThumbnail(clusterID int32, fileID int64, accessHash 
 	}
 
 	return tools.Try(fileCtrl.RetryMaxAttempts, fileCtrl.RetryWaitTime, func() error {
-		r.network.HttpCommand(
-			request.NewCallback(
-				0, 0, domain.NextRequestID(), msg.C_FileGet, req,
-				func() {
-					err = domain.ErrRequestTimeout
-				},
-				func(res *rony.MessageEnvelope) {
-					switch res.Constructor {
-					case rony.C_Error:
-						x := &rony.Error{}
-						_ = x.Unmarshal(res.Message)
-						err = x
-					case msg.C_File:
-						x := &msg.File{}
-						err = x.Unmarshal(res.Message)
-						if err != nil {
-							return
-						}
-
-						// write to file path
-						err = ioutil.WriteFile(filePath, x.Bytes, 0666)
-						if err != nil {
-							return
-						}
+		reqCB := request.NewCallback(
+			0, 0, domain.NextRequestID(), msg.C_FileGet, req,
+			func() {
+				err = domain.ErrRequestTimeout
+			},
+			func(res *rony.MessageEnvelope) {
+				switch res.Constructor {
+				case rony.C_Error:
+					x := &rony.Error{}
+					_ = x.Unmarshal(res.Message)
+					err = x
+				case msg.C_File:
+					x := &msg.File{}
+					err = x.Unmarshal(res.Message)
+					if err != nil {
+						return
 					}
-				},
-				nil, false, 0, domain.HttpRequestTimeout,
-			),
+
+					// write to file path
+					err = ioutil.WriteFile(filePath, x.Bytes, 0666)
+					if err != nil {
+						return
+					}
+				}
+			},
+			nil, false, 0, domain.HttpRequestTimeout,
 		)
+		r.network.HttpCommand(nil, reqCB)
 		return err
 	})
 }
