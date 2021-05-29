@@ -39,54 +39,50 @@ func (r *River) GetFileStatus(clusterID int32, fileID int64, accessHash int64) [
 	return buf
 }
 
-func (r *River) FileDownloadThumbnail(clusterID int32, fileID int64, accessHash int64) error {
+func (r *River) FileDownloadThumbnail(clusterID int32, fileID int64, accessHash int64) (err error) {
+	filePath := path.Join(repo.DirCache, fmt.Sprintf("%d%d%s", fileID, clusterID, ".jpg"))
+	req := &msg.FileGet{
+		Location: &msg.InputFileLocation{
+			ClusterID:  clusterID,
+			FileID:     fileID,
+			AccessHash: uint64(accessHash),
+			Version:    0,
+		},
+		Offset: 0,
+		Limit:  0,
+	}
+
 	return tools.Try(fileCtrl.RetryMaxAttempts, fileCtrl.RetryWaitTime, func() error {
-		req := &msg.FileGet{
-			Location: &msg.InputFileLocation{
-				ClusterID:  clusterID,
-				FileID:     fileID,
-				AccessHash: uint64(accessHash),
-				Version:    0,
-			},
-			Offset: 0,
-			Limit:  0,
-		}
+		r.network.HttpCommand(
+			request.NewCallback(
+				0, 0, domain.NextRequestID(), msg.C_FileGet, req,
+				func() {
+					err = domain.ErrRequestTimeout
+				},
+				func(res *rony.MessageEnvelope) {
+					switch res.Constructor {
+					case rony.C_Error:
+						x := &rony.Error{}
+						_ = x.Unmarshal(res.Message)
+						err = x
+					case msg.C_File:
+						x := &msg.File{}
+						err = x.Unmarshal(res.Message)
+						if err != nil {
+							return
+						}
 
-		envelop := &rony.MessageEnvelope{}
-		envelop.Fill(uint64(domain.SequentialUniqueID()), msg.C_FileGet, req)
-		filePath := path.Join(repo.DirCache, fmt.Sprintf("%d%d%s", fileID, clusterID, ".jpg"))
-
-		res, err := r.network.SendHttp(nil, envelop)
-		if err != nil {
-			return err
-		}
-
-		switch res.Constructor {
-		case rony.C_Error:
-			strErr := ""
-			x := new(rony.Error)
-			if err := x.Unmarshal(res.Message); err == nil {
-				strErr = "Code :" + x.Code + ", Items :" + x.Items
-			}
-			return fmt.Errorf("received error response {%s}", strErr)
-		case msg.C_File:
-			x := new(msg.File)
-			err := x.Unmarshal(res.Message)
-			if err != nil {
-				return err
-			}
-
-			// write to file path
-			err = ioutil.WriteFile(filePath, x.Bytes, 0666)
-			if err != nil {
-				return err
-			}
-
-			return nil
-
-		default:
-			return nil
-		}
+						// write to file path
+						err = ioutil.WriteFile(filePath, x.Bytes, 0666)
+						if err != nil {
+							return
+						}
+					}
+				},
+				nil, false, 0, domain.HttpRequestTimeout,
+			),
+		)
+		return err
 	})
 }
 

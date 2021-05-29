@@ -93,6 +93,7 @@ const (
 	WebsocketDialTimeout        = 3 * time.Second
 	WebsocketDialTimeoutLong    = 10 * time.Second
 	HttpRequestTimeout          = 30 * time.Second
+	HttpRequestTimeShort        = 8 * time.Second
 	SnapshotSyncThreshold       = 10000
 )
 

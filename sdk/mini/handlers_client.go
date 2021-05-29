@@ -1,7 +1,6 @@
 package mini
 
 import (
-	"context"
 	"fmt"
 	"git.ronaksoft.com/river/msg/go/msg"
 	fileCtrl "git.ronaksoft.com/river/sdk/internal/ctrl_file"
@@ -139,16 +138,10 @@ func (r *River) clientSendMessageMedia(da request.Callback) {
 		x.MediaData, _ = doc.Marshal()
 	}
 
-	me := rony.PoolMessageEnvelope.Get()
-	defer rony.PoolMessageEnvelope.Put(me)
-	me.Fill(uint64(x.RandomID), msg.C_MessagesSendMedia, x, domain.TeamHeader(da.TeamID(), da.TeamAccess())...)
-	r.network.HttpCommand(
-		me,
-		da.OnTimeout, da.OnComplete,
-	)
-
+	da.Envelope().Fill(da.RequestID(), msg.C_MessagesSendMedia, x)
+	r.network.HttpCommand(da)
 }
-func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation, error) {
+func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (fl *msg.FileLocation, err error) {
 	h, _ := domain.CalculateSha256(req.FilePath)
 	if len(h) == 0 {
 		return nil, domain.ErrDoesNotExists
@@ -167,29 +160,35 @@ func (r *River) checkSha256(req *msg.ClientSendMessageMedia) (*msg.FileLocation,
 		}
 	}
 
-	envelope := &rony.MessageEnvelope{}
-	envelope.Fill(tools.RandomUint64(0), msg.C_FileGetBySha256, &msg.FileGetBySha256{
-		Sha256:   h,
-		FileSize: fileSize,
-	})
+	r.network.HttpCommand(
+		request.NewCallback(
+			0, 0, domain.NextRequestID(), msg.C_FileGetBySha256,
+			&msg.FileGetBySha256{
+				Sha256:   h,
+				FileSize: fileSize,
+			},
+			func() {
+				err = domain.ErrRequestTimeout
+			},
+			func(res *rony.MessageEnvelope) {
+				switch res.Constructor {
+				case msg.C_FileLocation:
+					fl = &msg.FileLocation{}
+					_ = fl.Unmarshal(res.Message)
+					return
+				case rony.C_Error:
+					x := &rony.Error{}
+					_ = x.Unmarshal(res.Message)
+					err = x
+				default:
+					err = domain.ErrServer
+				}
+			},
+			nil, false, 0, domain.HttpRequestTimeout,
+		),
+	)
 
-	ctx, cancelFunc := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
-	defer cancelFunc()
-	res, err := r.network.SendHttp(ctx, envelope)
-	if err != nil {
-		return nil, err
-	}
-	switch res.Constructor {
-	case msg.C_FileLocation:
-		x := &msg.FileLocation{}
-		_ = x.Unmarshal(res.Message)
-		return x, nil
-	case rony.C_Error:
-		x := &rony.Error{}
-		_ = x.Unmarshal(res.Message)
-		return nil, x
-	}
-	return nil, domain.ErrServer
+	return
 }
 func (r *River) uploadFile(da request.Callback, fileID int64, filePath string, progress bool) error {
 	f, err := os.Open(filePath)
@@ -256,27 +255,26 @@ func (r *River) savePart(da request.Callback, f io.Reader, fileID int64, partInd
 	reqBuf := pools.Buffer.FromProto(req)
 	defer pools.Buffer.Put(reqBuf)
 	r.network.HttpCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_FileSavePart,
-			RequestID:   tools.RandomUint64(0),
-			Message:     *reqBuf.Bytes(),
-			Header:      domain.TeamHeader(da.TeamID(), da.TeamAccess()),
-		},
-		func() {
-			err = domain.ErrRequestTimeout
-		},
-		func(m *rony.MessageEnvelope) {
-			switch m.Constructor {
-			case msg.C_Bool:
-				err = nil
-			case rony.C_Error:
-				x := &rony.Error{}
-				_ = x.Unmarshal(m.Message)
-				err = x
-			default:
-				err = domain.ErrServer
-			}
-		},
+		request.NewCallbackFromBytes(
+			da.TeamID(), da.TeamAccess(), domain.NextRequestID(), msg.C_FileSavePart, *reqBuf.Bytes(),
+			func() {
+				err = domain.ErrRequestTimeout
+			},
+			func(m *rony.MessageEnvelope) {
+				switch m.Constructor {
+				case msg.C_Bool:
+					err = nil
+				case rony.C_Error:
+					x := &rony.Error{}
+					_ = x.Unmarshal(m.Message)
+					err = x
+				default:
+					err = domain.ErrServer
+				}
+			},
+			nil,
+			false, 0, domain.HttpRequestTimeout,
+		),
 	)
 	return err
 }

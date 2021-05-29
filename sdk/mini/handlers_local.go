@@ -26,15 +26,8 @@ func (r *River) messagesSendMedia(da request.Callback) {
 	}
 
 	req.RandomID = domain.SequentialUniqueID()
-	requestBytes, _ := req.Marshal()
-	r.network.HttpCommand(
-		&rony.MessageEnvelope{
-			Constructor: msg.C_MessagesSendMedia,
-			RequestID:   uint64(req.RandomID),
-			Message:     requestBytes,
-			Header:      da.Envelope().Header,
-		}, da.OnTimeout, da.OnComplete,
-	)
+	da.Envelope().Fill(da.RequestID(), msg.C_MessagesSendMedia, req)
+	r.network.HttpCommand(da)
 }
 
 func (r *River) messagesGetDialogs(da request.Callback) {
@@ -48,7 +41,7 @@ func (r *River) messagesGetDialogs(da request.Callback) {
 
 	// If the localDB had no data send the request to server
 	if len(res.Dialogs) == 0 {
-		r.network.HttpCommand(da.Envelope(), da.OnTimeout, da.OnComplete)
+		r.network.HttpCommand(da)
 		return
 	}
 

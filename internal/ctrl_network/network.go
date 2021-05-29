@@ -721,7 +721,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 	return nil
 }
 
-// WebsocketCommand run request immediately in blocking or non-blocking mode
+// WebsocketCommand run request immediately. It is blocking call
 func (ctrl *Controller) WebsocketCommand(reqCB request.Callback) {
 	defer logger.RecoverPanic(
 		"NetCtrl::WebsocketCommandWithTimeout",
@@ -863,7 +863,7 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 		return nil, err
 	}
 
-	logger.Info("SendHttp",
+	logger.Debug("SendHttp",
 		zap.String("URL", ctrl.curEndpoint),
 		zap.String("ReqC", registry.ConstructorName(msgEnvelope.Constructor)),
 		zap.String("ResC", registry.ConstructorName(receivedEncryptedPayload.Envelope.Constructor)),
@@ -873,37 +873,23 @@ func (ctrl *Controller) SendHttp(ctx context.Context, msgEnvelope *rony.MessageE
 	return receivedEncryptedPayload.Envelope, nil
 }
 
-// HttpCommandWithTimeout run request immediately
-func (ctrl *Controller) HttpCommandWithTimeout(
-	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-	timeout time.Duration,
-) {
-	ctx, cf := context.WithTimeout(context.Background(), timeout)
+// HttpCommand run request immediately
+func (ctrl *Controller) HttpCommand(reqCB request.Callback) {
+	ctx, cf := context.WithTimeout(context.Background(), reqCB.Timeout())
 	defer cf()
 
-	res, err := ctrl.SendHttp(ctx, messageEnvelope)
+	res, err := ctrl.SendHttp(ctx, reqCB.Envelope())
 	switch err {
 	case nil:
-		successCB(res)
+		reqCB.OnComplete(res)
 	case context.DeadlineExceeded:
-		timeoutCB()
+		reqCB.OnTimeout()
 	case context.Canceled:
-		res := &rony.MessageEnvelope{}
-		errors.New("E100", "Canceled").ToEnvelope(res)
-		successCB(res)
+		reqCB.Response(rony.C_Error, errors.New("Canceled", err.Error()))
 	default:
-		res := &rony.MessageEnvelope{}
-		errors.New("E100", err.Error()).ToEnvelope(res)
-		successCB(res)
+		reqCB.Response(rony.C_Error, errors.New("00", err.Error()))
 	}
 
-}
-
-// HttpCommand run request immediately
-func (ctrl *Controller) HttpCommand(
-	messageEnvelope *rony.MessageEnvelope, timeoutCB domain.TimeoutCallback, successCB domain.MessageHandler,
-) {
-	ctrl.HttpCommandWithTimeout(messageEnvelope, timeoutCB, successCB, domain.HttpRequestTimeout)
 }
 
 // Reconnect by wsKeepConnection = true the watchdog will connect itself again no need to call ctrl.Connect()

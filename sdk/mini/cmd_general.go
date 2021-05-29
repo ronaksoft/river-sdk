@@ -1,13 +1,10 @@
 package mini
 
 import (
-	"context"
 	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/logs"
 	"git.ronaksoft.com/river/sdk/internal/minirepo"
 	"git.ronaksoft.com/river/sdk/internal/request"
-	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/registry"
 	"go.uber.org/zap"
 	"runtime"
@@ -143,19 +140,7 @@ func (r *River) executeRemoteCommand(reqCB request.Callback) {
 		zap.String("Flags", request.DelegateFlagToString(reqCB.Flags())),
 	)
 
-	ctx, cf := context.WithTimeout(context.Background(), domain.HttpRequestTimeout)
-	defer cf()
-	res, err := r.network.SendHttp(ctx, reqCB.Envelope())
-	if res == nil {
-		res = &rony.MessageEnvelope{}
-		if err != nil {
-			errors.New("E100", err.Error()).ToEnvelope(res)
-		} else {
-			errors.New("E100", "Nil Response").ToEnvelope(res)
-		}
-	}
-
-	reqCB.OnComplete(res)
+	r.network.HttpCommand(reqCB)
 }
 
 func (r *River) SetTeam(teamID int64, teamAccessHash int64) {
