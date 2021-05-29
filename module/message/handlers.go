@@ -917,12 +917,14 @@ func (r *message) messagesClearDraft(da request.Callback) {
 
 	dialog, _ := repo.Dialogs.Get(da.TeamID(), req.Peer.ID, int32(req.Peer.Type))
 	if dialog != nil {
-		dialog.Draft = nil
-		_ = repo.Dialogs.Save(dialog)
+		if dialog.Draft != nil {
+			dialog.Draft = nil
+			_ = repo.Dialogs.Save(dialog)
+			// send the request to server
+			r.SDK().QueueCtrl().EnqueueCommand(da)
+		}
 	}
-
-	// send the request to server
-	r.SDK().QueueCtrl().EnqueueCommand(da)
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
 func (r *message) messagesTogglePin(da request.Callback) {
