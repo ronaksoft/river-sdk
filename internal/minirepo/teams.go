@@ -16,10 +16,6 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-const (
-	prefixTeams = "TEAM"
-	indexTeams
-)
 
 var (
 	bucketTeams = []byte("TEAM")

@@ -201,12 +201,10 @@ func (c *callback) SentOn() int64 {
 
 func (c *callback) SetPreComplete(h domain.MessageHandler) {
 	c.preComplete = h
-	return
 }
 
 func (c *callback) SetPreTimeout(h domain.TimeoutCallback) {
 	c.preTimeout = h
-	return
 }
 
 func (c *callback) RequestData(u Unmarshaller) error {
@@ -260,7 +258,7 @@ func NewCallbackFromBytes(
 		envelope: &rony.MessageEnvelope{
 			RequestID:   reqID,
 			Constructor: constructor,
-			Header: domain.TeamHeader(teamID, teamAccess),
+			Header:      domain.TeamHeader(teamID, teamAccess),
 		},
 		onComplete: onComplete,
 		onTimeout:  onTimeout,

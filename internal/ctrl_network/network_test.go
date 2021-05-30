@@ -73,16 +73,6 @@ func dummyNetworkChangeHandler(newStatus domain.NetworkStatus) {
 	)
 }
 
-func getServerTime() *rony.MessageEnvelope {
-	m := new(msg.SystemGetServerTime)
-	b, _ := m.Marshal()
-	return &rony.MessageEnvelope{
-		Constructor: msg.C_SystemGetServerTime,
-		RequestID:   atomic.AddUint64(&requestID, 1),
-		Message:     b,
-	}
-}
-
 func init() {
 	testenv.Log().SetLogLevel(0)
 	ctrl = networkCtrl.New(networkCtrl.Config{

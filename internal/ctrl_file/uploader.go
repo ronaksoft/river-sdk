@@ -75,29 +75,6 @@ func (u *UploadRequest) checkSha256() (err error) {
 	return
 }
 
-func (u *UploadRequest) genFileSavePart(fileID int64, partID int32, totalParts int32, bytes []byte) *rony.MessageEnvelope {
-	envelop := rony.MessageEnvelope{
-		RequestID:   uint64(domain.SequentialUniqueID()),
-		Constructor: msg.C_FileSavePart,
-	}
-	req := msg.FileSavePart{
-		TotalParts: totalParts,
-		Bytes:      bytes,
-		FileID:     fileID,
-		PartID:     partID,
-	}
-	envelop.Message, _ = req.Marshal()
-
-	logger.Debug("generates FileSavePart",
-		zap.Int64("MsgID", u.cfr.MessageID),
-		zap.Int64("FileID", req.FileID),
-		zap.Int32("PartID", req.PartID),
-		zap.Int32("TotalParts", req.TotalParts),
-		zap.Int("Bytes", len(req.Bytes)),
-	)
-	return &envelop
-}
-
 func (u *UploadRequest) resetUploadedList() {
 	u.mtx.Lock()
 	u.cfr.FinishedParts = u.cfr.FinishedParts[:0]
