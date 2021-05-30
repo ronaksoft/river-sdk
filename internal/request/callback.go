@@ -231,14 +231,15 @@ func NewCallback(
 	onTimeout domain.TimeoutCallback, onComplete domain.MessageHandler, onProgress func(int64),
 	ui bool, flags DelegateFlag, timeout time.Duration,
 ) *callback {
+	t := tools.NanoTime()
 	cb := &callback{
 		envelope:   &rony.MessageEnvelope{},
 		onComplete: onComplete,
 		onTimeout:  onTimeout,
 		onProgress: onProgress,
 		ui:         ui,
-		createdOn:  tools.NanoTime(),
-		sentOn:     tools.NanoTime(),
+		createdOn:  t,
+		sentOn:     t,
 		flags:      flags,
 		timeout:    timeout,
 		resChan:    make(chan *rony.MessageEnvelope, 1),
@@ -254,6 +255,7 @@ func NewCallbackFromBytes(
 	onTimeout domain.TimeoutCallback, onComplete domain.MessageHandler, onProgress func(int64),
 	ui bool, flags DelegateFlag, timeout time.Duration,
 ) *callback {
+	t := tools.NanoTime()
 	cb := &callback{
 		envelope: &rony.MessageEnvelope{
 			RequestID:   reqID,
@@ -263,8 +265,8 @@ func NewCallbackFromBytes(
 		onTimeout:  onTimeout,
 		onProgress: onProgress,
 		ui:         ui,
-		createdOn:  tools.NanoTime(),
-		sentOn:     tools.NanoTime(),
+		createdOn:  t,
+		sentOn:     t,
 		flags:      flags,
 		timeout:    timeout,
 		resChan:    make(chan *rony.MessageEnvelope, 1),
