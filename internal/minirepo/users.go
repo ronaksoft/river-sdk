@@ -267,3 +267,33 @@ func (d *repoUsers) Search(phrase string, limit int) []*msg.User {
 	})
 	return users
 }
+
+func (d *repoUsers) SearchContacts(teamID int64, phrase string, limit int) []*msg.ContactUser {
+	contacts := make([]*msg.ContactUser, 0, limit)
+	err := d.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketContacts)
+		_ = b.ForEach(func(k, v []byte) error {
+			if binary.BigEndian.Uint64(k[:8]) != uint64(teamID) {
+				return nil
+			}
+
+			c := &msg.ContactUser{}
+			_ = c.Unmarshal(v)
+			if strings.Contains(strings.ToLower(c.FirstName), phrase) ||
+				strings.Contains(strings.ToLower(c.LastName), phrase) ||
+				strings.Contains(strings.ToLower(c.Username), phrase) {
+				contacts = append(contacts, c)
+				limit--
+			}
+			if limit < 0 {
+				return domain.ErrLimitReached
+			}
+			return nil
+		})
+		return nil
+	})
+	if err != nil {
+		return nil
+	}
+	return contacts
+}

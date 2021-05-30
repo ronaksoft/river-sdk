@@ -282,11 +282,38 @@ func (r *River) clientGlobalSearch(da request.Callback) {
 	if err := da.RequestData(req); err != nil {
 		return
 	}
-
 	res := &msg.ClientSearchResult{}
-	res.Users = minirepo.Users.Search(strings.ToLower(req.Text), int(req.Limit))
+	uniqueUsers := domain.MInt64B{}
+	uniqueGroups := domain.MInt64B{}
+	cUsers := minirepo.Users.SearchContacts(da.TeamID(), strings.ToLower(req.Text), int(req.Limit))
+	for _, cu := range cUsers {
+		uniqueUsers[cu.ID] = true
+	}
+
+	var (
+		limit  int32 = 100
+		offset int32 = 0
+	)
+
+	for {
+		dialogs, _ := minirepo.Dialogs.List(da.TeamID(), offset, limit)
+		for _, d := range dialogs {
+			switch msg.PeerType(d.PeerType) {
+			case msg.PeerType_PeerUser:
+				uniqueUsers[d.PeerID] = true
+			case msg.PeerType_PeerGroup:
+				uniqueGroups[d.PeerID] = true
+			}
+		}
+		offset += limit
+		if len(dialogs) == 0 {
+			break
+		}
+	}
+
+	res.Users, _ = minirepo.Users.ReadMany(uniqueUsers.ToArray()...)
+	res.Groups, _ = minirepo.Groups.ReadMany(da.TeamID(), uniqueGroups.ToArray()...)
 	res.MatchedUsers = append(res.MatchedUsers, res.Users...)
-	res.Groups = minirepo.Groups.Search(strings.ToLower(req.Text), int(req.Limit))
 	res.MatchedGroups = append(res.MatchedGroups, res.Groups...)
 
 	da.Response(msg.C_ClientSearchResult, res)
