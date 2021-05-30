@@ -346,6 +346,8 @@ func (c *call) reject(callID int64, duration int32, reason msg.DiscardReason, ta
 		return
 	}
 
+	c.pushToRejectedCallIds(callID)
+
 	_, err = c.apiReject(peer, callID, reason, duration)
 	return
 }
@@ -1530,18 +1532,21 @@ func (c *call) removeParticipant(userID int64, callID *int64) bool {
 	for idx, id := range info.acceptedParticipantIds {
 		if id == userID {
 			info.acceptedParticipantIds = append(info.acceptedParticipantIds[:idx], info.acceptedParticipantIds[idx+1:]...)
+			break
 		}
 	}
 
 	for idx, id := range info.requestParticipantIds {
 		if id == userID {
 			info.requestParticipantIds = append(info.requestParticipantIds[:idx], info.requestParticipantIds[idx+1:]...)
+			break
 		}
 	}
 
 	for idx, request := range info.requests {
 		if request.UserID == userID {
 			info.requests = append(info.requests[:idx], info.requests[idx+1:]...)
+			break
 		}
 	}
 
@@ -1609,6 +1614,10 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 	data := in.Data.(*msg.PhoneActionRequested)
 	if c.activeCallID != 0 && c.activeCallID != in.CallID {
 		c.callBusy(in)
+		return
+	}
+
+	if c.isCallRejected(in.CallID) {
 		return
 	}
 
@@ -2098,6 +2107,35 @@ func (c *call) appendCallRequestID(callID, reqID int64) {
 		info.requestMap[reqID] = struct{}{}
 		info.mu.Unlock()
 	}
+}
+
+func (c *call) pushToRejectedCallIds(callID int64) {
+	c.mu.Lock()
+	c.rejectedCallIDs = append(c.rejectedCallIDs, callID)
+	c.mu.Unlock()
+	time.AfterFunc(time.Duration(15)*time.Second, func() {
+		c.mu.Lock()
+		for idx, id := range c.rejectedCallIDs {
+			if id == callID {
+				c.rejectedCallIDs = append(c.rejectedCallIDs[:idx], c.rejectedCallIDs[idx+1:]...)
+				break
+			}
+		}
+		c.mu.Unlock()
+	})
+}
+
+func (c *call) isCallRejected(callID int64) (ok bool) {
+	ok = false
+	c.mu.RLock()
+	for _, id := range c.rejectedCallIDs {
+		if id == callID {
+			ok = true
+			break
+		}
+	}
+	c.mu.RUnlock()
+	return
 }
 
 func (c *call) removeCallRequestID(callID, reqID int64) {
