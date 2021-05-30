@@ -72,7 +72,7 @@ func (c *call) destroyHandler(da request.Callback) {
 }
 
 func (c *call) areAllAudioHandler(da request.Callback) {
-	req := &msg.ClientCallDestroy{}
+	req := &msg.ClientCallAreAllAudio{}
 	if err := da.RequestData(req); err != nil {
 		return
 	}
