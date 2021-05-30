@@ -394,19 +394,22 @@ func (ctrl *Controller) UpdateStatus(online bool) {
 	req := &msg.AccountUpdateStatus{
 		Online: online,
 	}
+	retry := 3
 	go ctrl.networkCtrl.WebsocketCommand(
 		request.NewCallback(
 			0, 0, domain.NextRequestID(), msg.C_AccountUpdateStatus, req,
-			func() {},
+			func() {
+				if retry--; retry > 0 {
+					time.Sleep(time.Second)
+					ctrl.UpdateStatus(online)
+				}
+			},
 			func(m *rony.MessageEnvelope) {
 				switch m.Constructor {
 				case rony.C_Error:
 					x := &rony.Error{}
 					_ = x.Unmarshal(m.Message)
-					if !(x.Code == msg.ErrCodeUnavailable && x.Items == msg.ErrItemUserID) {
-						time.Sleep(time.Second)
-						ctrl.UpdateStatus(online)
-					}
+					logger.Warn("got error on AccountUpdateStatus", zap.Error(x))
 				}
 				// Controller applier will take care of this
 			}, nil,

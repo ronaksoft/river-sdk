@@ -508,6 +508,7 @@ func (r *River) GetServerTimeUnix() int64 {
 
 // AppForeground must be called every time apps come into foreground.
 func (r *River) AppForeground(online bool) {
+	logger.Info("APP is Foreground", zap.Bool("Online", online))
 	statusOnline = online
 
 	// Set the time we come to foreground
@@ -532,6 +533,7 @@ func (r *River) AppForeground(online bool) {
 
 // AppBackground must be called every time apps goes into background
 func (r *River) AppBackground() {
+	logger.Info("APP is Background")
 	statusOnline = false
 	r.syncCtrl.UpdateStatus(false)
 
@@ -644,7 +646,6 @@ var statusOnline bool
 
 func (r *River) updateStatusJob() {
 	d := time.Duration(domain.SysConfig.OnlineUpdatePeriodInSec-5) * time.Second
-	// We wait about 5 seconds to make sure user is actually in app
 	for {
 		time.Sleep(d)
 		r.syncCtrl.UpdateStatus(statusOnline)
