@@ -78,11 +78,21 @@ func (r *River) executeCommand(reqCB request.Callback) (err error) {
 	// If the constructor is a local command then
 	handler, ok := r.localCommands[reqCB.Constructor()]
 	if ok && !serverForce {
-		go r.executeLocalCommand(handler, reqCB)
+		go func() {
+			r.executeLocalCommand(handler, reqCB)
+			if blockingMode {
+				waitGroup.Done()
+			}
+		}()
 		return
 	}
 
-	go r.executeRemoteCommand(reqCB)
+	go func() {
+		r.executeRemoteCommand(reqCB)
+		if blockingMode {
+			waitGroup.Done()
+		}
+	}()
 	return
 }
 func (r *River) executeLocalCommand(handler request.LocalHandler, reqCB request.Callback) {

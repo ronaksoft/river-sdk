@@ -53,14 +53,12 @@ var ContactGetTeam = &ishell.Cmd{
 		req := msg.ContactsGet{}
 		teamID := fnGetTeamID(c)
 		accessHash := fnGetAccessHash(c)
-		_SDK.SetTeam(teamID, int64(accessHash), false)
 		reqBytes, _ := req.Marshal()
-
 		reqDelegate := NewCustomDelegate()
 		reqDelegate.FlagsFunc = func() riversdk.RequestDelegateFlag {
-			return request.ServerForced
+			return request.Blocking
 		}
-		if reqID, err := _SDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {
+		if reqID, err := _SDK.ExecuteCommandWithTeam(teamID, int64(accessHash), msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {
 			c.Println("Command Failed:", err)
 		} else {
 			reqDelegate.RequestID = reqID

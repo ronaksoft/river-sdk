@@ -260,6 +260,7 @@ func NewCallbackFromBytes(
 		envelope: &rony.MessageEnvelope{
 			RequestID:   reqID,
 			Constructor: constructor,
+			Header: domain.TeamHeader(teamID, teamAccess),
 		},
 		onComplete: onComplete,
 		onTimeout:  onTimeout,
@@ -272,7 +273,6 @@ func NewCallbackFromBytes(
 		resChan:    make(chan *rony.MessageEnvelope, 1),
 	}
 	cb.envelope.Message = append(cb.envelope.Message, reqBytes...)
-	cb.envelope.Header = domain.TeamHeader(teamID, teamAccess)
 	register(cb)
 	return cb
 }
