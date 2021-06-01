@@ -57,7 +57,11 @@ func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 			if innerErr == nil {
 				c.Log().Warn("got error on server request PhoneInitCall", zap.Error(err))
 			}
-			err = domain.ErrInvalidData
+			if xx.Code == "02" && xx.Items == "CALL" {
+				err = domain.ErrInvalidCall
+			} else {
+				err = domain.ErrInvalidData
+			}
 		default:
 			c.Log().Warn("received unknown response for PhoneInitCall", zap.String("C", registry.ConstructorName(x.Constructor)))
 			err = domain.ErrInvalidData

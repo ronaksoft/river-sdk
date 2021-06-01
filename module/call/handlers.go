@@ -2,6 +2,7 @@ package call
 
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
+	"git.ronaksoft.com/river/sdk/internal/domain"
 	"git.ronaksoft.com/river/sdk/internal/request"
 	"github.com/ronaksoft/rony"
 )
@@ -154,7 +155,11 @@ func (c *call) startHandler(da request.Callback) {
 
 	callID, err := c.start(req.Peer, req.InputUsers, req.Video, req.CallID)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		if err == domain.ErrInvalidCall {
+			da.Response(rony.C_Error, &rony.Error{Code: "02", Items: "CALL"})
+		} else {
+			da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		}
 		return
 	}
 
