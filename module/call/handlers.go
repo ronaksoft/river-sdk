@@ -24,7 +24,7 @@ func (c *call) toggleVideoHandler(da request.Callback) {
 
 	err := c.toggleVideo(req.Video)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -39,7 +39,7 @@ func (c *call) toggleAudioHandler(da request.Callback) {
 
 	err := c.toggleAudio(req.Audio)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -54,7 +54,7 @@ func (c *call) tryReconnectHandler(da request.Callback) {
 
 	err := c.tryReconnect(req.ConnId)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -80,7 +80,7 @@ func (c *call) areAllAudioHandler(da request.Callback) {
 
 	ok, err := c.areAllAudio()
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -95,7 +95,7 @@ func (c *call) iceCandidateHandler(da request.Callback) {
 
 	err := c.iceCandidate(req.ConnId, req.Candidate)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -110,7 +110,7 @@ func (c *call) iceConnectionStatusChangeHandler(da request.Callback) {
 
 	err := c.iceConnectionStatusChange(req.ConnId, req.State, req.HasIceError)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -140,7 +140,7 @@ func (c *call) mediaSettingsChangeHandler(da request.Callback) {
 
 	err := c.mediaSettingsChange(req.MediaSettings)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -156,9 +156,9 @@ func (c *call) startHandler(da request.Callback) {
 	callID, err := c.start(req.Peer, req.InputUsers, req.Video, req.CallID)
 	if err != nil {
 		if err == domain.ErrInvalidCall {
-			da.Response(rony.C_Error, &rony.Error{Code: "02", Items: "CALL"})
+			da.Response(rony.C_Error, &rony.Error{Code: "E02", Items: "CALL"})
 		} else {
-			da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+			da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		}
 		return
 	}
@@ -174,7 +174,7 @@ func (c *call) joinHandler(da request.Callback) {
 
 	err := c.join(req.Peer, req.CallID)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -189,7 +189,7 @@ func (c *call) acceptHandler(da request.Callback) {
 
 	err := c.accept(req.CallID, req.Video)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -204,7 +204,7 @@ func (c *call) rejectHandler(da request.Callback) {
 
 	err := c.reject(req.CallID, req.Duration, req.Reason, req.TargetPeer)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -219,7 +219,7 @@ func (c *call) getParticipantByUserIDHandler(da request.Callback) {
 
 	participant, err := c.getParticipantByUserID(req.CallID, req.UserID)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -234,7 +234,7 @@ func (c *call) getParticipantByConnIdHandler(da request.Callback) {
 
 	participant, err := c.getParticipantByConnId(req.ConnId)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -249,7 +249,7 @@ func (c *call) getParticipantListHandler(da request.Callback) {
 
 	participants, err := c.getParticipantList(req.CallID, req.ExcludeCurrent)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -266,7 +266,7 @@ func (c *call) muteParticipantHandler(da request.Callback) {
 
 	err := c.muteParticipant(req.UserID, req.Muted)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -281,7 +281,7 @@ func (c *call) groupAddParticipantHandler(da request.Callback) {
 
 	err := c.groupAddParticipant(req.CallID, req.Participants)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -296,7 +296,7 @@ func (c *call) groupRemoveParticipantHandler(da request.Callback) {
 
 	err := c.groupRemoveParticipant(req.CallID, req.UserIDs, req.Timeout)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 
@@ -311,7 +311,7 @@ func (c *call) groupUpdateAdminHandler(da request.Callback) {
 
 	err := c.groupUpdateAdmin(req.CallID, req.UserID, req.Admin)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "00", Items: err.Error()})
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
 		return
 	}
 

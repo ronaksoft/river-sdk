@@ -57,7 +57,7 @@ func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 			if innerErr == nil {
 				c.Log().Warn("got error on server request PhoneInitCall", zap.Error(err))
 			}
-			if xx.Code == "02" && xx.Items == "CALL" {
+			if xx.Code == "E02" && xx.Items == "CALL" {
 				err = domain.ErrInvalidCall
 			} else {
 				err = domain.ErrInvalidData
