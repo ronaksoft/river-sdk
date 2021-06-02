@@ -73,7 +73,7 @@ func (c *call) destroy(callID int64) {
 
 	if d, ok := c.callDuration[callID]; ok {
 		if d.Stop == 0 {
-			d.Stop = time.Now().Unix()
+			c.callDuration[callID].Stop = time.Now().Unix()
 		}
 	}
 
@@ -389,7 +389,7 @@ func (c *call) reject(callID int64, duration int32, reason msg.DiscardReason, ta
 	c.mu.Lock()
 	if d, ok := c.callDuration[callID]; ok {
 		if d.Stop == 0 {
-			d.Stop = time.Now().Unix()
+			c.callDuration[callID].Stop = time.Now().Unix()
 		}
 	}
 	c.mu.Unlock()
