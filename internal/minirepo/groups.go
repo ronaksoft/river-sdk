@@ -107,7 +107,7 @@ func (d *repoGroups) ReadMany(teamID int64, groupIDs ...int64) ([]*msg.Group, er
 	return groups, nil
 }
 
-func (d *repoGroups) Search(phrase string, limit int) []*msg.Group {
+func (d *repoGroups) Search(teamID int64, phrase string, limit int) []*msg.Group {
 	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
@@ -117,6 +117,9 @@ func (d *repoGroups) Search(phrase string, limit int) []*msg.Group {
 		_ = b.ForEach(func(k, v []byte) error {
 			g := &msg.Group{}
 			_ = g.Unmarshal(v)
+			if g.TeamID != teamID {
+				return nil
+			}
 			if strings.Contains(strings.ToLower(g.Title), phrase) {
 				groups = append(groups, g)
 				limit--
