@@ -88,6 +88,7 @@ func New(config *Config) *call {
 			msg.C_ClientCallTryReconnect:            c.tryReconnectHandler,
 			msg.C_ClientCallDestroy:                 c.destroyHandler,
 			msg.C_ClientCallAreAllAudio:             c.areAllAudioHandler,
+			msg.C_ClientCallGetDuration:             c.durationHandler,
 			msg.C_ClientCallSendIceCandidate:        c.iceCandidateHandler,
 			msg.C_ClientCallSendIceConnectionStatus: c.iceConnectionStatusChangeHandler,
 			msg.C_ClientCallSendMediaSettings:       c.mediaSettingsChangeHandler,
