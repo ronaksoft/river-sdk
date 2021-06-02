@@ -71,6 +71,12 @@ func (c *call) destroy(callID int64) {
 		c.callUpdate(msg.CallUpdate_Destroyed, updateData)
 	}
 
+	if d, ok := c.callDuration[callID]; ok {
+		if d.Stop == 0 {
+			d.Stop = time.Now().Unix()
+		}
+	}
+
 	c.activeCallID = 0
 	c.peer = nil
 	c.mu.Unlock()
