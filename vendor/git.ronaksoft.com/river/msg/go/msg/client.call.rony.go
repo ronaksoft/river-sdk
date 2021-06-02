@@ -393,6 +393,46 @@ func (x *ClientCallSendMediaSettings) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientCallSendMediaSettings, x)
 }
 
+const C_ClientCallGetDuration int64 = 2971494454
+
+type poolClientCallGetDuration struct {
+	pool sync.Pool
+}
+
+func (p *poolClientCallGetDuration) Get() *ClientCallGetDuration {
+	x, ok := p.pool.Get().(*ClientCallGetDuration)
+	if !ok {
+		x = &ClientCallGetDuration{}
+	}
+	return x
+}
+
+func (p *poolClientCallGetDuration) Put(x *ClientCallGetDuration) {
+	if x == nil {
+		return
+	}
+	x.CallID = 0
+	p.pool.Put(x)
+}
+
+var PoolClientCallGetDuration = poolClientCallGetDuration{}
+
+func (x *ClientCallGetDuration) DeepCopy(z *ClientCallGetDuration) {
+	z.CallID = x.CallID
+}
+
+func (x *ClientCallGetDuration) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientCallGetDuration) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientCallGetDuration) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientCallGetDuration, x)
+}
+
 const C_ClientCallStart int64 = 1041146964
 
 type poolClientCallStart struct {
@@ -494,6 +534,46 @@ func (x *ClientCallStarted) Unmarshal(b []byte) error {
 
 func (x *ClientCallStarted) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientCallStarted, x)
+}
+
+const C_ClientCallDuration int64 = 3292884691
+
+type poolClientCallDuration struct {
+	pool sync.Pool
+}
+
+func (p *poolClientCallDuration) Get() *ClientCallDuration {
+	x, ok := p.pool.Get().(*ClientCallDuration)
+	if !ok {
+		x = &ClientCallDuration{}
+	}
+	return x
+}
+
+func (p *poolClientCallDuration) Put(x *ClientCallDuration) {
+	if x == nil {
+		return
+	}
+	x.Duration = 0
+	p.pool.Put(x)
+}
+
+var PoolClientCallDuration = poolClientCallDuration{}
+
+func (x *ClientCallDuration) DeepCopy(z *ClientCallDuration) {
+	z.Duration = x.Duration
+}
+
+func (x *ClientCallDuration) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientCallDuration) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientCallDuration) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientCallDuration, x)
 }
 
 const C_ClientCallJoin int64 = 2382593398
@@ -2184,8 +2264,10 @@ func init() {
 	registry.RegisterConstructor(3421647876, "ClientCallSendIceConnectionStatus")
 	registry.RegisterConstructor(2856076314, "ClientCallSendTrack")
 	registry.RegisterConstructor(2959794351, "ClientCallSendMediaSettings")
+	registry.RegisterConstructor(2971494454, "ClientCallGetDuration")
 	registry.RegisterConstructor(1041146964, "ClientCallStart")
 	registry.RegisterConstructor(484502003, "ClientCallStarted")
+	registry.RegisterConstructor(3292884691, "ClientCallDuration")
 	registry.RegisterConstructor(2382593398, "ClientCallJoin")
 	registry.RegisterConstructor(2726334873, "ClientCallAccept")
 	registry.RegisterConstructor(3026524692, "ClientCallReject")

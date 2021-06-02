@@ -18,7 +18,7 @@ import (
 
 var (
 	ErrActionNotFound             = errors.New("action not found")
-	ErrInvalidCallId              = errors.New("invalid call id")
+	ErrInvalidCallID              = errors.New("invalid call id")
 	ErrInvalidConnId              = errors.New("invalid conn id")
 	ErrInvalidPeerInput           = errors.New("invalid peer input")
 	ErrInvalidCallRequest         = errors.New("invalid call request")
@@ -56,6 +56,11 @@ type MediaSettings struct {
 	Audio       bool
 	ScreenShare bool
 	Video       bool
+}
+
+type Duration struct {
+	Start int64
+	Stop  int64
 }
 
 type Info struct {

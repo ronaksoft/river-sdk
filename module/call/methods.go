@@ -103,6 +103,29 @@ func (c *call) areAllAudio() (ok bool, err error) {
 	return
 }
 
+func (c *call) duration(callID int64) (duration int64, err error) {
+	c.mu.RLock()
+	dur, ok := c.callDuration[callID]
+	c.mu.RUnlock()
+
+	if !ok {
+		err = ErrInvalidCallID
+		return
+	}
+
+	if dur.Start == 0 {
+		duration = 0
+		return
+	}
+
+	if dur.Stop == 0 {
+		duration = time.Now().Unix() - dur.Start
+	}
+
+	duration = dur.Stop - dur.Start
+	return
+}
+
 // Client should listen to icecandidate and send it to SDK
 func (c *call) iceCandidate(connId int32, candidate *msg.CallRTCIceCandidate) (err error) {
 	err = c.sendIceCandidate(c.activeCallID, connId, candidate)
@@ -149,6 +172,15 @@ func (c *call) trackUpdate(connId int32, streamID string) (err error) {
 		return
 	}
 
+	c.mu.Lock()
+	if _, ok := c.callDuration[c.activeCallID]; !ok {
+		c.callDuration[c.activeCallID] = &Duration{
+			Start: time.Now().Unix(),
+			Stop:  0,
+		}
+	}
+	c.mu.Unlock()
+
 	conn, hasConn := c.peerConnections[connId]
 	if !hasConn {
 		err = ErrInvalidConnId
@@ -177,7 +209,7 @@ func (c *call) mediaSettingsChange(mediaSettings *msg.CallMediaSettings) (err er
 
 	info := c.getCallInfo(c.activeCallID)
 	if info == nil {
-		err = ErrInvalidCallId
+		err = ErrInvalidCallID
 		return
 	}
 
@@ -348,6 +380,14 @@ func (c *call) reject(callID int64, duration int32, reason msg.DiscardReason, ta
 
 	c.pushToRejectedCallIds(callID)
 
+	c.mu.Lock()
+	if d, ok := c.callDuration[callID]; ok {
+		if d.Stop == 0 {
+			d.Stop = time.Now().Unix()
+		}
+	}
+	c.mu.Unlock()
+
 	_, err = c.apiReject(peer, callID, reason, duration)
 	return
 }
@@ -355,7 +395,7 @@ func (c *call) reject(callID int64, duration int32, reason msg.DiscardReason, ta
 func (c *call) getParticipantByUserID(callID int64, userID int64) (participant *msg.CallParticipant, err error) {
 	connId, info, valid := c.getConnId(callID, userID)
 	if !valid {
-		err = ErrInvalidCallId
+		err = ErrInvalidCallID
 		return
 	}
 
@@ -373,7 +413,7 @@ func (c *call) getParticipantByConnId(connId int32) (participant *msg.CallPartic
 
 	info := c.getCallInfo(c.activeCallID)
 	if info == nil {
-		err = ErrInvalidCallId
+		err = ErrInvalidCallID
 		return
 	}
 
@@ -386,7 +426,7 @@ func (c *call) getParticipantByConnId(connId int32) (participant *msg.CallPartic
 func (c *call) getParticipantList(callID int64, excludeCurrent bool) (participants []*msg.CallParticipant, err error) {
 	info := c.getCallInfo(callID)
 	if info == nil {
-		err = ErrInvalidCallId
+		err = ErrInvalidCallID
 		return
 	}
 
@@ -412,7 +452,7 @@ func (c *call) muteParticipant(userID int64, muted bool) (err error) {
 
 	connId, info, valid := c.getConnId(c.activeCallID, userID)
 	if !valid {
-		err = ErrInvalidCallId
+		err = ErrInvalidCallID
 		return
 	}
 
@@ -451,7 +491,7 @@ func (c *call) groupRemoveParticipant(callID int64, userIDs []int64, timeout boo
 
 	inputUsers := c.getInputUserByUserIDs(callID, userIDs)
 	if len(inputUsers) == 0 {
-		err = ErrInvalidCallId
+		err = ErrInvalidCallID
 		return
 	}
 
@@ -484,7 +524,7 @@ func (c *call) groupUpdateAdmin(callID int64, userID int64, admin bool) (err err
 
 	inputUsers := c.getInputUserByUserIDs(callID, []int64{userID})
 	if len(inputUsers) == 0 {
-		err = ErrInvalidCallId
+		err = ErrInvalidCallID
 		return
 	}
 
@@ -515,7 +555,7 @@ func (c *call) getMediaSettings() (ms *msg.CallMediaSettings, err error) {
 
 	info := c.getCallInfo(c.activeCallID)
 	if info == nil {
-		err = ErrInvalidCallId
+		err = ErrInvalidCallID
 		return
 	}
 
@@ -710,7 +750,7 @@ func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequ
 func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator bool, request *UpdatePhoneCall) (res *msg.PhoneCall, err error) {
 	currentUserConnId, callInfo, valid := c.getConnId(callID, c.userID)
 	if !valid {
-		err = ErrInvalidCallId
+		err = ErrInvalidCallID
 		return
 	}
 
@@ -1261,7 +1301,7 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 		conn.mu.Unlock()
 		currentConnId, _, valid := c.getConnId(c.activeCallID, c.userID)
 		if !valid {
-			err = ErrInvalidCallId
+			err = ErrInvalidCallID
 			return
 		}
 
