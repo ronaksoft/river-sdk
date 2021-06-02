@@ -16,7 +16,6 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-
 var (
 	bucketTeams = []byte("TEAM")
 )

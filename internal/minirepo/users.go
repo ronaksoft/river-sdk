@@ -99,7 +99,7 @@ func (d *repoUsers) SaveUser(teamID int64, users ...*msg.User) error {
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b1 := tx.Bucket(bucketUsers)
 		for _, user := range users {
-			err := b1.Put(alloc.Gen(teamID, user.ID), alloc.Marshal(user))
+			err := b1.Put(alloc.Gen(user.ID), alloc.Marshal(user))
 			if err != nil {
 				return err
 			}

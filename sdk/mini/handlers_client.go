@@ -282,6 +282,10 @@ func (r *River) clientGlobalSearch(da request.Callback) {
 	if err := da.RequestData(req); err != nil {
 		return
 	}
+	logger.Debug("local handler for ClientGlobalSearch called",
+		zap.Int64("TeamID", da.TeamID()),
+		zap.Any("Text", req.Text),
+	)
 	res := &msg.ClientSearchResult{}
 	uniqueUsers := domain.MInt64B{}
 	uniqueGroups := domain.MInt64B{}

@@ -127,7 +127,6 @@ func (d *repoDialogs) List(teamID int64, offset, limit int32) ([]*msg.Dialog, er
 			peerType := tools.StrToInt32(parts[3])
 			_ = d.db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket(bucketDialogs)
-
 				v := b.Get(alloc.Gen(teamID, peerID, peerType))
 				if len(v) > 0 {
 					dialog := &msg.Dialog{}

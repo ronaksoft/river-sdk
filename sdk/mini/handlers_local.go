@@ -36,6 +36,11 @@ func (r *River) messagesGetDialogs(da request.Callback) {
 		return
 	}
 
+	logger.Debug("local handler for MessagesGetDialogs called",
+		zap.Int64("TeamID", da.TeamID()),
+		zap.Int32("Offset", req.Offset),
+		zap.Int32("Limit", req.Limit),
+	)
 	res := &msg.MessagesDialogs{}
 	res.Dialogs, _ = minirepo.Dialogs.List(da.TeamID(), req.Offset, req.Limit)
 
