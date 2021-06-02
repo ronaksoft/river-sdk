@@ -31,6 +31,19 @@ func TestRepoDialogs(t *testing.T) {
 		dialogs, err := minirepo.Dialogs.List(0, 0, 10)
 		c.So(err, ShouldBeNil)
 		c.So(dialogs, ShouldHaveLength, 10)
+		teamID := tools.RandomInt64(0)
+		for i := 0; i < 10; i++ {
+			err := minirepo.Dialogs.Save(&msg.Dialog{
+				TeamID:       teamID,
+				PeerID:       tools.RandomInt64(0),
+				PeerType:     int32(tools.RandomInt(2)) + 1,
+				TopMessageID: tools.RandomInt64(100000),
+			})
+			c.So(err, ShouldBeNil)
+		}
+		dialogs, err = minirepo.Dialogs.List(0, 0, 10)
+		c.So(err, ShouldBeNil)
+		c.So(dialogs, ShouldHaveLength, 10)
 	})
 
 }

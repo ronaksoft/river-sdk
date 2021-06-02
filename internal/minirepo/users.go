@@ -92,7 +92,7 @@ func (d *repoUsers) DeleteContact(teamID int64, userID int64) {
 
 }
 
-func (d *repoUsers) SaveUser(teamID int64, users ...*msg.User) error {
+func (d *repoUsers) SaveUser(users ...*msg.User) error {
 	alloc := tools.NewAllocator()
 	defer alloc.ReleaseAll()
 
@@ -102,22 +102,6 @@ func (d *repoUsers) SaveUser(teamID int64, users ...*msg.User) error {
 			err := b1.Put(alloc.Gen(user.ID), alloc.Marshal(user))
 			if err != nil {
 				return err
-			}
-
-			b2 := tx.Bucket(bucketContacts)
-			v1 := b2.Get(alloc.Gen(teamID, user.ID))
-			if len(v1) > 0 {
-				err = d.index.Update(func(tx *buntdb.Tx) error {
-					_, _, err := tx.Set(
-						fmt.Sprintf("%s.%d.%d", prefixContacts, teamID, user.ID),
-						tools.Int64ToStr(user.LastSeen),
-						nil,
-					)
-					return err
-				})
-				if err != nil {
-					return err
-				}
 			}
 		}
 		return nil

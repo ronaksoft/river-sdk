@@ -112,7 +112,7 @@ func (r *River) syncContacts(teamID int64, teamAccess uint64) {
 					}
 					err := minirepo.Users.SaveAllContacts(teamID, x)
 					if err != nil {
-						logger.Warn("MiniRiver got error on saving contacts", zap.Error(err))
+						logger.Warn("MiniRiver got error on saving users/contacts", zap.Error(err))
 						return
 					}
 					err = r.setContactsHash(teamID, x.Hash)
@@ -164,7 +164,7 @@ func (r *River) syncDialogs(teamID int64, teamAccess uint64) {
 						x := &msg.MessagesDialogs{}
 						_ = x.Unmarshal(m.Message)
 						_ = minirepo.Dialogs.Save(x.Dialogs...)
-						_ = minirepo.Users.SaveUser(teamID, x.Users...)
+						_ = minirepo.Users.SaveUser(x.Users...)
 						_ = minirepo.Groups.Save(x.Groups...)
 						offset += int32(len(x.Dialogs))
 						if len(x.Dialogs) == 0 {
@@ -203,7 +203,7 @@ func (r *River) syncTeams() {
 						logger.Warn("got error on saving teams [Teams]", zap.Error(err))
 						return
 					}
-					err = minirepo.Users.SaveUser(0, x.Users...)
+					err = minirepo.Users.SaveUser(x.Users...)
 					if err != nil {
 						logger.Warn("got error on saving teams [Users]", zap.Error(err))
 						return

@@ -113,16 +113,17 @@ func (d *repoDialogs) List(teamID int64, offset, limit int32) ([]*msg.Dialog, er
 
 	err := d.index.View(func(tx *buntdb.Tx) error {
 		return tx.Descend(indexDialogs, func(key, value string) bool {
+			parts := strings.Split(key, ".")
+			if tools.StrToInt64(parts[1]) != teamID {
+				return true
+			}
 			if offset--; offset >= 0 {
 				return true
 			}
 			if limit--; limit < 0 {
 				return false
 			}
-			parts := strings.Split(key, ".")
-			if tools.StrToInt64(parts[1]) != teamID {
-				return true
-			}
+
 			peerID := tools.StrToInt64(parts[2])
 			peerType := tools.StrToInt32(parts[3])
 			_ = d.db.View(func(tx *bolt.Tx) error {
