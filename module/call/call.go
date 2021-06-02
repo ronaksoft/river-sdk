@@ -42,6 +42,7 @@ type call struct {
 	peer            *msg.InputPeer
 	activeCallID    int64
 	callInfo        map[int64]*Info
+	callDuration    map[int64]*Duration
 	rejectedCallIDs []int64
 
 	iceServer []*msg.IceServer
@@ -60,6 +61,7 @@ func New(config *Config) *call {
 		peer:            nil,
 		activeCallID:    0,
 		callInfo:        make(map[int64]*Info),
+		callDuration:    make(map[int64]*Duration),
 		rejectedCallIDs: nil,
 		iceServer:       nil,
 		userID:          config.UserID,
@@ -86,6 +88,7 @@ func New(config *Config) *call {
 			msg.C_ClientCallTryReconnect:            c.tryReconnectHandler,
 			msg.C_ClientCallDestroy:                 c.destroyHandler,
 			msg.C_ClientCallAreAllAudio:             c.areAllAudioHandler,
+			msg.C_ClientCallGetDuration:             c.durationHandler,
 			msg.C_ClientCallSendIceCandidate:        c.iceCandidateHandler,
 			msg.C_ClientCallSendIceConnectionStatus: c.iceConnectionStatusChangeHandler,
 			msg.C_ClientCallSendMediaSettings:       c.mediaSettingsChangeHandler,

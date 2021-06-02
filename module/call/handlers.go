@@ -87,6 +87,21 @@ func (c *call) areAllAudioHandler(da request.Callback) {
 	da.Response(msg.C_Bool, &msg.Bool{Result: ok})
 }
 
+func (c *call) durationHandler(da request.Callback) {
+	req := &msg.ClientCallGetDuration{}
+	if err := da.RequestData(req); err != nil {
+		return
+	}
+
+	duration, err := c.duration(req.CallID)
+	if err != nil {
+		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
+		return
+	}
+
+	da.Response(msg.C_ClientCallDuration, &msg.ClientCallDuration{Duration: duration})
+}
+
 func (c *call) iceCandidateHandler(da request.Callback) {
 	req := &msg.ClientCallSendIceCandidate{}
 	if err := da.RequestData(req); err != nil {

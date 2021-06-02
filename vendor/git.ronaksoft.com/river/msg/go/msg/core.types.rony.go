@@ -113,6 +113,7 @@ func (p *poolUpdateEnvelope) Put(x *UpdateEnvelope) {
 	x.UCount = 0
 	x.UpdateID = 0
 	x.Timestamp = 0
+	x.Deadline = 0
 	p.pool.Put(x)
 }
 
@@ -124,6 +125,7 @@ func (x *UpdateEnvelope) DeepCopy(z *UpdateEnvelope) {
 	z.UCount = x.UCount
 	z.UpdateID = x.UpdateID
 	z.Timestamp = x.Timestamp
+	z.Deadline = x.Deadline
 }
 
 func (x *UpdateEnvelope) Marshal() ([]byte, error) {
