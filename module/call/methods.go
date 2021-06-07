@@ -126,6 +126,7 @@ func (c *call) duration(callID int64) (duration int64, err error) {
 
 	if dur.Stop == 0 {
 		duration = time.Now().Unix() - dur.Start
+		return
 	}
 
 	duration = dur.Stop - dur.Start
