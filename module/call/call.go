@@ -93,6 +93,7 @@ func New(config *Config) *call {
 			msg.C_ClientCallSendIceConnectionStatus: c.iceConnectionStatusChangeHandler,
 			msg.C_ClientCallSendMediaSettings:       c.mediaSettingsChangeHandler,
 			msg.C_ClientCallSendTrack:               c.trackUpdateHandler,
+			msg.C_ClientCallSendAck:                 c.ackHandler,
 			msg.C_ClientCallStart:                   c.startHandler,
 			msg.C_ClientCallJoin:                    c.joinHandler,
 			msg.C_ClientCallAccept:                  c.acceptHandler,

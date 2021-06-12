@@ -1468,6 +1468,23 @@ func (c *call) callBusy(in *UpdatePhoneCall) {
 	_, _ = c.apiReject(inputPeer, in.CallID, msg.DiscardReason_DiscardReasonBusy, 0)
 }
 
+func (c *call) ack(callID int64) {
+	info := c.getCallInfo(callID)
+	if info == nil {
+		return
+	}
+
+	wg := sync.WaitGroup{}
+	for _, req := range info.requests {
+		wg.Add(1)
+		go func(request *UpdatePhoneCall) {
+			c.sendCallAck(request)
+			wg.Done()
+		}(req)
+	}
+	wg.Wait()
+}
+
 func (c *call) sendCallAck(in *UpdatePhoneCall) {
 	inputPeer := c.getInputUserFromUpdate(in)
 
@@ -1668,8 +1685,9 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 		return
 	}
 
+	// (Disabled due to client state problem)
 	// Send ack update so callee ringing indicator activates
-	c.sendCallAck(in)
+	// c.sendCallAck(in)
 	if _, ok := c.callInfo[in.CallID]; !ok {
 		c.initCallRequest(in, data)
 
@@ -1771,17 +1789,8 @@ func (c *call) callDiscarded(in *UpdatePhoneCall) {
 
 	data := in.Data.(*msg.PhoneActionDiscarded)
 	if in.PeerType == int32(msg.PeerType_PeerUser) || data.Terminate {
-		update := msg.CallUpdateCallRejected{
-			CallID: in.CallID,
-			Reason: data.Reason,
-		}
-		updateData, uErr := update.Marshal()
-		if uErr == nil {
-			c.callUpdate(msg.CallUpdate_CallRejected, updateData)
-		}
 		c.destroy(in.CallID)
-	} else {
-		if c.removeParticipant(in.UserID, &in.CallID) {
+		if c.activeCallID != 0 {
 			update := msg.CallUpdateCallRejected{
 				CallID: in.CallID,
 				Reason: data.Reason,
@@ -1790,15 +1799,30 @@ func (c *call) callDiscarded(in *UpdatePhoneCall) {
 			if uErr == nil {
 				c.callUpdate(msg.CallUpdate_CallRejected, updateData)
 			}
+		}
+	} else {
+		if c.removeParticipant(in.UserID, &in.CallID) {
 			c.destroy(in.CallID)
+			if c.activeCallID != 0 {
+				update := msg.CallUpdateCallRejected{
+					CallID: in.CallID,
+					Reason: data.Reason,
+				}
+				updateData, uErr := update.Marshal()
+				if uErr == nil {
+					c.callUpdate(msg.CallUpdate_CallRejected, updateData)
+				}
+			}
 		} else {
 			c.checkAllConnected()
-			update := msg.CallUpdateParticipantLeft{
-				UserID: in.UserID,
-			}
-			updateData, uErr := update.Marshal()
-			if uErr == nil {
-				c.callUpdate(msg.CallUpdate_ParticipantLeft, updateData)
+			if c.activeCallID != 0 {
+				update := msg.CallUpdateParticipantLeft{
+					UserID: in.UserID,
+				}
+				updateData, uErr := update.Marshal()
+				if uErr == nil {
+					c.callUpdate(msg.CallUpdate_ParticipantLeft, updateData)
+				}
 			}
 		}
 	}

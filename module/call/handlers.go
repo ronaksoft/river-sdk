@@ -147,6 +147,17 @@ func (c *call) trackUpdateHandler(da request.Callback) {
 	da.Response(msg.C_Bool, &msg.Bool{Result: true})
 }
 
+func (c *call) ackHandler(da request.Callback) {
+	req := &msg.ClientCallSendAck{}
+	if err := da.RequestData(req); err != nil {
+		return
+	}
+
+	c.ack(req.CallID)
+
+	da.Response(msg.C_Bool, &msg.Bool{Result: true})
+}
+
 func (c *call) mediaSettingsChangeHandler(da request.Callback) {
 	req := &msg.ClientCallSendMediaSettings{}
 	if err := da.RequestData(req); err != nil {

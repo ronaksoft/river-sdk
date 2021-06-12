@@ -345,6 +345,46 @@ func (x *ClientCallSendTrack) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_ClientCallSendTrack, x)
 }
 
+const C_ClientCallSendAck int64 = 3339532851
+
+type poolClientCallSendAck struct {
+	pool sync.Pool
+}
+
+func (p *poolClientCallSendAck) Get() *ClientCallSendAck {
+	x, ok := p.pool.Get().(*ClientCallSendAck)
+	if !ok {
+		x = &ClientCallSendAck{}
+	}
+	return x
+}
+
+func (p *poolClientCallSendAck) Put(x *ClientCallSendAck) {
+	if x == nil {
+		return
+	}
+	x.CallID = 0
+	p.pool.Put(x)
+}
+
+var PoolClientCallSendAck = poolClientCallSendAck{}
+
+func (x *ClientCallSendAck) DeepCopy(z *ClientCallSendAck) {
+	z.CallID = x.CallID
+}
+
+func (x *ClientCallSendAck) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *ClientCallSendAck) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *ClientCallSendAck) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_ClientCallSendAck, x)
+}
+
 const C_ClientCallSendMediaSettings int64 = 2959794351
 
 type poolClientCallSendMediaSettings struct {
@@ -2263,6 +2303,7 @@ func init() {
 	registry.RegisterConstructor(1007531716, "ClientCallSendIceCandidate")
 	registry.RegisterConstructor(3421647876, "ClientCallSendIceConnectionStatus")
 	registry.RegisterConstructor(2856076314, "ClientCallSendTrack")
+	registry.RegisterConstructor(3339532851, "ClientCallSendAck")
 	registry.RegisterConstructor(2959794351, "ClientCallSendMediaSettings")
 	registry.RegisterConstructor(2971494454, "ClientCallGetDuration")
 	registry.RegisterConstructor(1041146964, "ClientCallStart")
