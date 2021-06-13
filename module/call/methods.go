@@ -205,6 +205,7 @@ func (c *call) trackUpdate(connId int32, streamID string) (err error) {
 	}
 	conn.mu.Unlock()
 
+	c.changeStatus(connId, msg.CallStatus_Connected)
 	return
 }
 
@@ -1292,6 +1293,8 @@ func (c *call) checkDisconnection(connId int32, state string, isIceError bool) (
 			c.callUpdate(msg.CallUpdate_ConnectionStatusChanged, updateData)
 		}
 
+		c.changeStatus(connId, msg.CallStatus_Reconnecting)
+
 		var initRes *msg.PhoneInit
 		initRes, err = c.apiInit(c.peer, c.activeCallID)
 		if err != nil {
@@ -1776,6 +1779,8 @@ func (c *call) callAccepted(in *UpdatePhoneCall) {
 	if uErr == nil {
 		c.callUpdate(msg.CallUpdate_CallAccepted, updateData)
 	}
+
+	c.changeStatus(connId, msg.CallStatus_Connecting)
 }
 
 func (c *call) callDiscarded(in *UpdatePhoneCall) {
@@ -1952,6 +1957,8 @@ func (c *call) callAcknowledged(in *UpdatePhoneCall) {
 	if uErr == nil {
 		c.callUpdate(msg.CallUpdate_CallAck, updateData)
 	}
+
+	c.changeStatus(connId, msg.CallStatus_Ringing)
 }
 
 func (c *call) participantAdded(in *UpdatePhoneCall) {
@@ -2155,6 +2162,37 @@ func (c *call) checkCallTimeout(connId int32) {
 		if len(notAnsweringUserIDs) > 0 {
 			_ = c.groupRemoveParticipant(c.activeCallID, notAnsweringUserIDs, true)
 		}
+	}
+}
+
+func (c *call) changeStatus(connId int32, status msg.CallStatus) {
+	if c.activeCallID == 0 {
+		return
+	}
+
+	c.mu.Lock()
+	conn, ok := c.peerConnections[connId]
+	c.mu.Unlock()
+	if !ok {
+		return
+	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	if conn.status == msg.CallStatus_Connected && status != msg.CallStatus_Reconnecting {
+		return
+	}
+	conn.status = status
+
+	update := msg.CallUpdateStatusChanged{
+		CallID: c.activeCallID,
+		ConnId: connId,
+		Status: status,
+	}
+	updateData, uErr := update.Marshal()
+	if uErr == nil {
+		c.callUpdate(msg.CallUpdate_CallStatusChanged, updateData)
 	}
 }
 

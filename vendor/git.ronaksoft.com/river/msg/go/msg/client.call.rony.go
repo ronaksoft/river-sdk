@@ -2294,6 +2294,50 @@ func (x *CallUpdateDestroyed) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_CallUpdateDestroyed, x)
 }
 
+const C_CallUpdateStatusChanged int64 = 3530146764
+
+type poolCallUpdateStatusChanged struct {
+	pool sync.Pool
+}
+
+func (p *poolCallUpdateStatusChanged) Get() *CallUpdateStatusChanged {
+	x, ok := p.pool.Get().(*CallUpdateStatusChanged)
+	if !ok {
+		x = &CallUpdateStatusChanged{}
+	}
+	return x
+}
+
+func (p *poolCallUpdateStatusChanged) Put(x *CallUpdateStatusChanged) {
+	if x == nil {
+		return
+	}
+	x.CallID = 0
+	x.ConnId = 0
+	x.Status = 0
+	p.pool.Put(x)
+}
+
+var PoolCallUpdateStatusChanged = poolCallUpdateStatusChanged{}
+
+func (x *CallUpdateStatusChanged) DeepCopy(z *CallUpdateStatusChanged) {
+	z.CallID = x.CallID
+	z.ConnId = x.ConnId
+	z.Status = x.Status
+}
+
+func (x *CallUpdateStatusChanged) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *CallUpdateStatusChanged) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *CallUpdateStatusChanged) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_CallUpdateStatusChanged, x)
+}
+
 func init() {
 	registry.RegisterConstructor(2873625233, "ClientCallToggleVideo")
 	registry.RegisterConstructor(3488802344, "ClientCallToggleAudio")
@@ -2346,4 +2390,5 @@ func init() {
 	registry.RegisterConstructor(3684039715, "CallUpdateCallDestroyed")
 	registry.RegisterConstructor(587913546, "CallUpdateLocalMediaSettingsUpdated")
 	registry.RegisterConstructor(2831970154, "CallUpdateDestroyed")
+	registry.RegisterConstructor(3530146764, "CallUpdateStatusChanged")
 }

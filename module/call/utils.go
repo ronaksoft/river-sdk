@@ -44,6 +44,7 @@ type Connection struct {
 	mu              *sync.RWMutex
 	connectTicker   *time.Ticker
 	reconnectTimout *time.Timer
+	status          msg.CallStatus
 }
 
 type MediaSettingsIn struct {
