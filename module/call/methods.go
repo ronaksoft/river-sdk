@@ -1794,7 +1794,6 @@ func (c *call) callDiscarded(in *UpdatePhoneCall) {
 
 	data := in.Data.(*msg.PhoneActionDiscarded)
 	if in.PeerType == int32(msg.PeerType_PeerUser) || data.Terminate {
-		c.destroy(in.CallID)
 		if c.activeCallID != 0 {
 			update := msg.CallUpdateCallRejected{
 				CallID: in.CallID,
@@ -1805,9 +1804,9 @@ func (c *call) callDiscarded(in *UpdatePhoneCall) {
 				c.callUpdate(msg.CallUpdate_CallRejected, updateData)
 			}
 		}
+		c.destroy(in.CallID)
 	} else {
 		if c.removeParticipant(in.UserID, &in.CallID) {
-			c.destroy(in.CallID)
 			if c.activeCallID != 0 {
 				update := msg.CallUpdateCallRejected{
 					CallID: in.CallID,
@@ -1818,6 +1817,7 @@ func (c *call) callDiscarded(in *UpdatePhoneCall) {
 					c.callUpdate(msg.CallUpdate_CallRejected, updateData)
 				}
 			}
+			c.destroy(in.CallID)
 		} else {
 			c.checkAllConnected()
 			if c.activeCallID != 0 {
