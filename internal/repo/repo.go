@@ -110,7 +110,8 @@ func repoSetDB(dbPath string, lowMemory bool) error {
 	badgerPath := filepath.Join(dbPath, "badger")
 	_ = os.MkdirAll(badgerPath, os.ModePerm)
 	badgerOpts := badger.DefaultOptions(badgerPath).
-		WithLogger(nil)
+		WithLogger(nil).
+		WithTruncate(true)
 	if lowMemory {
 		badgerOpts = badgerOpts.
 			WithTableLoadingMode(options.FileIO).

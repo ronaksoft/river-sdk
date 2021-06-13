@@ -18,6 +18,7 @@ import (
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"math/big"
+	"os"
 	"runtime"
 	"sync"
 	"time"
@@ -573,6 +574,7 @@ func (r *River) AppStart() error {
 	// Initialize DB replaced with ORM
 	err := repo.Init(r.dbPath, r.optimizeForLowMemory)
 	if err != nil {
+		_ = os.RemoveAll(r.dbPath)
 		return err
 	}
 

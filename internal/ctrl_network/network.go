@@ -32,6 +32,9 @@ import (
 
 var (
 	logger *logs.Logger
+	dnsServers = []string{
+		"8.8.8.8:53", "1.1.1.1:53", "9.9.9.9:53", "185.228.168.168:53",
+	}
 )
 
 func init() {
@@ -135,8 +138,16 @@ func (ctrl *Controller) createWebsocketDialer(timeout time.Duration) {
 					return
 				}
 			}
+			r := &net.Resolver{
+				PreferGo: true,
+				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+						dnsServer := dnsServers[tools.RandomInt(len(dnsServers))]
+						logger.Info("dial dns server", zap.String("DNS", dnsServer))
+						return d.DialContext(ctx, "udp", dnsServer)
+				},
 
-			ips, err := net.LookupIP(host)
+			}
+			ips, err := r.LookupIP(ctx, "ip4", host)
 			if err != nil {
 				return nil, err
 			}
