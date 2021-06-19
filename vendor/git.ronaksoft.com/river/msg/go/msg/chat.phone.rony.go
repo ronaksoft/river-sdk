@@ -680,6 +680,46 @@ func (x *PhoneGetHistory) PushToContext(ctx *edge.RequestCtx) {
 	ctx.PushMessage(C_PhoneGetHistory, x)
 }
 
+const C_PhoneDeleteHistory int64 = 2528259211
+
+type poolPhoneDeleteHistory struct {
+	pool sync.Pool
+}
+
+func (p *poolPhoneDeleteHistory) Get() *PhoneDeleteHistory {
+	x, ok := p.pool.Get().(*PhoneDeleteHistory)
+	if !ok {
+		x = &PhoneDeleteHistory{}
+	}
+	return x
+}
+
+func (p *poolPhoneDeleteHistory) Put(x *PhoneDeleteHistory) {
+	if x == nil {
+		return
+	}
+	x.CallIDs = x.CallIDs[:0]
+	p.pool.Put(x)
+}
+
+var PoolPhoneDeleteHistory = poolPhoneDeleteHistory{}
+
+func (x *PhoneDeleteHistory) DeepCopy(z *PhoneDeleteHistory) {
+	z.CallIDs = append(z.CallIDs[:0], x.CallIDs...)
+}
+
+func (x *PhoneDeleteHistory) Marshal() ([]byte, error) {
+	return proto.Marshal(x)
+}
+
+func (x *PhoneDeleteHistory) Unmarshal(b []byte) error {
+	return proto.UnmarshalOptions{}.Unmarshal(b, x)
+}
+
+func (x *PhoneDeleteHistory) PushToContext(ctx *edge.RequestCtx) {
+	ctx.PushMessage(C_PhoneDeleteHistory, x)
+}
+
 const C_PhoneCallRecord int64 = 4147150312
 
 type poolPhoneCallRecord struct {
@@ -1950,6 +1990,7 @@ func init() {
 	registry.RegisterConstructor(1976202226, "PhoneUpdateCall")
 	registry.RegisterConstructor(2215486159, "PhoneRateCall")
 	registry.RegisterConstructor(407776572, "PhoneGetHistory")
+	registry.RegisterConstructor(2528259211, "PhoneDeleteHistory")
 	registry.RegisterConstructor(4147150312, "PhoneCallRecord")
 	registry.RegisterConstructor(1227520020, "PhoneCallsMany")
 	registry.RegisterConstructor(442877873, "PhoneUpdateAdmin")
