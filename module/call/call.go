@@ -109,7 +109,9 @@ func New(config *Config) *call {
 	)
 
 	c.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{
-		msg.C_UpdatePhoneCall: c.updatePhoneCall,
+		msg.C_UpdatePhoneCall:        c.updatePhoneCall,
+		msg.C_UpdatePhoneCallStarted: c.updatePhoneCallStarted,
+		msg.C_UpdatePhoneCallEnded:   c.updatePhoneCallEnded,
 	})
 
 	return c

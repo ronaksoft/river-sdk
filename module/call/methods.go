@@ -3,6 +3,7 @@ package call
 import (
 	"git.ronaksoft.com/river/msg/go/msg"
 	"git.ronaksoft.com/river/sdk/internal/domain"
+	"git.ronaksoft.com/river/sdk/internal/repo"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -375,7 +376,7 @@ func (c *call) accept(callID int64, video bool) (err error) {
 	return initFn()
 }
 
-func (c *call) reject(callID int64, duration int32, reason msg.DiscardReason, targetPeer *msg.InputPeer) (err error) {
+func (c *call) reject(callID int64, duration int32, reason msg.DiscardReason, targetPeer *msg.InputPeer, force bool) (err error) {
 	peer := c.peer
 	if targetPeer != nil {
 		peer = targetPeer
@@ -395,6 +396,19 @@ func (c *call) reject(callID int64, duration int32, reason msg.DiscardReason, ta
 		}
 	}
 	c.mu.Unlock()
+
+	if force {
+		_ = repo.Dialogs.UpdateCallEnded(&msg.UpdatePhoneCallEnded{
+			UCount:   0,
+			UpdateID: 0,
+			TeamID:   0,
+			Peer:     &msg.Peer{
+				ID:         peer.ID,
+				Type:       int32(peer.Type),
+				AccessHash: peer.AccessHash,
+			},
+		})
+	}
 
 	_, err = c.apiReject(peer, callID, reason, duration)
 	return
@@ -2136,7 +2150,7 @@ func (c *call) checkCallTimeout(connId int32) {
 	}
 
 	if len(info.acceptedParticipants) == 0 {
-		_ = c.reject(c.activeCallID, 0, msg.DiscardReason_DiscardReasonMissed, nil)
+		_ = c.reject(c.activeCallID, 0, msg.DiscardReason_DiscardReasonMissed, nil, false)
 		update := msg.CallUpdateCallTimeout{}
 		updateData, uErr := update.Marshal()
 		if uErr == nil {
@@ -2258,4 +2272,36 @@ func (c *call) removeCallRequestID(callID, reqID int64) {
 		delete(info.requestMap, reqID)
 		info.mu.Unlock()
 	}
+}
+
+func (c *call) updatePhoneCallStarted(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := new(msg.UpdatePhoneCallStarted)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	c.Log().Debug("applies UpdatePhoneCallStarted",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
+	_ = repo.Dialogs.UpdateCallStarted(x)
+	res := []*msg.UpdateEnvelope{u}
+	return res, nil
+}
+
+func (c *call) updatePhoneCallEnded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
+	x := new(msg.UpdatePhoneCallEnded)
+	err := x.Unmarshal(u.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	c.Log().Debug("applies UpdatePhoneCallEnded",
+		zap.Int64("UpdateID", x.UpdateID),
+	)
+
+	_ = repo.Dialogs.UpdateCallEnded(x)
+	res := []*msg.UpdateEnvelope{u}
+	return res, nil
 }

@@ -731,6 +731,7 @@ func (p *poolClientCallReject) Put(x *ClientCallReject) {
 	x.Reason = 0
 	PoolInputPeer.Put(x.TargetPeer)
 	x.TargetPeer = nil
+	x.Force = false
 	p.pool.Put(x)
 }
 
@@ -748,6 +749,7 @@ func (x *ClientCallReject) DeepCopy(z *ClientCallReject) {
 	} else {
 		z.TargetPeer = nil
 	}
+	z.Force = x.Force
 }
 
 func (x *ClientCallReject) Marshal() ([]byte, error) {
