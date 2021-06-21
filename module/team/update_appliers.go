@@ -47,11 +47,19 @@ func (r *team) updateTeamMemberRemoved(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		zap.Int64("UpdateID", x.UpdateID),
 	)
 
-	_ = repo.Users.DeleteContact(x.TeamID, x.UserID)
-	err = repo.System.SaveInt(domain.GetContactsGetHashKey(x.TeamID), uint64(x.Hash))
-	if err != nil {
-		return nil, err
+	if x.UserID == r.SDK().GetConnInfo().PickupUserID() {
+		// we have been deleted from the team
+		_ = repo.Teams.Delete(x.TeamID)
+		_ = repo.Users.DeleteAllContacts(x.TeamID)
+	} else {
+		_ = repo.Users.DeleteContact(x.TeamID, x.UserID)
+		err = repo.System.SaveInt(domain.GetContactsGetHashKey(x.TeamID), uint64(x.Hash))
+		if err != nil {
+			return nil, err
+		}
 	}
+
+
 	return []*msg.UpdateEnvelope{u}, nil
 }
 
@@ -101,15 +109,14 @@ func (r *team) updateTeam(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) 
 		zap.String("Name", x.Name),
 	)
 
-	team, err := repo.Teams.Get(x.TeamID)
-
+	t, err := repo.Teams.Get(x.TeamID)
 	if err != nil {
 		return nil, nil
 	}
 
-	team.Name = x.Name
+	t.Name = x.Name
 
-	err = repo.Teams.Save(team)
+	err = repo.Teams.Save(t)
 	if err != nil {
 		return nil, err
 	}
