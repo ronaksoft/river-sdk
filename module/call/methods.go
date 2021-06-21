@@ -402,7 +402,7 @@ func (c *call) reject(callID int64, duration int32, reason msg.DiscardReason, ta
 			UCount:   0,
 			UpdateID: 0,
 			TeamID:   0,
-			Peer:     &msg.Peer{
+			Peer: &msg.Peer{
 				ID:         peer.ID,
 				Type:       int32(peer.Type),
 				AccessHash: peer.AccessHash,
