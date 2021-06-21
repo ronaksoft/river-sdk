@@ -57,6 +57,7 @@ type Controller struct {
 	authKey       []byte
 	authRecalled  int32 // atomic boolean for checking if AuthRecall is sent
 	messageSeq    int64
+	sessionSeq    int64
 	endPoints     []string
 	curEndpoint   string
 	curEndpointIP string
@@ -534,6 +535,7 @@ func (ctrl *Controller) Connect() {
 
 			ctrl.UpdateEndpoint("")
 			ctrl.wsDialer.Header = ws.HandshakeHeaderHTTP(reqHdr)
+			ctrl.incSessionSeq()
 			wsConn, _, _, err := ctrl.wsDialer.Dial(context.Background(), fmt.Sprintf("ws://%s", ctrl.curEndpoint))
 			if err != nil {
 				time.Sleep(domain.GetExponentialTime(100*time.Millisecond, 3*time.Second, attempts))
@@ -619,6 +621,10 @@ func (ctrl *Controller) SetAuthorization(authID int64, authKey []byte) {
 
 func (ctrl *Controller) incMessageSeq() int64 {
 	return atomic.AddInt64(&ctrl.messageSeq, 1)
+}
+
+func (ctrl *Controller) incSessionSeq() int64 {
+	return atomic.AddInt64(&ctrl.sessionSeq, 1)
 }
 
 // WebsocketCommand run request immediately. It is blocking call
@@ -741,8 +747,9 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 		protoMessage.AuthID = ctrl.authID
 		encryptedPayload := &msg.ProtoEncryptedPayload{
 			ServerSalt: salt.Get(),
-			Envelope:   msgEnvelope,
 			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.incMessageSeq()),
+			SessionID:  domain.Now().Unix()<<32 | ctrl.incSessionSeq(),
+			Envelope:   msgEnvelope,
 		}
 
 		mo := proto.MarshalOptions{UseCachedSize: true}
