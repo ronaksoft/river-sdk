@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	logger *logs.Logger
+	logger     *logs.Logger
 	dnsServers = []string{
 		"8.8.8.8:53", "1.1.1.1:53", "9.9.9.9:53", "185.228.168.168:53",
 	}
@@ -142,11 +142,10 @@ func (ctrl *Controller) createWebsocketDialer(timeout time.Duration) {
 			r := &net.Resolver{
 				PreferGo: true,
 				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-						dnsServer := dnsServers[tools.RandomInt(len(dnsServers))]
-						logger.Info("dial dns server", zap.String("DNS", dnsServer))
-						return d.DialContext(ctx, "udp", dnsServer)
+					dnsServer := dnsServers[tools.RandomInt(len(dnsServers))]
+					logger.Info("dial dns server", zap.String("DNS", dnsServer))
+					return d.DialContext(ctx, "udp", dnsServer)
 				},
-
 			}
 			ips, err := r.LookupIP(ctx, "ip4", host)
 			if err != nil {
@@ -627,6 +626,10 @@ func (ctrl *Controller) incSessionSeq() int64 {
 	return atomic.AddInt64(&ctrl.sessionSeq, 1)
 }
 
+func (ctrl *Controller) getSessionSeq() int64 {
+	return atomic.LoadInt64(&ctrl.sessionSeq)
+}
+
 // WebsocketCommand run request immediately. It is blocking call
 func (ctrl *Controller) WebsocketCommand(reqCB request.Callback) {
 	defer logger.RecoverPanic(
@@ -748,7 +751,7 @@ func (ctrl *Controller) writeToWebsocket(msgEnvelope *rony.MessageEnvelope) erro
 		encryptedPayload := &msg.ProtoEncryptedPayload{
 			ServerSalt: salt.Get(),
 			MessageID:  uint64(domain.Now().Unix()<<32 | ctrl.incMessageSeq()),
-			SessionID:  domain.Now().Unix()<<32 | ctrl.incSessionSeq(),
+			SessionID:  domain.Now().Unix()<<32 | ctrl.getSessionSeq(),
 			Envelope:   msgEnvelope,
 		}
 
