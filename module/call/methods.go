@@ -2302,6 +2302,18 @@ func (c *call) updatePhoneCallEnded(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelop
 	)
 
 	_ = repo.Dialogs.UpdateCallEnded(x)
+
+	if c.activeCallID != 0 && c.peer != nil && c.peer.ID == x.Peer.ID && int32(c.peer.Type) == x.Peer.Type) {
+		update := msg.CallUpdateCallRejected{
+			CallID: c.activeCallID,
+			Reason: msg.DiscardReason_DiscardReasonHangup,
+		}
+		updateData, uErr := update.Marshal()
+		if uErr == nil {
+			c.callUpdate(msg.CallUpdate_CallRejected, updateData)
+		}
+	}
+
 	res := []*msg.UpdateEnvelope{u}
 	return res, nil
 }
