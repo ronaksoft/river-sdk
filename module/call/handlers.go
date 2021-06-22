@@ -230,8 +230,9 @@ func (c *call) rejectHandler(da request.Callback) {
 
 	err := c.reject(req.CallID, req.Duration, req.Reason, req.TargetPeer, req.Force)
 	if err != nil {
-		da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
-		return
+		//da.Response(rony.C_Error, &rony.Error{Code: "E00", Items: err.Error()})
+		//return
+		c.Log().WarnOnErr("ClientCallReject", err)
 	}
 
 	da.Response(msg.C_Bool, &msg.Bool{Result: true})
