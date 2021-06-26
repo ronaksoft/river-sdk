@@ -27,7 +27,7 @@ func (c *call) updatePhoneCall(u *msg.UpdateEnvelope) (res []*msg.UpdateEnvelope
 		c.Log().Info("applies UpdatePhoneCall", zap.String("Action", x.Action.String()))
 
 		now := domain.Now().Unix()
-		if !(x.Timestamp == 0 || now-x.Timestamp < 60) {
+		if x.Timestamp != 0 && now-x.Timestamp > 60 {
 			return
 		}
 
