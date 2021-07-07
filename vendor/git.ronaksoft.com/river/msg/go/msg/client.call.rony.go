@@ -1375,6 +1375,7 @@ func (p *poolCallUpdateCallRequested) Put(x *CallUpdateCallRequested) {
 	PoolInputPeer.Put(x.Peer)
 	x.Peer = nil
 	x.CallID = 0
+	x.Video = false
 	p.pool.Put(x)
 }
 
@@ -1390,6 +1391,7 @@ func (x *CallUpdateCallRequested) DeepCopy(z *CallUpdateCallRequested) {
 		z.Peer = nil
 	}
 	z.CallID = x.CallID
+	z.Video = x.Video
 }
 
 func (x *CallUpdateCallRequested) Marshal() ([]byte, error) {

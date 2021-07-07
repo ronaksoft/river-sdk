@@ -257,7 +257,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 		}
 
 		c.initParticipants(c.activeCallID, joinRes.Participants, true)
-		_, err = c.initManyConnections(peer, c.activeCallID, false, nil)
+		_, err = c.initManyConnections(peer, c.activeCallID, false, video, nil)
 		if err != nil {
 			c.Log().WarnOnErr("initManyConnections", err)
 			return
@@ -265,7 +265,7 @@ func (c *call) start(peer *msg.InputPeer, participants []*msg.InputUser, video b
 	} else {
 		c.activeCallID = 0
 		c.initCallParticipants(TempCallID, participants)
-		_, err = c.initManyConnections(peer, TempCallID, true, nil)
+		_, err = c.initManyConnections(peer, TempCallID, true, video, nil)
 		if err != nil {
 			c.Log().WarnOnErr("initManyConnections", err)
 			return
@@ -332,7 +332,7 @@ func (c *call) accept(callID int64, video bool) (err error) {
 			wg.Add(1)
 			go func(req *UpdatePhoneCall) {
 				defer wg.Done()
-				_, innerErr := c.initManyConnections(c.peer, callID, false, req)
+				_, innerErr := c.initManyConnections(c.peer, callID, false, video, req)
 				if innerErr != nil {
 					c.Log().WarnOnErr("initManyConnections", err)
 					return
@@ -769,7 +769,7 @@ func (c *call) initCallRequest(in *UpdatePhoneCall, sdpData *msg.PhoneActionRequ
 	c.mu.Unlock()
 }
 
-func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator bool, request *UpdatePhoneCall) (res *msg.PhoneCall, err error) {
+func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator, video bool, request *UpdatePhoneCall) (res *msg.PhoneCall, err error) {
 	currentUserConnId, callInfo, valid := c.getConnId(callID, c.userID)
 	if !valid {
 		err = ErrInvalidCallID
@@ -872,7 +872,7 @@ func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator 
 							pc.mu.Lock()
 							pc.Try++
 							pc.mu.Unlock()
-							_, innerErr := c.callUserSingle(peer, participant, c.activeCallID)
+							_, innerErr := c.callUserSingle(peer, participant, c.activeCallID, video)
 							if innerErr != nil {
 								c.Log().WarnOnErr("callUserSingle", innerErr)
 							}
@@ -889,7 +889,7 @@ func (c *call) initManyConnections(peer *msg.InputPeer, callID int64, initiator 
 				}(participantSDP)
 			}
 		}
-		_, err = c.callUser(peer, initiator, callResults, c.activeCallID)
+		_, err = c.callUser(peer, initiator, callResults, c.activeCallID, video)
 		if err != nil {
 			c.Log().WarnOnErr("callUser", err)
 		}
@@ -984,9 +984,9 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	return
 }
 
-func (c *call) callUser(peer *msg.InputPeer, initiator bool, phoneParticipants []*msg.PhoneParticipantSDP, callID int64) (res *msg.PhoneCall, err error) {
+func (c *call) callUser(peer *msg.InputPeer, initiator bool, phoneParticipants []*msg.PhoneParticipantSDP, callID int64, video bool) (res *msg.PhoneCall, err error) {
 	randomID := domain.RandomInt64(0)
-	res, err = c.apiRequest(peer, randomID, initiator, phoneParticipants, callID, false)
+	res, err = c.apiRequest(peer, randomID, initiator, phoneParticipants, callID, video, false)
 	if err == nil && callID == 0 {
 		c.mu.Lock()
 		c.activeCallID = res.ID
@@ -995,9 +995,9 @@ func (c *call) callUser(peer *msg.InputPeer, initiator bool, phoneParticipants [
 	return
 }
 
-func (c *call) callUserSingle(peer *msg.InputPeer, phoneParticipant *msg.PhoneParticipantSDP, callID int64) (res *msg.PhoneCall, err error) {
+func (c *call) callUserSingle(peer *msg.InputPeer, phoneParticipant *msg.PhoneParticipantSDP, callID int64, video bool) (res *msg.PhoneCall, err error) {
 	randomID := domain.RandomInt64(0)
-	res, err = c.apiRequest(peer, randomID, false, []*msg.PhoneParticipantSDP{phoneParticipant}, callID, true)
+	res, err = c.apiRequest(peer, randomID, false, []*msg.PhoneParticipantSDP{phoneParticipant}, callID, video, false)
 	return
 }
 
@@ -1715,6 +1715,7 @@ func (c *call) callRequested(in *UpdatePhoneCall) {
 		update := msg.CallUpdateCallRequested{
 			Peer:   c.peer,
 			CallID: in.CallID,
+			Video:  data.Video,
 		}
 		updateData, uErr := update.Marshal()
 		if uErr == nil {

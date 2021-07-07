@@ -73,7 +73,7 @@ func (c *call) apiInit(peer *msg.InputPeer, callID int64) (res *msg.PhoneInit, e
 	return
 }
 
-func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, participants []*msg.PhoneParticipantSDP, callID int64, batch bool) (res *msg.PhoneCall, err error) {
+func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, participants []*msg.PhoneParticipantSDP, callID int64, video, batch bool) (res *msg.PhoneCall, err error) {
 	req := msg.PhoneRequestCall{
 		Peer:         peer,
 		RandomID:     randomID,
@@ -81,6 +81,7 @@ func (c *call) apiRequest(peer *msg.InputPeer, randomID int64, initiator bool, p
 		Participants: participants,
 		CallID:       callID,
 		DeviceType:   c.deviceType,
+		Video:        video,
 	}
 
 	reqBytes, err := req.Marshal()
