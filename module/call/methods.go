@@ -1108,7 +1108,7 @@ func (c *call) upgradeConnection(video bool) (err error) {
 	var connIds []int32
 	c.mu.RLock()
 	for _, pc := range c.peerConnections {
-		if pc.IceConnectionState == "connected" {
+		if pc.IceConnectionState == "connected" || pc.IceConnectionState == "completed" {
 			connIds = append(connIds, pc.ConnId)
 		}
 	}
