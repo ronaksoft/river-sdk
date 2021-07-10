@@ -1245,7 +1245,7 @@ func (c *call) checkAllConnected() {
 		}
 
 		for _, pc := range c.peerConnections {
-			if pc.IceConnectionState != "connected" {
+			if !(pc.IceConnectionState == "connected" || pc.IceConnectionState == "completed") {
 				return
 			}
 		}
