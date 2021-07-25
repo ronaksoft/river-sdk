@@ -22,8 +22,6 @@ type Message struct {
 // than one message when peer sending fragmented message in multiple frames and
 // want to send some control frame between fragments. Then returned slice will
 // contain those control frames at first, and then result of gluing fragments.
-//
-// TODO(gobwas): add DefaultReader with buffer size options.
 func ReadMessage(r io.Reader, s ws.State, m []Message) ([]Message, error) {
 	rd := Reader{
 		Source: r,
@@ -34,6 +32,7 @@ func ReadMessage(r io.Reader, s ws.State, m []Message) ([]Message, error) {
 				return err
 			}
 			m = append(m, Message{OpCode: hdr.OpCode, Payload: bts})
+
 			return nil
 		},
 	}
@@ -58,6 +57,7 @@ func ReadMessage(r io.Reader, s ws.State, m []Message) ([]Message, error) {
 	if err != nil {
 		return m, err
 	}
+
 	return append(m, Message{OpCode: h.OpCode, Payload: p}), nil
 }
 

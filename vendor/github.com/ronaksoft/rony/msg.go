@@ -15,39 +15,32 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-//go:generate protoc -I=. --go_out=paths=source_relative:. imsg.proto msg.proto options.proto
-//go:generate protoc -I=. --gorony_out=paths=source_relative,option=no_edge_dep:. imsg.proto msg.proto
+//go:generate protoc -I=. --go_out=paths=source_relative:. msg.proto options.proto
+//go:generate protoc -I=. --gorony_out=paths=source_relative,option=no_edge_dep:. msg.proto
 func init() {}
 
 /*
 	Extra methods for MessageEnvelope
 */
 
-func (x *MessageEnvelope) Clone() *MessageEnvelope {
-	c := PoolMessageEnvelope.Get()
-	c.Constructor = x.Constructor
-	c.RequestID = x.RequestID
-	c.Message = append(c.Message[:0], x.Message...)
-	c.Auth = append(c.Auth[:0], x.Auth...)
-	if cap(c.Header) >= len(x.Header) {
-		c.Header = c.Header[:len(x.Header)]
-	} else {
-		c.Header = make([]*KeyValue, len(x.Header))
-	}
-	for idx, kv := range x.Header {
-		if c.Header[idx] == nil {
-			c.Header[idx] = &KeyValue{}
-		}
-		kv.DeepCopy(c.Header[idx])
-	}
-	return c
-}
-
 func (x *MessageEnvelope) Fill(reqID uint64, constructor int64, p proto.Message, kvs ...*KeyValue) {
 	x.RequestID = reqID
 	x.Constructor = constructor
-	x.Header = append(x.Header[:0], kvs...)
 
+	// Fill Header
+	if cap(x.Header) >= len(kvs) {
+		x.Header = x.Header[:len(kvs)]
+	} else {
+		x.Header = make([]*KeyValue, len(kvs))
+	}
+	for idx, kv := range kvs {
+		if x.Header[idx] == nil {
+			x.Header[idx] = &KeyValue{}
+		}
+		kv.DeepCopy(x.Header[idx])
+	}
+
+	// Fill Message
 	buf := pools.Buffer.FromProto(p)
 	x.Message = append(x.Message[:0], *buf.Bytes()...)
 	pools.Buffer.Put(buf)
@@ -59,6 +52,7 @@ func (x *MessageEnvelope) Get(key, defaultVal string) string {
 			return kv.Value
 		}
 	}
+
 	return defaultVal
 }
 
@@ -74,20 +68,6 @@ func (x *MessageContainer) Add(reqID uint64, constructor int64, p proto.Message,
 	me.Fill(reqID, constructor, p, kvs...)
 	x.Envelopes = append(x.Envelopes, me)
 	x.Length += 1
-}
-
-/*
-	Extra methods for TunnelMessage
-*/
-
-func (x *TunnelMessage) Fill(senderID []byte, senderReplicaSet uint64, e *MessageEnvelope, kvs ...*KeyValue) {
-	x.SenderID = append(x.SenderID[:0], senderID...)
-	x.SenderReplicaSet = senderReplicaSet
-	x.Store = append(x.Store[:0], kvs...)
-	if x.Envelope == nil {
-		x.Envelope = PoolMessageEnvelope.Get()
-	}
-	e.DeepCopy(x.Envelope)
 }
 
 /*

@@ -1,9 +1,10 @@
 package gossipCluster
 
 import (
-	"github.com/hashicorp/memberlist"
-	"github.com/pkg/errors"
+	"github.com/ronaksoft/memberlist"
 	"github.com/ronaksoft/rony"
+	"github.com/ronaksoft/rony/errors"
+	"github.com/ronaksoft/rony/internal/msg"
 	"google.golang.org/protobuf/proto"
 	"net"
 )
@@ -54,7 +55,7 @@ func (m *Member) Proto(p *rony.Edge) *rony.Edge {
 	return p
 }
 
-func (m *Member) Merge(en *rony.EdgeNode) {
+func (m *Member) Merge(en *msg.EdgeNode) {
 	m.replicaSet = en.GetReplicaSet()
 	m.gatewayAddr = append(m.gatewayAddr[:0], en.GetGatewayAddr()...)
 	m.tunnelAddr = append(m.tunnelAddr[:0], en.GetTunnelAddr()...)
@@ -62,7 +63,7 @@ func (m *Member) Merge(en *rony.EdgeNode) {
 
 func (m *Member) Dial() (net.Conn, error) {
 	if len(m.tunnelAddr) == 0 {
-		return nil, ErrNoTunnelAddrs
+		return nil, errors.ErrNoTunnelAddrs
 	}
 
 	idx := m.idx
@@ -80,11 +81,10 @@ func (m *Member) Dial() (net.Conn, error) {
 }
 
 func newMember(sm *memberlist.Node) (*Member, error) {
-	en := rony.PoolEdgeNode.Get()
-	defer rony.PoolEdgeNode.Put(en)
+	en := msg.PoolEdgeNode.Get()
+	defer msg.PoolEdgeNode.Put(en)
 
-	err := extractNode(sm, en)
-	if err != nil {
+	if err := extractNode(sm, en); err != nil {
 		return nil, err
 	}
 
@@ -99,10 +99,6 @@ func newMember(sm *memberlist.Node) (*Member, error) {
 	return m, nil
 }
 
-func extractNode(n *memberlist.Node, en *rony.EdgeNode) error {
+func extractNode(n *memberlist.Node, en *msg.EdgeNode) error {
 	return proto.UnmarshalOptions{}.Unmarshal(n.Meta, en)
 }
-
-var (
-	ErrNoTunnelAddrs = errors.New("tunnel address does not found")
-)

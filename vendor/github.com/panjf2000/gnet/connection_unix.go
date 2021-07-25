@@ -27,11 +27,12 @@ import (
 	"net"
 	"os"
 
-	"github.com/panjf2000/gnet/internal/netpoll"
+	"golang.org/x/sys/unix"
+
+	"github.com/panjf2000/gnet/internal/socket"
 	"github.com/panjf2000/gnet/pool/bytebuffer"
 	prb "github.com/panjf2000/gnet/pool/ringbuffer"
 	"github.com/panjf2000/gnet/ringbuffer"
-	"golang.org/x/sys/unix"
 )
 
 type conn struct {
@@ -50,33 +51,17 @@ type conn struct {
 }
 
 func newTCPConn(fd int, el *eventloop, sa unix.Sockaddr, remoteAddr net.Addr) (c *conn) {
-	c = &conn{
+	return &conn{
 		fd:             fd,
 		sa:             sa,
 		loop:           el,
 		codec:          el.svr.codec,
+		localAddr:      el.ln.lnaddr,
+		remoteAddr:     remoteAddr,
 		inboundBuffer:  prb.Get(),
 		outboundBuffer: prb.Get(),
 	}
-	c.localAddr = el.ln.lnaddr
-	c.remoteAddr = remoteAddr
-
-	if el.svr.ln.network != "tcp" {
-		return
-	}
-
-	var noDelay bool
-	switch el.svr.opts.TCPNoDelay {
-	case TCPNoDelay:
-		noDelay = true
-	case TCPDelay:
-	}
-	_ = netpoll.SetNoDelay(fd, noDelay)
-	_ = netpoll.SetKeepAlive(fd, el.svr.opts.TCPKeepAlive)
-	return
 }
-
-var emptyBuffer = ringbuffer.New(0)
 
 func (c *conn) releaseTCP() {
 	c.opened = false
@@ -87,8 +72,8 @@ func (c *conn) releaseTCP() {
 	c.remoteAddr = nil
 	prb.Put(c.inboundBuffer)
 	prb.Put(c.outboundBuffer)
-	c.inboundBuffer = nil
-	c.outboundBuffer = emptyBuffer
+	c.inboundBuffer = ringbuffer.EmptyRingBuffer
+	c.outboundBuffer = ringbuffer.EmptyRingBuffer
 	bytebuffer.Put(c.byteBuffer)
 	c.byteBuffer = nil
 }
@@ -98,7 +83,7 @@ func newUDPConn(fd int, el *eventloop, sa unix.Sockaddr) *conn {
 		fd:         fd,
 		sa:         sa,
 		localAddr:  el.ln.lnaddr,
-		remoteAddr: netpoll.SockaddrToUDPAddr(sa),
+		remoteAddr: socket.SockaddrToUDPAddr(sa),
 	}
 }
 
@@ -154,6 +139,13 @@ func (c *conn) write(buf []byte) (err error) {
 	return
 }
 
+func (c *conn) asyncWrite(itf interface{}) error {
+	if !c.opened {
+		return nil
+	}
+	return c.write(itf.([]byte))
+}
+
 func (c *conn) sendTo(buf []byte) error {
 	return unix.Sendto(c.fd, buf, 0, c.sa)
 }
@@ -186,7 +178,7 @@ func (c *conn) ReadN(n int) (size int, buf []byte) {
 		buf = c.buffer[:n]
 		return
 	}
-	head, tail := c.inboundBuffer.LazyRead(n)
+	head, tail := c.inboundBuffer.Peek(n)
 	c.byteBuffer = bytebuffer.Get()
 	_, _ = c.byteBuffer.Write(head)
 	_, _ = c.byteBuffer.Write(tail)
@@ -219,7 +211,7 @@ func (c *conn) ShiftN(n int) (size int) {
 	c.byteBuffer = nil
 
 	if inBufferLen >= n {
-		c.inboundBuffer.Shift(n)
+		c.inboundBuffer.Discard(n)
 		return
 	}
 	c.inboundBuffer.Reset()
@@ -234,12 +226,7 @@ func (c *conn) BufferLength() int {
 }
 
 func (c *conn) AsyncWrite(buf []byte) error {
-	return c.loop.poller.Trigger(func() (err error) {
-		if c.opened {
-			err = c.write(buf)
-		}
-		return
-	})
+	return c.loop.poller.Trigger(c.asyncWrite, buf)
 }
 
 func (c *conn) SendTo(buf []byte) error {
@@ -247,15 +234,11 @@ func (c *conn) SendTo(buf []byte) error {
 }
 
 func (c *conn) Wake() error {
-	return c.loop.poller.Trigger(func() error {
-		return c.loop.loopWake(c)
-	})
+	return c.loop.poller.UrgentTrigger(func(_ interface{}) error { return c.loop.loopWake(c) }, nil)
 }
 
 func (c *conn) Close() error {
-	return c.loop.poller.Trigger(func() error {
-		return c.loop.loopCloseConn(c, nil)
-	})
+	return c.loop.poller.Trigger(func(_ interface{}) error { return c.loop.loopCloseConn(c, nil) }, nil)
 }
 
 func (c *conn) Context() interface{}       { return c.ctx }

@@ -36,6 +36,7 @@ func NewSentryCore(sentryDSN, release, environment string, level zapcore.Level, 
 
 	sentryScope := sentry.NewScope()
 	sentryHub := sentry.NewHub(client, sentryScope)
+
 	return &sentryCore{
 		hub:          sentryHub,
 		tags:         tags,
@@ -55,6 +56,7 @@ func (c *sentryCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore
 	if c.LevelEnabler.Enabled(ent.Level) {
 		return ce.AddCore(ent, c)
 	}
+
 	return ce
 }
 
@@ -81,11 +83,13 @@ func (c *sentryCore) Write(ent zapcore.Entry, fs []zapcore.Field) error {
 	if ent.Level > zapcore.ErrorLevel {
 		c.hub.Flush(time.Second)
 	}
+
 	return nil
 }
 
 func (c *sentryCore) Sync() error {
 	c.hub.Flush(time.Second * 3)
+
 	return nil
 }
 

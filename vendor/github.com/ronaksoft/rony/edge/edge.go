@@ -4,19 +4,15 @@ import (
 	"bufio"
 	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/errors"
-	"github.com/ronaksoft/rony/internal/cluster"
-	"github.com/ronaksoft/rony/internal/gateway"
-	tcpGateway "github.com/ronaksoft/rony/internal/gateway/tcp"
 	"github.com/ronaksoft/rony/internal/log"
 	"github.com/ronaksoft/rony/internal/metrics"
-	"github.com/ronaksoft/rony/internal/store/localdb"
-	"github.com/ronaksoft/rony/internal/tunnel"
+	"github.com/ronaksoft/rony/internal/msg"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/registry"
-	"github.com/ronaksoft/rony/rest"
 	"github.com/ronaksoft/rony/store"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -38,8 +34,9 @@ func init() {
 
 type Server struct {
 	// General
-	dataDir  string
-	serverID []byte
+	dataDir       string
+	serverID      []byte
+	inMemoryStore bool
 
 	// Handlers
 	preHandlers  []Handler
@@ -47,11 +44,12 @@ type Server struct {
 	postHandlers []Handler
 
 	// Edge components
-	cluster    cluster.Cluster
-	tunnel     tunnel.Tunnel
-	store      store.Store
-	gateway    gateway.Gateway
+	cluster    rony.Cluster
+	tunnel     rony.Tunnel
+	store      rony.Store
+	gateway    rony.Gateway
 	dispatcher Dispatcher
+	restMux    *restMux
 }
 
 func NewServer(serverID string, opts ...Option) *Server {
@@ -72,14 +70,23 @@ func NewServer(serverID string, opts ...Option) *Server {
 	}
 
 	if edgeServer.store == nil {
-		edgeServer.store, _ = localdb.New(localdb.DefaultConfig(edgeServer.dataDir))
+		cfg := store.DefaultConfig(edgeServer.dataDir)
+		if edgeServer.inMemoryStore {
+			cfg.InMemory = true
+		}
+		var err error
+		edgeServer.store, err = store.New(cfg)
+		if err != nil {
+			log.Warn("Error On initializing store", zap.Error(err))
+		}
+
 	}
 
 	// register builtin rony handlers
-	builtin := newBuiltin(edgeServer.GetServerID(), edgeServer.Gateway(), edgeServer.Cluster())
-	edgeServer.SetHandler(NewHandlerOptions().SetConstructor(rony.C_GetNodes).Append(builtin.GetNodes))
-	edgeServer.SetHandler(NewHandlerOptions().SetConstructor(rony.C_GetAllNodes).Append(builtin.GetAllNodes))
-	edgeServer.SetHandler(NewHandlerOptions().SetConstructor(rony.C_GetPage).Append(builtin.GetPage).setBuiltin())
+	builtin := newBuiltin(edgeServer)
+	edgeServer.SetHandler(NewHandlerOptions().SetConstructor(rony.C_GetNodes).Append(builtin.getNodes))
+	edgeServer.SetHandler(NewHandlerOptions().SetConstructor(rony.C_GetAllNodes).Append(builtin.getAllNodes))
+	edgeServer.SetHandler(NewHandlerOptions().SetConstructor(msg.C_GetPage).Append(builtin.getPage).setBuiltin())
 
 	return edgeServer
 }
@@ -104,15 +111,11 @@ func (edge *Server) SetGlobalPostHandlers(handlers ...Handler) {
 	edge.postHandlers = handlers
 }
 
-// SetHandler set the handlers for the constructor. 'leaderOnly' is applicable ONLY if the cluster is run
-// with Raft support. If cluster is a Raft enabled cluster, then by setting 'leaderOnly' to TRUE, requests sent
-// to a follower server will return redirect error to the client. For standalone servers 'leaderOnly' does not
-// affect.
+// SetHandler set the handlers for the constructor.
 func (edge *Server) SetHandler(ho *HandlerOption) {
 	for c := range ho.constructors {
 		edge.handlers[c] = ho
 	}
-
 }
 
 // GetHandler returns the handlers of the constructor
@@ -120,31 +123,34 @@ func (edge *Server) GetHandler(constructor int64) *HandlerOption {
 	return edge.handlers[constructor]
 }
 
-// SetRestWrapper set a REST wrapper to expose RPCs in REST (Representational State Transfer) format
-func (edge *Server) SetRestWrapper(method string, path string, f *rest.Factory) {
-	switch gw := edge.gateway.(type) {
-	case *tcpGateway.Gateway:
-		if !gw.Support(gateway.Http) {
-			panic("tcp gateway does not support http protocol")
+// SetRestProxy set a REST wrapper to expose RPCs in REST (Representational State Transfer) format
+func (edge *Server) SetRestProxy(method string, path string, p RestProxy) {
+	if edge.restMux == nil {
+		edge.restMux = &restMux{
+			routes: map[string]*trie{},
 		}
-		gw.SetProxy(method, path, f)
-	default:
-		panic("only works on tcp gateway")
 	}
+	edge.restMux.Set(method, path, p)
 }
 
 // Cluster returns a reference to the underlying cluster of the Edge server
-func (edge *Server) Cluster() cluster.Cluster {
+func (edge *Server) Cluster() rony.Cluster {
 	return edge.cluster
 }
 
-func (edge *Server) Store() store.Store {
+// Store returns the store component of the Edge server.
+func (edge *Server) Store() rony.Store {
 	return edge.store
 }
 
 // Gateway returns a reference to the underlying gateway of the Edge server
-func (edge *Server) Gateway() gateway.Gateway {
+func (edge *Server) Gateway() rony.Gateway {
 	return edge.gateway
+}
+
+// Tunnel returns a reference to the underlying tunnel of the Edge server
+func (edge *Server) Tunnel() rony.Tunnel {
+	return edge.tunnel
 }
 
 func (edge *Server) execute(dispatchCtx *DispatchCtx) (err error) {
@@ -254,35 +260,66 @@ func (edge *Server) recoverPanic(ctx *RequestCtx, in *rony.MessageEnvelope) {
 	}
 }
 
-func (edge *Server) onGatewayMessage(conn rony.Conn, streamID int64, data []byte, byPassDispatcher bool) {
+func (edge *Server) onGatewayMessage(conn rony.Conn, streamID int64, data []byte) {
 	// _, task := trace.NewTask(context.Background(), "onGatewayMessage")
 	// defer task.End()
 
-	var (
-		err error
-	)
+	// if it is REST API then we take a different approach.
+	if !conn.Persistent() && edge.restMux != nil {
+		if rc, ok := conn.(rony.RestConn); ok {
+			p := edge.restMux.Search(rc)
+			if p != nil {
+				edge.onGatewayRest(rc, p)
+				return
+			}
+		}
+	}
 
 	// Fill dispatch context with data. We use the GatewayDispatcher or consume data directly based on the
 	// byPassDispatcher argument
 	dispatchCtx := acquireDispatchCtx(edge, conn, streamID, edge.serverID, GatewayMessage)
-	if byPassDispatcher {
-		err = dispatchCtx.UnmarshalEnvelope(data)
-	} else {
-		err = edge.dispatcher.Interceptor(dispatchCtx, data)
-	}
+	defer releaseDispatchCtx(dispatchCtx)
+
+	err := edge.dispatcher.Interceptor(dispatchCtx, data)
 	if err != nil {
-		releaseDispatchCtx(dispatchCtx)
 		return
 	}
 
-	if err := edge.execute(dispatchCtx); err != nil {
+	err = edge.execute(dispatchCtx)
+	if err != nil {
 		edge.onError(dispatchCtx, errors.ErrInternalServer)
 	} else {
 		edge.dispatcher.Done(dispatchCtx)
 	}
+}
+func (edge *Server) onGatewayRest(conn rony.RestConn, proxy RestProxy) {
+	dispatchCtx := acquireDispatchCtx(edge, conn, 0, edge.serverID, GatewayMessage)
+	defer releaseDispatchCtx(dispatchCtx)
 
-	// Release the dispatch context
-	releaseDispatchCtx(dispatchCtx)
+	// apply the transformation on the client message before execute it
+	err := proxy.ClientMessage(conn, dispatchCtx)
+	if err != nil {
+		conn.WriteStatus(http.StatusInternalServerError)
+		b, _ := errors.New(errors.Internal, err.Error()).MarshalJSON()
+		_ = conn.WriteBinary(0, b)
+		return
+	}
+
+	err = edge.execute(dispatchCtx)
+	if err != nil {
+		conn.WriteStatus(http.StatusInternalServerError)
+		b, _ := errors.New(errors.Internal, err.Error()).MarshalJSON()
+		_ = conn.WriteBinary(0, b)
+		return
+	}
+
+	// apply the transformation on the server message before sending it to the client
+	err = proxy.ServerMessage(conn, dispatchCtx)
+	if err != nil {
+		conn.WriteStatus(http.StatusInternalServerError)
+		b, _ := errors.New(errors.Internal, err.Error()).MarshalJSON()
+		_ = conn.WriteBinary(0, b)
+	}
 }
 func (edge *Server) onGatewayConnect(conn rony.Conn, kvs ...*rony.KeyValue) {
 	edge.dispatcher.OnOpen(conn, kvs...)
@@ -290,16 +327,13 @@ func (edge *Server) onGatewayConnect(conn rony.Conn, kvs ...*rony.KeyValue) {
 func (edge *Server) onGatewayClose(conn rony.Conn) {
 	edge.dispatcher.OnClose(conn)
 }
-func (edge *Server) onTunnelMessage(conn rony.Conn, tm *rony.TunnelMessage) {
+func (edge *Server) onTunnelMessage(conn rony.Conn, tm *msg.TunnelMessage) {
 	// _, task := trace.NewTask(context.Background(), "onTunnelMessage")
 	// defer task.End()
 
 	// Fill the dispatch context envelope from the received tunnel message
 	dispatchCtx := acquireDispatchCtx(edge, conn, 0, tm.SenderID, TunnelMessage)
-	dispatchCtx.FillEnvelope(
-		tm.Envelope.GetRequestID(), tm.Envelope.GetConstructor(), tm.Envelope.Message,
-		tm.Envelope.Auth, tm.Envelope.Header...,
-	)
+	tm.Envelope.DeepCopy(dispatchCtx.req)
 
 	if err := edge.execute(dispatchCtx); err != nil {
 		edge.onError(dispatchCtx, errors.ErrInternalServer)
@@ -311,22 +345,25 @@ func (edge *Server) onTunnelMessage(conn rony.Conn, tm *rony.TunnelMessage) {
 	releaseDispatchCtx(dispatchCtx)
 }
 func (edge *Server) onTunnelDone(ctx *DispatchCtx) {
-	tm := rony.PoolTunnelMessage.Get()
-	defer rony.PoolTunnelMessage.Put(tm)
+	tm := msg.PoolTunnelMessage.Get()
+	defer msg.PoolTunnelMessage.Put(tm)
 	switch ctx.BufferSize() {
 	case 0:
 		return
 	case 1:
 		tm.SenderReplicaSet = edge.cluster.ReplicaSet()
 		tm.SenderID = edge.serverID
-		tm.Envelope = ctx.BufferPop()
+		ctx.BufferPop(func(envelope *rony.MessageEnvelope) {
+			envelope.DeepCopy(tm.Envelope)
+			buf := pools.Buffer.FromProto(tm)
+			_ = ctx.Conn().WriteBinary(ctx.streamID, *buf.Bytes())
+			pools.Buffer.Put(buf)
+		})
 	default:
 		// TODO:: implement it
 		panic("not implemented, handle multiple tunnel message")
 	}
-	buf := pools.Buffer.FromProto(tm)
-	_ = ctx.Conn().SendBinary(ctx.streamID, *buf.Bytes())
-	pools.Buffer.Put(buf)
+
 }
 func (edge *Server) onError(ctx *DispatchCtx, err *rony.Error) {
 	envelope := rony.PoolMessageEnvelope.Get()
@@ -340,13 +377,20 @@ func (edge *Server) onError(ctx *DispatchCtx, err *rony.Error) {
 	rony.PoolMessageEnvelope.Put(envelope)
 }
 
-// StartCluster is non-blocking function which runs the gossip and raft if it is set
+// StartCluster is non-blocking function which runs the cluster component of the Edge server.
 func (edge *Server) StartCluster() (err error) {
 	if edge.cluster == nil {
-		return ErrClusterNotSet
+		log.Warn("Edge Server:: Cluster is NOT set",
+			zap.ByteString("ServerID", edge.serverID),
+		)
+		return errors.ErrClusterNotSet
 	}
 
-	edge.cluster.Start()
+	err = edge.cluster.Start()
+	if err != nil {
+		return
+	}
+
 	log.Info("Edge Server:: Cluster Started",
 		zap.ByteString("ServerID", edge.serverID),
 		zap.String("Cluster", edge.cluster.Addr()),
@@ -359,7 +403,10 @@ func (edge *Server) StartCluster() (err error) {
 // StartGateway is non-blocking function runs the gateway in background so we can accept clients requests
 func (edge *Server) StartGateway() error {
 	if edge.gateway == nil {
-		return ErrGatewayNotSet
+		log.Warn("Edge Server:: Gateway is NOT set",
+			zap.ByteString("ServerID", edge.serverID),
+		)
+		return errors.ErrGatewayNotSet
 	}
 	edge.gateway.Start()
 
@@ -370,7 +417,7 @@ func (edge *Server) StartGateway() error {
 	)
 
 	if edge.cluster != nil {
-		return edge.cluster.SetGatewayAddrs(edge.gateway.Addr())
+		return errors.Wrap("cluster:")(edge.cluster.SetGatewayAddrs(edge.gateway.Addr()))
 	}
 
 	return nil
@@ -379,7 +426,10 @@ func (edge *Server) StartGateway() error {
 // StartTunnel is non-blocking function runs the gateway in background so we can accept other servers requests
 func (edge *Server) StartTunnel() error {
 	if edge.tunnel == nil {
-		return ErrTunnelNotSet
+		log.Warn("Edge Server:: Tunnel is NOT set",
+			zap.ByteString("ServerID", edge.serverID),
+		)
+		return errors.ErrTunnelNotSet
 	}
 	edge.tunnel.Start()
 
@@ -397,20 +447,18 @@ func (edge *Server) StartTunnel() error {
 
 // Start is a helper function which tries to start all three parts of the edge server
 // This function does not return any error, if you need to make sure all the parts are started with
-// no error, then you must start each section separately.
+// no error, then you must start each section separately. i.e. use StartGateway, StartCluster and StartTunnel
+// functions.
 func (edge *Server) Start() {
-	_ = edge.StartCluster()
-	_ = edge.StartGateway()
-	_ = edge.StartTunnel()
-}
-
-// JoinCluster is used to take an existing Cluster and attempt to join a cluster
-// by contacting all the given hosts and performing a state sync.
-// This returns the number of hosts successfully contacted and an error if
-// none could be reached. If an error is returned, the node did not successfully
-// join the cluster.
-func (edge *Server) JoinCluster(addr ...string) (int, error) {
-	return edge.cluster.Join(addr...)
+	if err := edge.StartCluster(); err != nil && err != errors.ErrClusterNotSet {
+		panic(err)
+	}
+	if err := edge.StartGateway(); err != nil && err != errors.ErrGatewayNotSet {
+		panic(err)
+	}
+	if err := edge.StartTunnel(); err != nil && err != errors.ErrTunnelNotSet {
+		panic(err)
+	}
 }
 
 // Shutdown gracefully shutdown the services
@@ -425,6 +473,11 @@ func (edge *Server) Shutdown() {
 		edge.cluster.Shutdown()
 	}
 
+	// Shutdown the tunnel
+	if edge.tunnel != nil {
+		edge.tunnel.Shutdown()
+	}
+
 	// Shutdown the store
 	if edge.store != nil {
 		edge.store.Shutdown()
@@ -435,12 +488,16 @@ func (edge *Server) Shutdown() {
 
 // ShutdownWithSignal blocks until any of the signals has been called
 func (edge *Server) ShutdownWithSignal(signals ...os.Signal) {
+	edge.WaitForSignal(signals...)
+	edge.Shutdown()
+}
+
+func (edge *Server) WaitForSignal(signals ...os.Signal) {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, signals...)
 
 	// Wait for signal
 	<-ch
-	edge.Shutdown()
 }
 
 // GetGatewayConn return the gateway connection identified by connID or returns nil if not found.
@@ -451,16 +508,19 @@ func (edge *Server) GetGatewayConn(connID uint64) rony.Conn {
 	return edge.gateway.GetConn(connID)
 }
 
-// ExecuteRemote sends and receives a request through the Tunnel interface of the receiver Edge node.
-func (edge *Server) ExecuteRemote(replicaSet uint64, req, res *rony.MessageEnvelope) error {
-	return edge.TryExecuteRemote(1, 0, replicaSet, req, res)
+// TunnelRequest sends and receives a request through the Tunnel interface of the receiver Edge node.
+func (edge *Server) TunnelRequest(replicaSet uint64, req, res *rony.MessageEnvelope) error {
+	return edge.TryTunnelRequest(1, 0, replicaSet, req, res)
 }
-func (edge *Server) TryExecuteRemote(attempts int, retryWait time.Duration, replicaSet uint64, req, res *rony.MessageEnvelope) error {
+func (edge *Server) TryTunnelRequest(attempts int, retryWait time.Duration, replicaSet uint64, req, res *rony.MessageEnvelope) error {
+	if edge.tunnel == nil {
+		return errors.ErrTunnelNotSet
+	}
 	startTime := tools.CPUTicks()
 	err := tools.Try(attempts, retryWait, func() error {
 		target := edge.getReplicaMember(replicaSet)
 		if target == nil {
-			return ErrMemberNotFound
+			return errors.ErrMemberNotFound
 		}
 
 		return edge.sendRemoteCommand(target, req, res)
@@ -468,28 +528,29 @@ func (edge *Server) TryExecuteRemote(attempts int, retryWait time.Duration, repl
 	metrics.ObserveHistogram(metrics.HistTunnelRoundtripTime, float64(time.Duration(tools.CPUTicks()-startTime)/time.Millisecond))
 	return err
 }
-func (edge *Server) getReplicaMember(replicaSet uint64) (target cluster.Member) {
+func (edge *Server) getReplicaMember(replicaSet uint64) (target rony.ClusterMember) {
 	members := edge.cluster.MembersByReplicaSet(replicaSet)
 	if len(members) == 0 {
 		return nil
 	}
 	for idx := range members {
 		target = members[idx]
+
 		break
 	}
 	return
 }
-func (edge *Server) sendRemoteCommand(target cluster.Member, req, res *rony.MessageEnvelope) error {
+func (edge *Server) sendRemoteCommand(target rony.ClusterMember, req, res *rony.MessageEnvelope) error {
 	conn, err := target.Dial()
 	if err != nil {
 		return err
 	}
 
 	// Get a rony.TunnelMessage from pool and put it back into the pool when we are done
-	tmOut := rony.PoolTunnelMessage.Get()
-	defer rony.PoolTunnelMessage.Put(tmOut)
-	tmIn := rony.PoolTunnelMessage.Get()
-	defer rony.PoolTunnelMessage.Put(tmIn)
+	tmOut := msg.PoolTunnelMessage.Get()
+	defer msg.PoolTunnelMessage.Put(tmOut)
+	tmIn := msg.PoolTunnelMessage.Get()
+	defer msg.PoolTunnelMessage.Put(tmIn)
 	tmOut.Fill(edge.serverID, edge.cluster.ReplicaSet(), req)
 
 	// Marshal and send over the wire

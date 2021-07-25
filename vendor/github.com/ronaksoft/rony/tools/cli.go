@@ -106,6 +106,7 @@ func PromptCompleter(rootCmd *cobra.Command) func(d prompt.Document) []prompt.Su
 			for _, cmd := range currCmd.Commands() {
 				if cmd.Name() == col {
 					currCmd = cmd
+
 					break
 				}
 			}
@@ -126,11 +127,10 @@ func PromptCompleter(rootCmd *cobra.Command) func(d prompt.Document) []prompt.Su
 				if strings.HasPrefix(flag.Name, currWord[2:]) {
 					suggests = append(suggests, prompt.Suggest{
 						Text:        fmt.Sprintf("--%s", flag.Name),
-						Description: flag.Usage,
+						Description: flag.DefValue,
 					})
 				}
 			})
-
 		} else {
 			for _, cmd := range currCmd.Commands() {
 				if strings.HasPrefix(cmd.Name(), currWord) {
@@ -154,10 +154,11 @@ func PromptExecutor(rootCmd *cobra.Command) func(s string) {
 			return
 		}
 		rootCmd.SetArgs(strings.Fields(s))
-		err := rootCmd.Execute()
-		if err != nil {
-			fmt.Println(rootCmd.Name(), "returned with error: ", err)
-		}
+		_ = rootCmd.Execute()
 	}
+}
 
+// RunShell runs an interactive shell
+func RunShell(cmd *cobra.Command) {
+	prompt.New(PromptExecutor(cmd), PromptCompleter(cmd)).Run()
 }

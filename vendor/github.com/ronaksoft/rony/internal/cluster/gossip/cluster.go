@@ -2,10 +2,10 @@ package gossipCluster
 
 import (
 	"fmt"
-	"github.com/hashicorp/memberlist"
+	"github.com/ronaksoft/memberlist"
 	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/internal/cluster"
 	"github.com/ronaksoft/rony/internal/log"
+	"github.com/ronaksoft/rony/internal/msg"
 	"github.com/ronaksoft/rony/tools"
 	"go.uber.org/zap"
 	"hash/crc64"
@@ -43,9 +43,9 @@ type Cluster struct {
 	membersByReplica map[uint64]map[string]*Member
 	membersByID      map[string]*Member
 	membersByHash    map[uint64]*Member
+	eventChan        chan memberlist.NodeEvent
 	gossip           *memberlist.Memberlist
-	rateLimitChan    chan struct{}
-	subscriber       cluster.Delegate
+	subscriber       rony.ClusterDelegate
 }
 
 func New(dataPath string, cfg Config) *Cluster {
@@ -60,7 +60,7 @@ func New(dataPath string, cfg Config) *Cluster {
 		membersByID:      make(map[string]*Member, 4096),
 		membersByReplica: make(map[uint64]map[string]*Member, 1024),
 		membersByHash:    make(map[uint64]*Member, 4096),
-		rateLimitChan:    make(chan struct{}, clusterMessageRateLimit),
+		eventChan:        make(chan memberlist.NodeEvent, 1024),
 	}
 
 	return c
@@ -76,14 +76,16 @@ func (c *Cluster) startGossip() error {
 	}
 	conf := memberlist.DefaultLANConfig()
 	conf.Name = string(c.localServerID)
-	conf.Events = cd
+	conf.Events = &memberlist.ChannelEventDelegate{
+		Ch: c.eventChan,
+	}
 	conf.Delegate = cd
-	conf.Alive = cd
 	conf.LogOutput = ioutil.Discard
 	conf.Logger = nil
 	conf.BindPort = c.cfg.GossipPort
 	if s, err := memberlist.Create(conf); err != nil {
 		log.Warn("Error On Creating MemberList", zap.Error(err))
+
 		return err
 	} else {
 		c.gossip = s
@@ -92,71 +94,100 @@ func (c *Cluster) startGossip() error {
 	return c.updateCluster(gossipUpdateTimeout)
 }
 
-func (c *Cluster) addMember(m *Member) {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	// add new member to the cluster
-	c.membersByID[m.serverID] = m
-	c.membersByHash[m.hash] = m
-	if c.membersByReplica[m.replicaSet] == nil {
-		c.membersByReplica[m.replicaSet] = make(map[string]*Member, 5)
+func (c *Cluster) addMember(n *memberlist.Node) {
+	cm, err := newMember(n)
+	if err != nil {
+		log.Warn("Error On Cluster Node Add", zap.Error(err))
+		return
 	}
-	c.membersByReplica[m.replicaSet][m.serverID] = m
+
+	c.mtx.Lock()
+	// add new member to the cluster
+	c.membersByID[cm.serverID] = cm
+	c.membersByHash[cm.hash] = cm
+	if c.membersByReplica[cm.replicaSet] == nil {
+		c.membersByReplica[cm.replicaSet] = make(map[string]*Member, 5)
+	}
+	c.membersByReplica[cm.replicaSet][cm.serverID] = cm
+	c.mtx.Unlock()
+
+	if c.subscriber != nil {
+		c.subscriber.OnJoin(cm.hash)
+	}
 }
 
-func (c *Cluster) removeMember(en *rony.EdgeNode) {
+func (c *Cluster) removeMember(n *memberlist.Node) {
+	en := msg.PoolEdgeNode.Get()
+	defer msg.PoolEdgeNode.Put(en)
+	if err := extractNode(n, en); err != nil {
+		log.Warn("Error On Cluster Node Update", zap.Error(err))
+		return
+	}
+
 	serverID := tools.B2S(en.ServerID)
 	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
 	delete(c.membersByID, serverID)
 	delete(c.membersByHash, en.Hash)
 	if c.membersByReplica[en.ReplicaSet] != nil {
 		delete(c.membersByReplica[en.ReplicaSet], serverID)
 	}
+	c.mtx.Unlock()
+	if c.subscriber != nil {
+		c.subscriber.OnLeave(en.Hash)
+	}
 }
 
-func (c *Cluster) Start() {
-	err := c.startGossip()
-	if err != nil {
-		return
+func (c *Cluster) Start() error {
+	if err := c.startGossip(); err != nil {
+		return err
 	}
+	go func() {
+		for e := range c.eventChan {
+			n := c.gossip.Member(e.Node.Name)
+			switch n.State {
+			case memberlist.StateLeft:
+				c.removeMember(n)
+			default:
+				c.addMember(n)
+			}
+		}
+	}()
+	return nil
 }
 
 func (c *Cluster) Join(addr ...string) (int, error) {
 	return c.gossip.Join(addr)
 }
 
+func (c *Cluster) Leave() error {
+	return c.gossip.Leave(gossipLeaveTimeout)
+}
+
 func (c *Cluster) Shutdown() {
 	// Shutdown gossip
-	err := c.gossip.Leave(gossipLeaveTimeout)
-	if err != nil {
-		log.Warn("Error On Leaving Cluster, but we shutdown anyway", zap.Error(err))
-	}
-	err = c.gossip.Shutdown()
+	err := c.gossip.Shutdown()
 	if err != nil {
 		log.Warn("Error On Shutdown (Gossip)", zap.Error(err))
 	}
-
 }
 
-func (c *Cluster) ServerID() []byte {
-	return c.localServerID
+func (c *Cluster) ServerID() string {
+	return tools.B2S(c.localServerID)
 }
 
-func (c *Cluster) Members() []cluster.Member {
-	members := make([]cluster.Member, 0, 16)
+func (c *Cluster) Members() []rony.ClusterMember {
+	members := make([]rony.ClusterMember, 0, 16)
 	c.mtx.RLock()
 	for _, cm := range c.membersByID {
 		members = append(members, cm)
 	}
 	c.mtx.RUnlock()
+
 	return members
 }
 
-func (c *Cluster) MembersByReplicaSet(replicaSets ...uint64) []cluster.Member {
-	members := make([]cluster.Member, 0, 16)
+func (c *Cluster) MembersByReplicaSet(replicaSets ...uint64) []rony.ClusterMember {
+	members := make([]rony.ClusterMember, 0, 16)
 	c.mtx.RLock()
 	for _, rs := range replicaSets {
 		for _, cm := range c.membersByReplica[rs] {
@@ -164,26 +195,29 @@ func (c *Cluster) MembersByReplicaSet(replicaSets ...uint64) []cluster.Member {
 		}
 	}
 	c.mtx.RUnlock()
+
 	return members
 }
 
-func (c *Cluster) MemberByHash(h uint64) cluster.Member {
+func (c *Cluster) MemberByHash(h uint64) rony.ClusterMember {
 	c.mtx.RLock()
 	m := c.membersByHash[h]
 	c.mtx.RUnlock()
 	if m == nil {
 		return nil
 	}
+
 	return m
 }
 
-func (c *Cluster) MemberByID(serverID string) cluster.Member {
+func (c *Cluster) MemberByID(serverID string) rony.ClusterMember {
 	c.mtx.RLock()
 	m := c.membersByID[serverID]
 	c.mtx.RUnlock()
 	if m == nil {
 		return nil
 	}
+
 	return m
 }
 
@@ -193,11 +227,13 @@ func (c *Cluster) TotalReplicas() int {
 
 func (c *Cluster) SetGatewayAddrs(hostPorts []string) error {
 	c.localGatewayAddr = hostPorts
+
 	return c.updateCluster(gossipUpdateTimeout)
 }
 
 func (c *Cluster) SetTunnelAddrs(hostPorts []string) error {
 	c.localTunnelAddr = hostPorts
+
 	return c.updateCluster(gossipUpdateTimeout)
 }
 
@@ -209,6 +245,6 @@ func (c *Cluster) ReplicaSet() uint64 {
 	return c.cfg.ReplicaSet
 }
 
-func (c *Cluster) Subscribe(d cluster.Delegate) {
+func (c *Cluster) Subscribe(d rony.ClusterDelegate) {
 	c.subscriber = d
 }

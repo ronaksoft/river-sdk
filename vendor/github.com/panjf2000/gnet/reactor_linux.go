@@ -23,6 +23,7 @@ package gnet
 import (
 	"runtime"
 
+	"github.com/panjf2000/gnet/errors"
 	"github.com/panjf2000/gnet/internal/netpoll"
 )
 
@@ -35,7 +36,11 @@ func (svr *server) activateMainReactor(lockOSThread bool) {
 	defer svr.signalShutdown()
 
 	err := svr.mainLoop.poller.Polling(func(fd int, ev uint32) error { return svr.acceptNewConnection(fd) })
-	svr.logger.Infof("Main reactor is exiting due to error: %v", err)
+	if err == errors.ErrServerShutdown {
+		svr.opts.Logger.Debugf("main reactor is exiting in terms of the demand from user, %v", err)
+	} else if err != nil {
+		svr.opts.Logger.Errorf("main reactor is exiting due to error: %v", err)
+	}
 }
 
 func (svr *server) activateSubReactor(el *eventloop, lockOSThread bool) {
@@ -71,14 +76,18 @@ func (svr *server) activateSubReactor(el *eventloop, lockOSThread bool) {
 			// and prioritize the writable events to achieve a higher performance.
 			//
 			// Note that the client may send massive amounts of data to server by write() under blocking mode,
-			// resulting in that it won't receive any responses before the server read all data from client,
-			// in which case if the socket send buffer is full, we need to let it go and continue reading the data
-			// to prevent blocking forever.
+			// resulting in that it won't receive any responses before the server reads all data from client,
+			// in which case if the server socket send buffer is full, we need to let it go and continue reading
+			// the data to prevent blocking forever.
 			if ev&netpoll.InEvents != 0 && (ev&netpoll.OutEvents == 0 || c.outboundBuffer.IsEmpty()) {
 				return el.loopRead(c)
 			}
 		}
 		return nil
 	})
-	svr.logger.Infof("Event-loop(%d) is exiting normally on the signal error: %v", el.idx, err)
+	if err == errors.ErrServerShutdown {
+		svr.opts.Logger.Debugf("event-loop(%d) is exiting in terms of the demand from user, %v", el.idx, err)
+	} else if err != nil {
+		svr.opts.Logger.Errorf("event-loop(%d) is exiting normally on the signal error: %v", el.idx, err)
+	}
 }

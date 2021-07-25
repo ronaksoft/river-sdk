@@ -1,7 +1,7 @@
 package edge
 
 import (
-	"github.com/ronaksoft/rony/internal/gateway"
+	"github.com/ronaksoft/rony"
 )
 
 /*
@@ -20,12 +20,12 @@ type Stats struct {
 	Members         int
 	MembershipScore int
 	TunnelAddr      []string
-	GatewayProtocol gateway.Protocol
+	GatewayProtocol rony.GatewayProtocol
 	GatewayAddr     []string
 }
 
 // Stats exports some internal metrics data packed in 'Stats' struct
-func (edge *Server) Stats() *Stats {
+func (edge *Server) Stats() Stats {
 	s := Stats{}
 
 	if edge.gateway != nil {
@@ -43,5 +43,5 @@ func (edge *Server) Stats() *Stats {
 		s.Members = len(edge.cluster.Members())
 	}
 
-	return &s
+	return s
 }

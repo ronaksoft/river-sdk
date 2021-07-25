@@ -23,6 +23,7 @@ package gnet
 
 import (
 	"net"
+	"sync"
 
 	"github.com/panjf2000/gnet/pool/bytebuffer"
 	prb "github.com/panjf2000/gnet/pool/ringbuffer"
@@ -34,8 +35,14 @@ type stderr struct {
 	err error
 }
 
-type wakeReq struct {
-	c *stdConn
+type signalTask struct {
+	run func(*stdConn) error
+	c   *stdConn
+}
+
+type dataTask struct {
+	run func([]byte) (int, error)
+	buf []byte
 }
 
 type tcpConn struct {
@@ -46,6 +53,11 @@ type tcpConn struct {
 type udpConn struct {
 	c *stdConn
 }
+
+var (
+	signalTaskPool = sync.Pool{New: func() interface{} { return new(signalTask) }}
+	dataTaskPool   = sync.Pool{New: func() interface{} { return new(dataTask) }}
+)
 
 type stdConn struct {
 	ctx           interface{}            // user-defined context
@@ -109,7 +121,7 @@ func (c *stdConn) releaseTCP() {
 	c.remoteAddr = nil
 	c.conn = nil
 	prb.Put(c.inboundBuffer)
-	c.inboundBuffer = nil
+	c.inboundBuffer = ringbuffer.EmptyRingBuffer
 	bytebuffer.Put(c.buffer)
 	c.buffer = nil
 }
@@ -132,6 +144,13 @@ func (c *stdConn) releaseUDP() {
 
 func (c *stdConn) read() ([]byte, error) {
 	return c.codec.Decode(c)
+}
+
+func (c *stdConn) write(data []byte) (n int, err error) {
+	if c.conn != nil {
+		n, err = c.conn.Write(data)
+	}
+	return
 }
 
 // ================================= Public APIs of gnet.Conn =================================
@@ -162,7 +181,7 @@ func (c *stdConn) ReadN(n int) (size int, buf []byte) {
 		buf = c.buffer.B[:n]
 		return
 	}
-	head, tail := c.inboundBuffer.LazyRead(n)
+	head, tail := c.inboundBuffer.Peek(n)
 	c.byteBuffer = bytebuffer.Get()
 	_, _ = c.byteBuffer.Write(head)
 	_, _ = c.byteBuffer.Write(tail)
@@ -195,7 +214,7 @@ func (c *stdConn) ShiftN(n int) (size int) {
 	c.byteBuffer = nil
 
 	if inBufferLen >= n {
-		c.inboundBuffer.Shift(n)
+		c.inboundBuffer.Discard(n)
 		return
 	}
 	c.inboundBuffer.Reset()
@@ -212,12 +231,10 @@ func (c *stdConn) BufferLength() int {
 func (c *stdConn) AsyncWrite(buf []byte) (err error) {
 	var encodedBuf []byte
 	if encodedBuf, err = c.codec.Encode(c, buf); err == nil {
-		c.loop.ch <- func() (err error) {
-			if c.conn != nil {
-				_, err = c.conn.Write(encodedBuf)
-			}
-			return
-		}
+		task := dataTaskPool.Get().(*dataTask)
+		task.run = c.write
+		task.buf = encodedBuf
+		c.loop.ch <- task
 	}
 	return
 }
@@ -228,14 +245,18 @@ func (c *stdConn) SendTo(buf []byte) (err error) {
 }
 
 func (c *stdConn) Wake() error {
-	c.loop.ch <- wakeReq{c}
+	task := signalTaskPool.Get().(*signalTask)
+	task.run = c.loop.loopWake
+	task.c = c
+	c.loop.ch <- task
 	return nil
 }
 
 func (c *stdConn) Close() error {
-	c.loop.ch <- func() error {
-		return c.loop.loopCloseConn(c)
-	}
+	task := signalTaskPool.Get().(*signalTask)
+	task.run = c.loop.loopCloseConn
+	task.c = c
+	c.loop.ch <- task
 	return nil
 }
 

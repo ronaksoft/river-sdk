@@ -3,7 +3,6 @@ package tcpGateway
 import (
 	"bytes"
 	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/internal/gateway"
 	"github.com/ronaksoft/rony/tools"
 	"github.com/valyala/fasthttp"
 	"sync"
@@ -68,7 +67,7 @@ func (m *connInfo) Upgrade() bool {
 	return m.upgrade
 }
 
-func acquireConnInfo(reqCtx *gateway.RequestCtx) *connInfo {
+func acquireConnInfo(reqCtx *fasthttp.RequestCtx) *connInfo {
 	mt, ok := connInfoPool.Get().(*connInfo)
 	if !ok {
 		mt = newConnInfo()
@@ -95,6 +94,7 @@ func acquireConnInfo(reqCtx *gateway.RequestCtx) *connInfo {
 		reqCtx.Request.Header.SetBytesKV(tools.S2B(fasthttp.HeaderConnection), ronyUpgrade)
 		mt.upgrade = true
 	}
+
 	return mt
 }
 

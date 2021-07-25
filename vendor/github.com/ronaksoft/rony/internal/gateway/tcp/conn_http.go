@@ -1,10 +1,10 @@
 package tcpGateway
 
 import (
-	"github.com/ronaksoft/rony/internal/gateway"
 	"github.com/ronaksoft/rony/internal/metrics"
-	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
+	"github.com/valyala/fasthttp"
+	"mime/multipart"
 )
 
 /*
@@ -16,21 +16,25 @@ import (
    Copyright Ronak Software Group 2020
 */
 
+var (
+	strLocation = []byte(fasthttp.HeaderLocation)
+)
+
 // httpConn
 type httpConn struct {
 	gateway    *Gateway
-	ctx        *gateway.RequestCtx
+	ctx        *fasthttp.RequestCtx
 	clientIP   []byte
 	clientType []byte
 	mtx        tools.SpinLock
 	kv         map[string]interface{}
-	proxy      gateway.ProxyHandle
 }
 
 func (c *httpConn) Get(key string) interface{} {
 	c.mtx.Lock()
 	v := c.kv[key]
 	c.mtx.Unlock()
+
 	return v
 }
 
@@ -56,21 +60,46 @@ func (c *httpConn) SetClientType(ct []byte) {
 	c.clientType = append(c.clientType[:0], ct...)
 }
 
-func (c *httpConn) SendBinary(streamID int64, data []byte) (err error) {
-	if c.proxy != nil {
-		d, hdr := c.proxy.OnResponse(data)
-		for k, v := range hdr {
-			c.ctx.Response.Header.Add(k, v)
-		}
-		_, err = c.ctx.Write(*d.Bytes())
-		pools.Buffer.Put(d)
-	} else {
-		_, err = c.ctx.Write(data)
-	}
+func (c *httpConn) WriteStatus(status int) {
+	c.ctx.SetStatusCode(status)
+}
+
+func (c *httpConn) WriteBinary(streamID int64, data []byte) (err error) {
+	_, err = c.ctx.Write(data)
 	metrics.IncCounter(metrics.CntGatewayOutgoingHttpMessage)
+
 	return err
+}
+
+func (c *httpConn) WriteHeader(key, value string) {
+	c.ctx.Response.Header.Add(key, value)
+}
+
+func (c *httpConn) MultiPart() (*multipart.Form, error) {
+	return c.ctx.MultipartForm()
+}
+
+func (c *httpConn) Method() string {
+	return tools.B2S(c.ctx.Method())
+}
+
+func (c *httpConn) Path() string {
+	return tools.B2S(c.ctx.Request.URI().PathOriginal())
+}
+
+func (c *httpConn) Body() []byte {
+	return c.ctx.PostBody()
 }
 
 func (c *httpConn) Persistent() bool {
 	return false
+}
+
+func (c *httpConn) Redirect(statusCode int, newHostPort string) {
+	u := fasthttp.AcquireURI()
+	c.ctx.URI().CopyTo(u)
+	u.SetHost(newHostPort)
+	c.ctx.Response.Header.SetCanonical(strLocation, u.FullURI())
+	c.ctx.Response.SetStatusCode(statusCode)
+	fasthttp.ReleaseURI(u)
 }

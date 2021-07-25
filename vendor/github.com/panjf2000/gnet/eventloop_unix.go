@@ -24,16 +24,22 @@
 package gnet
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"runtime"
+	"sync/atomic"
 	"time"
 	"unsafe"
 
-	gerrors "github.com/panjf2000/gnet/errors"
-	"github.com/panjf2000/gnet/internal/netpoll"
 	"golang.org/x/sys/unix"
+
+	gerrors "github.com/panjf2000/gnet/errors"
+	"github.com/panjf2000/gnet/internal/io"
+	"github.com/panjf2000/gnet/internal/netpoll"
+	"github.com/panjf2000/gnet/internal/socket"
+	"github.com/panjf2000/gnet/logging"
 )
 
 type eventloop struct {
@@ -44,16 +50,28 @@ type eventloop struct {
 	_ [64 - unsafe.Sizeof(internalEventloop{})%64]byte
 }
 
+//nolint:structcheck
 type internalEventloop struct {
-	ln                *listener               // listener
-	idx               int                     // loop index in the server loops list
-	svr               *server                 // server in loop
-	poller            *netpoll.Poller         // epoll or kqueue
-	packet            []byte                  // read packet buffer whose capacity is 64KB
-	connCount         int32                   // number of active connections in event-loop
-	connections       map[int]*conn           // loop connections fd -> conn
-	eventHandler      EventHandler            // user eventHandler
-	calibrateCallback func(*eventloop, int32) // callback func for re-adjusting connCount
+	ln           *listener       // listener
+	idx          int             // loop index in the server loops list
+	svr          *server         // server in loop
+	poller       *netpoll.Poller // epoll or kqueue
+	buffer       []byte          // read packet buffer whose capacity is 64KB
+	connCount    int32           // number of active connections in event-loop
+	connections  map[int]*conn   // loop connections fd -> conn
+	eventHandler EventHandler    // user eventHandler
+}
+
+func (el *eventloop) getLogger() logging.Logger {
+	return el.svr.opts.Logger
+}
+
+func (el *eventloop) addConn(delta int32) {
+	atomic.AddInt32(&el.connCount, delta)
+}
+
+func (el *eventloop) loadConn() int32 {
+	return atomic.LoadInt32(&el.connCount)
 }
 
 func (el *eventloop) closeAllConns() {
@@ -76,7 +94,7 @@ func (el *eventloop) loopRun(lockOSThread bool) {
 	}()
 
 	err := el.poller.Polling(el.handleEvent)
-	el.svr.logger.Infof("Event-loop(%d) is exiting due to error: %v", el.idx, err)
+	el.getLogger().Infof("event-loop(%d) is exiting due to error: %v", el.idx, err)
 }
 
 func (el *eventloop) loopAccept(fd int) error {
@@ -96,7 +114,7 @@ func (el *eventloop) loopAccept(fd int) error {
 			return err
 		}
 
-		netAddr := netpoll.SockaddrToTCPOrUnixAddr(sa)
+		netAddr := socket.SockaddrToTCPOrUnixAddr(sa)
 		c := newTCPConn(nfd, el, sa, netAddr)
 		if err = el.poller.AddRead(c.fd); err == nil {
 			el.connections[c.fd] = c
@@ -108,9 +126,20 @@ func (el *eventloop) loopAccept(fd int) error {
 	return nil
 }
 
+func (el *eventloop) loopInsert(itf interface{}) error {
+	c := itf.(*conn)
+	if err := el.poller.AddRead(c.fd); err != nil {
+		_ = unix.Close(c.fd)
+		c.releaseTCP()
+		return nil
+	}
+	el.connections[c.fd] = c
+	return el.loopOpen(c)
+}
+
 func (el *eventloop) loopOpen(c *conn) error {
 	c.opened = true
-	el.calibrateCallback(el, 1)
+	el.addConn(1)
 
 	out, action := el.eventHandler.OnOpened(c)
 	if out != nil {
@@ -125,14 +154,14 @@ func (el *eventloop) loopOpen(c *conn) error {
 }
 
 func (el *eventloop) loopRead(c *conn) error {
-	n, err := unix.Read(c.fd, el.packet)
+	n, err := unix.Read(c.fd, el.buffer)
 	if n == 0 || err != nil {
 		if err == unix.EAGAIN {
 			return nil
 		}
 		return el.loopCloseConn(c, os.NewSyscallError("read", err))
 	}
-	c.buffer = el.packet[:n]
+	c.buffer = el.buffer[:n]
 
 	for inFrame, _ := c.read(); inFrame != nil; inFrame, _ = c.read() {
 		out, action := el.eventHandler.React(inFrame, c)
@@ -167,25 +196,15 @@ func (el *eventloop) loopRead(c *conn) error {
 func (el *eventloop) loopWrite(c *conn) error {
 	el.eventHandler.PreWrite()
 
-	head, tail := c.outboundBuffer.LazyReadAll()
-	n, err := unix.Write(c.fd, head)
-	if err != nil {
-		if err == unix.EAGAIN {
-			return nil
-		}
+	head, tail := c.outboundBuffer.PeekAll()
+	n, err := io.Writev(c.fd, [][]byte{head, tail})
+	c.outboundBuffer.Discard(n)
+	switch err {
+	case nil, gerrors.ErrShortWritev: // do nothing, just go on
+	case unix.EAGAIN:
+		return nil
+	default:
 		return el.loopCloseConn(c, os.NewSyscallError("write", err))
-	}
-	c.outboundBuffer.Shift(n)
-
-	if n == len(head) && tail != nil {
-		n, err = unix.Write(c.fd, tail)
-		if err != nil {
-			if err == unix.EAGAIN {
-				return nil
-			}
-			return el.loopCloseConn(c, os.NewSyscallError("write", err))
-		}
-		c.outboundBuffer.Shift(n)
 	}
 
 	// All data have been drained, it's no need to monitor the writable events,
@@ -199,14 +218,14 @@ func (el *eventloop) loopWrite(c *conn) error {
 
 func (el *eventloop) loopCloseConn(c *conn, err error) (rerr error) {
 	if !c.opened {
-		return fmt.Errorf("the fd=%d in event-loop(%d) is already closed, skipping it", c.fd, el.idx)
+		return
 	}
 
 	// Send residual data in buffer back to client before actually closing the connection.
 	if !c.outboundBuffer.IsEmpty() {
 		el.eventHandler.PreWrite()
 
-		head, tail := c.outboundBuffer.LazyReadAll()
+		head, tail := c.outboundBuffer.PeekAll()
 		if n, err := unix.Write(c.fd, head); err == nil {
 			if n == len(head) && tail != nil {
 				_, _ = unix.Write(c.fd, tail)
@@ -216,7 +235,8 @@ func (el *eventloop) loopCloseConn(c *conn, err error) (rerr error) {
 
 	if err0, err1 := el.poller.Delete(c.fd), unix.Close(c.fd); err0 == nil && err1 == nil {
 		delete(el.connections, c.fd)
-		el.calibrateCallback(el, -1)
+		el.addConn(-1)
+
 		if el.eventHandler.OnClosed(c, err) == Shutdown {
 			return gerrors.ErrServerShutdown
 		}
@@ -239,9 +259,10 @@ func (el *eventloop) loopCloseConn(c *conn, err error) (rerr error) {
 }
 
 func (el *eventloop) loopWake(c *conn) error {
-	//if co, ok := el.connections[c.fd]; !ok || co != c {
-	//	return nil // ignore stale wakes.
-	//}
+	if co, ok := el.connections[c.fd]; !ok || co != c {
+		return nil // ignore stale wakes.
+	}
+
 	out, action := el.eventHandler.React(nil, c)
 	if out != nil {
 		if err := c.write(out); err != nil {
@@ -252,31 +273,38 @@ func (el *eventloop) loopWake(c *conn) error {
 	return el.handleAction(c, action)
 }
 
-func (el *eventloop) loopTicker() {
+func (el *eventloop) loopTicker(ctx context.Context) {
+	if el == nil {
+		return
+	}
 	var (
-		delay time.Duration
-		open  bool
-		err   error
+		action Action
+		delay  time.Duration
+		timer  *time.Timer
 	)
-	for {
-		err = el.poller.Trigger(func() (err error) {
-			delay, action := el.eventHandler.Tick()
-			el.svr.ticktock <- delay
-			switch action {
-			case None:
-			case Shutdown:
-				err = gerrors.ErrServerShutdown
-			}
-			return
-		})
-		if err != nil {
-			el.svr.logger.Errorf("Failed to awake poller in event-loop(%d), error:%v, stopping ticker", el.idx, err)
-			break
+	defer func() {
+		if timer != nil {
+			timer.Stop()
 		}
-		if delay, open = <-el.svr.ticktock; open {
-			time.Sleep(delay)
+	}()
+	for {
+		delay, action = el.eventHandler.Tick()
+		switch action {
+		case None:
+		case Shutdown:
+			err := el.poller.UrgentTrigger(func(_ interface{}) error { return gerrors.ErrServerShutdown }, nil)
+			el.getLogger().Debugf("stopping ticker in event-loop(%d) from Tick(), UrgentTrigger:%v", el.idx, err)
+		}
+		if timer == nil {
+			timer = time.NewTimer(delay)
 		} else {
-			break
+			timer.Reset(delay)
+		}
+		select {
+		case <-ctx.Done():
+			el.getLogger().Debugf("stopping ticker in event-loop(%d) from Server, error:%v", el.idx, ctx.Err())
+			return
+		case <-timer.C:
 		}
 	}
 }
@@ -295,7 +323,7 @@ func (el *eventloop) handleAction(c *conn, action Action) error {
 }
 
 func (el *eventloop) loopReadUDP(fd int) error {
-	n, sa, err := unix.Recvfrom(fd, el.packet, 0)
+	n, sa, err := unix.Recvfrom(fd, el.buffer, 0)
 	if err != nil {
 		if err == unix.EAGAIN || err == unix.EWOULDBLOCK {
 			return nil
@@ -305,7 +333,7 @@ func (el *eventloop) loopReadUDP(fd int) error {
 	}
 
 	c := newUDPConn(fd, el, sa)
-	out, action := el.eventHandler.React(el.packet[:n], c)
+	out, action := el.eventHandler.React(el.buffer[:n], c)
 	if out != nil {
 		el.eventHandler.PreWrite()
 		_ = c.sendTo(out)

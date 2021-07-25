@@ -40,7 +40,7 @@ type Config struct {
 	ListenAddress string
 	MaxBodySize   int
 	MaxIdleTime   time.Duration
-	Protocol      gateway.Protocol
+	Protocol      rony.GatewayProtocol
 	ExternalAddrs []string
 }
 
@@ -54,7 +54,7 @@ type Gateway struct {
 	gateway.CloseHandler
 
 	// Internals
-	transportMode      gateway.Protocol
+	transportMode      rony.GatewayProtocol
 	listenOn           string
 	listener           *wrapListener
 	addrsMtx           sync.RWMutex
@@ -69,9 +69,6 @@ type Gateway struct {
 	waitGroupWriters   *sync.WaitGroup
 	cntReads           uint64
 	cntWrites          uint64
-
-	// Http Internals
-	httpProxy *HttpProxy
 
 	// Websocket Internals
 	upgradeHandler ws.Upgrader
@@ -96,9 +93,8 @@ func New(config Config) (*Gateway, error) {
 		waitGroupWriters:   &sync.WaitGroup{},
 		waitGroupAcceptors: &sync.WaitGroup{},
 		conns:              make(map[uint64]*websocketConn, 100000),
-		transportMode:      gateway.TCP,
+		transportMode:      rony.TCP,
 		extAddrs:           config.ExternalAddrs,
-		httpProxy:          &HttpProxy{},
 	}
 
 	g.listener, err = newWrapListener(g.listenOn)
@@ -109,12 +105,12 @@ func New(config Config) (*Gateway, error) {
 	if config.MaxIdleTime != 0 {
 		g.maxIdleTime = int64(config.MaxIdleTime)
 	}
-	if config.Protocol != gateway.Undefined {
+	if config.Protocol != rony.Undefined {
 		g.transportMode = config.Protocol
 	}
 
 	switch g.transportMode {
-	case gateway.Websocket, gateway.Http, gateway.TCP:
+	case rony.Websocket, rony.Http, rony.TCP:
 	default:
 		return nil, ErrUnsupportedProtocol
 	}
@@ -126,7 +122,7 @@ func New(config Config) (*Gateway, error) {
 	g.connGC = newWebsocketConnGC(g)
 
 	// set handlers
-	g.MessageHandler = func(c rony.Conn, streamID int64, data []byte, bypass bool) {}
+	g.MessageHandler = func(c rony.Conn, streamID int64, data []byte) {}
 	g.CloseHandler = func(c rony.Conn) {}
 	g.ConnectHandler = func(c rony.Conn, kvs ...*rony.KeyValue) {}
 	if poller, err := netpoll.New(&netpoll.Config{
@@ -187,7 +183,6 @@ func (g *Gateway) watchdog() {
 		}
 		time.Sleep(time.Second * 15)
 	}
-
 }
 
 func (g *Gateway) detectAddrs() error {
@@ -221,9 +216,7 @@ func (g *Gateway) detectAddrs() error {
 			}
 		}
 	} else {
-
 		lAddrs = append(lAddrs, fmt.Sprintf("%s:%d", ta.IP, ta.Port))
-
 	}
 	g.addrsMtx.Lock()
 	g.addrs = append(g.addrs[:0], lAddrs...)
@@ -238,9 +231,6 @@ func (g *Gateway) Start() {
 
 // Run is blocking and runs the server endless loop until a non-temporary error happens
 func (g *Gateway) Run() {
-	// set the proxy handler
-	g.httpProxy.handler = g.MessageHandler
-
 	// initialize the fasthttp server.
 	server := fasthttp.Server{
 		Name:               "Rony TCP-Gateway",
@@ -269,9 +259,6 @@ func (g *Gateway) Shutdown() {
 	g.waitGroupAcceptors.Wait()
 	log.Info("Connection Acceptors all closed")
 
-	// TODO:: why wait ?!
-	time.Sleep(time.Second * 3)
-
 	// 2. Close all readPumps
 	log.Info("Read Pumpers are closing")
 	g.waitGroupReaders.Wait()
@@ -289,9 +276,10 @@ func (g *Gateway) Shutdown() {
 
 	g.connsMtx.Lock()
 	for id, c := range g.conns {
-		fmt.Println("Conn(", id, ") Stalled",
-			time.Duration(tools.CPUTicks()-atomic.LoadInt64(&c.startTime)),
-			time.Duration(tools.CPUTicks()-(atomic.LoadInt64(&c.lastActivity))),
+		log.Info("Conn Stalled",
+			zap.Uint64("ID", id),
+			zap.Duration("SinceStart", time.Duration(tools.CPUTicks()-atomic.LoadInt64(&c.startTime))),
+			zap.Duration("SinceLastActivity", time.Duration(tools.CPUTicks()-(atomic.LoadInt64(&c.lastActivity)))),
 		)
 	}
 	g.connsMtx.Unlock()
@@ -317,7 +305,7 @@ func (g *Gateway) GetConn(connID uint64) rony.Conn {
 	return c
 }
 
-func (g *Gateway) Support(p gateway.Protocol) bool {
+func (g *Gateway) Support(p rony.GatewayProtocol) bool {
 	return g.transportMode&p == p
 }
 
@@ -328,13 +316,12 @@ func (g *Gateway) TotalConnections() int {
 	return n
 }
 
-func (g *Gateway) Protocol() gateway.Protocol {
+func (g *Gateway) Protocol() rony.GatewayProtocol {
 	return g.transportMode
 }
 
-func (g *Gateway) requestHandler(reqCtx *gateway.RequestCtx) {
+func (g *Gateway) requestHandler(reqCtx *fasthttp.RequestCtx) {
 	// ByPass CORS (Cross Origin Resource Sharing) check
-	// TODO:: let developer choose
 	reqCtx.Response.Header.Set("Access-Control-Allow-Origin", "*")
 	reqCtx.Response.Header.Set("Access-Control-Request-Method", "*")
 	reqCtx.Response.Header.Set("Access-Control-Allow-Headers", "*")
@@ -347,9 +334,9 @@ func (g *Gateway) requestHandler(reqCtx *gateway.RequestCtx) {
 	// extract required information from the header of the RequestCtx
 	meta := acquireConnInfo(reqCtx)
 
-	// If this is a Http Upgrade then we handle websocket
+	// If this is a Http Upgrade then we Handle websocket
 	if meta.Upgrade() {
-		if !g.Support(gateway.Websocket) {
+		if !g.Support(rony.Websocket) {
 			reqCtx.SetConnectionClose()
 			reqCtx.SetStatusCode(http.StatusNotAcceptable)
 			return
@@ -367,7 +354,7 @@ func (g *Gateway) requestHandler(reqCtx *gateway.RequestCtx) {
 
 	// This is going to be an HTTP request
 	reqCtx.SetConnectionClose()
-	if !g.Support(gateway.Http) {
+	if !g.Support(rony.Http) {
 		reqCtx.SetStatusCode(http.StatusNotAcceptable)
 		return
 	}
@@ -381,17 +368,7 @@ func (g *Gateway) requestHandler(reqCtx *gateway.RequestCtx) {
 	g.ConnectHandler(conn, meta.kvs...)
 	releaseConnInfo(meta)
 
-	if g.httpProxy != nil {
-		if proxyFactory := g.httpProxy.search(tools.B2S(reqCtx.Method()), tools.B2S(reqCtx.Request.URI().PathOriginal()), conn); proxyFactory == nil {
-			g.MessageHandler(conn, int64(reqCtx.ID()), reqCtx.PostBody(), false)
-		} else {
-			conn.proxy = proxyFactory.Get()
-			g.httpProxy.handle(conn, reqCtx)
-			proxyFactory.Release(conn.proxy)
-		}
-	} else {
-		g.MessageHandler(conn, int64(reqCtx.ID()), reqCtx.PostBody(), false)
-	}
+	g.MessageHandler(conn, int64(reqCtx.ID()), reqCtx.PostBody())
 
 	g.CloseHandler(conn)
 	releaseHttpConn(conn)
@@ -446,7 +423,7 @@ func (g *Gateway) websocketReadPump(wc *websocketConn, wg *sync.WaitGroup, ms []
 	}
 	atomic.AddUint64(&g.cntReads, 1)
 
-	// handle messages
+	// Handle messages
 	for idx := range ms {
 		switch ms[idx].OpCode {
 		case ws.OpPong:
@@ -459,7 +436,7 @@ func (g *Gateway) websocketReadPump(wc *websocketConn, wg *sync.WaitGroup, ms []
 			wg.Add(1)
 			_ = goPoolB.Submit(func() {
 				metrics.IncCounter(metrics.CntGatewayIncomingWebsocketMessage)
-				g.MessageHandler(wc, 0, ms[idx].Payload, false)
+				g.MessageHandler(wc, 0, ms[idx].Payload)
 				wg.Done()
 			})
 
@@ -487,7 +464,6 @@ func (g *Gateway) websocketWritePump(wr *writeRequest) (err error) {
 		} else {
 			atomic.AddUint64(&g.cntWrites, 1)
 		}
-
 	}
 	return
 }
@@ -500,10 +476,4 @@ func (g *Gateway) getConnection(connID uint64) *websocketConn {
 		return wsConn
 	}
 	return nil
-}
-
-// SetProxy set http proxy handlers. This function MUST NOT used concurrent and MUST ONLY use it before
-// calling Start or Run.
-func (g *Gateway) SetProxy(method, path string, factory gateway.ProxyFactory) {
-	g.httpProxy.Set(method, path, factory)
 }

@@ -39,14 +39,14 @@ type PoolWithFunc struct {
 	// running is the number of the currently running goroutines.
 	running int32
 
+	// lock for protecting the worker queue.
+	lock sync.Locker
+
 	// workers is a slice that store the available workers.
 	workers []*goWorkerWithFunc
 
 	// state is used to notice the pool to closed itself.
 	state int32
-
-	// lock for synchronous operation.
-	lock sync.Locker
 
 	// cond for waiting to get a idle worker.
 	cond *sync.Cond
@@ -70,7 +70,7 @@ func (p *PoolWithFunc) purgePeriodically() {
 
 	var expiredWorkers []*goWorkerWithFunc
 	for range heartbeat.C {
-		if atomic.LoadInt32(&p.state) == CLOSED {
+		if p.IsClosed() {
 			break
 		}
 		currentTime := time.Now()
@@ -101,7 +101,7 @@ func (p *PoolWithFunc) purgePeriodically() {
 
 		// There might be a situation that all workers have been cleaned up(no any worker is running)
 		// while some invokers still get stuck in "p.cond.Wait()",
-		// then it ought to wakes all those invokers.
+		// then it ought to wake all those invokers.
 		if p.Running() == 0 {
 			p.cond.Broadcast()
 		}
@@ -111,7 +111,7 @@ func (p *PoolWithFunc) purgePeriodically() {
 // NewPoolWithFunc generates an instance of ants pool with a specific function.
 func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWithFunc, error) {
 	if size <= 0 {
-		return nil, ErrInvalidPoolSize
+		size = -1
 	}
 
 	if pf == nil {
@@ -143,6 +143,9 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 		}
 	}
 	if p.options.PreAlloc {
+		if size == -1 {
+			return nil, ErrInvalidPreAllocSize
+		}
 		p.workers = make([]*goWorkerWithFunc, 0, size)
 	}
 	p.cond = sync.NewCond(p.lock)
@@ -157,7 +160,7 @@ func NewPoolWithFunc(size int, pf func(interface{}), options ...Option) (*PoolWi
 
 // Invoke submits a task to pool.
 func (p *PoolWithFunc) Invoke(args interface{}) error {
-	if atomic.LoadInt32(&p.state) == CLOSED {
+	if p.IsClosed() {
 		return ErrPoolClosed
 	}
 	var w *goWorkerWithFunc
@@ -173,9 +176,13 @@ func (p *PoolWithFunc) Running() int {
 	return int(atomic.LoadInt32(&p.running))
 }
 
-// Free returns a available goroutines to work.
+// Free returns a available goroutines to work, -1 indicates this pool is unlimited.
 func (p *PoolWithFunc) Free() int {
-	return p.Cap() - p.Running()
+	c := p.Cap()
+	if c < 0 {
+		return -1
+	}
+	return c - p.Running()
 }
 
 // Cap returns the capacity of this pool.
@@ -183,15 +190,20 @@ func (p *PoolWithFunc) Cap() int {
 	return int(atomic.LoadInt32(&p.capacity))
 }
 
-// Tune changes the capacity of this pool.
+// Tune changes the capacity of this pool, note that it is noneffective to the infinite or pre-allocation pool.
 func (p *PoolWithFunc) Tune(size int) {
-	if size <= 0 || size == p.Cap() || p.options.PreAlloc {
+	if capacity := p.Cap(); capacity == -1 || size <= 0 || size == capacity || p.options.PreAlloc {
 		return
 	}
 	atomic.StoreInt32(&p.capacity, int32(size))
 }
 
-// Release Closes this pool.
+// IsClosed indicates whether the pool is closed.
+func (p *PoolWithFunc) IsClosed() bool {
+	return atomic.LoadInt32(&p.state) == CLOSED
+}
+
+// Release closes this pool and releases the worker queue.
 func (p *PoolWithFunc) Release() {
 	atomic.StoreInt32(&p.state, CLOSED)
 	p.lock.Lock()
@@ -201,9 +213,12 @@ func (p *PoolWithFunc) Release() {
 	}
 	p.workers = nil
 	p.lock.Unlock()
+	// There might be some callers waiting in retrieveWorker(), so we need to wake them up to prevent
+	// those callers blocking infinitely.
+	p.cond.Broadcast()
 }
 
-// Reboot reboots a released pool.
+// Reboot reboots a closed pool.
 func (p *PoolWithFunc) Reboot() {
 	if atomic.CompareAndSwapInt32(&p.state, CLOSED, OPENED) {
 		go p.purgePeriodically()
@@ -232,35 +247,45 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 	p.lock.Lock()
 	idleWorkers := p.workers
 	n := len(idleWorkers) - 1
-	if n >= 0 {
+	if n >= 0 { // first try to fetch the worker from the queue
 		w = idleWorkers[n]
 		idleWorkers[n] = nil
 		p.workers = idleWorkers[:n]
 		p.lock.Unlock()
-	} else if p.Running() < p.Cap() {
+	} else if capacity := p.Cap(); capacity == -1 || capacity > p.Running() {
+		// if the worker queue is empty and we don't run out of the pool capacity,
+		// then just spawn a new worker goroutine.
 		p.lock.Unlock()
 		spawnWorker()
-	} else {
+	} else { // otherwise, we'll have to keep them blocked and wait for at least one worker to be put back into pool.
 		if p.options.Nonblocking {
 			p.lock.Unlock()
 			return
 		}
-	Reentry:
+	retry:
 		if p.options.MaxBlockingTasks != 0 && p.blockingNum >= p.options.MaxBlockingTasks {
 			p.lock.Unlock()
 			return
 		}
 		p.blockingNum++
-		p.cond.Wait()
+		p.cond.Wait() // block and wait for an available worker
 		p.blockingNum--
-		if p.Running() == 0 {
+		var nw int
+		if nw = p.Running(); nw == 0 { // awakened by the scavenger
 			p.lock.Unlock()
-			spawnWorker()
+			if !p.IsClosed() {
+				spawnWorker()
+			}
 			return
 		}
 		l := len(p.workers) - 1
 		if l < 0 {
-			goto Reentry
+			if nw < capacity {
+				p.lock.Unlock()
+				spawnWorker()
+				return
+			}
+			goto retry
 		}
 		w = p.workers[l]
 		p.workers[l] = nil
@@ -272,7 +297,7 @@ func (p *PoolWithFunc) retrieveWorker() (w *goWorkerWithFunc) {
 
 // revertWorker puts a worker back into free pool, recycling the goroutines.
 func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
-	if atomic.LoadInt32(&p.state) == CLOSED || p.Running() > p.Cap() {
+	if capacity := p.Cap(); (capacity > 0 && p.Running() > capacity) || p.IsClosed() {
 		return false
 	}
 	worker.recycleTime = time.Now()
@@ -280,7 +305,7 @@ func (p *PoolWithFunc) revertWorker(worker *goWorkerWithFunc) bool {
 
 	// To avoid memory leaks, add a double check in the lock scope.
 	// Issue: https://github.com/panjf2000/ants/issues/113
-	if atomic.LoadInt32(&p.state) == CLOSED {
+	if p.IsClosed() {
 		p.lock.Unlock()
 		return false
 	}

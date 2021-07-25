@@ -1,6 +1,9 @@
 package dummyGateway
 
 import (
+	"github.com/ronaksoft/rony/errors"
+	"github.com/ronaksoft/rony/tools"
+	"mime/multipart"
 	"sync"
 )
 
@@ -19,12 +22,54 @@ type Conn struct {
 	persistent bool
 	mtx        sync.Mutex
 	kv         map[string]interface{}
-	onMessage  func(connID uint64, streamID int64, data []byte)
+	onMessage  func(connID uint64, streamID int64, data []byte, hdr map[string]string)
+
+	// extra data for REST
+	status  int
+	httpHdr map[string]string
+	method  string
+	path    string
+	body    []byte
+}
+
+func NewConn(onMessage func(connID uint64, streamID int64, data []byte, hdr map[string]string)) *Conn {
+	return &Conn{
+		id:         tools.RandomUint64(0),
+		kv:         make(map[string]interface{}),
+		persistent: false,
+		onMessage:  onMessage,
+	}
+}
+func (c *Conn) WriteStatus(status int) {
+	c.status = status
+}
+
+func (c *Conn) WriteHeader(key, value string) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.httpHdr[key] = value
+}
+
+func (c *Conn) MultiPart() (*multipart.Form, error) {
+	return nil, errors.New(errors.NotImplemented, "Multipart")
+}
+
+func (c *Conn) Method() string {
+	return c.method
+}
+
+func (c *Conn) Path() string {
+	return c.path
+}
+
+func (c *Conn) Body() []byte {
+	return c.body
 }
 
 func (c *Conn) Get(key string) interface{} {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
+
 	return c.kv[key]
 }
 
@@ -42,8 +87,9 @@ func (c *Conn) ClientIP() string {
 	return c.clientIP
 }
 
-func (c *Conn) SendBinary(streamID int64, data []byte) error {
-	c.onMessage(c.id, streamID, data)
+func (c *Conn) WriteBinary(streamID int64, data []byte) error {
+	c.onMessage(c.id, streamID, data, c.httpHdr)
+
 	return nil
 }
 

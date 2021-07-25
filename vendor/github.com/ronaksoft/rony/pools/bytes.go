@@ -42,6 +42,7 @@ func NewByteSlice(min, max int) *byteSlicePool {
 	logarithmicRange(min, max, func(n int) {
 		p.pool[n] = &sync.Pool{}
 	})
+
 	return p
 }
 
@@ -58,6 +59,7 @@ func (p *byteSlicePool) Get(n, c int) []byte {
 		if v != nil {
 			bts := v.([]byte)
 			bts = bts[:n]
+
 			return bts
 		} else {
 			return make([]byte, n, size)
@@ -98,6 +100,7 @@ func (bb *ByteBuffer) Read(p []byte) (n int, err error) {
 	}
 	n = copy(p, bb.b[bb.ri:])
 	bb.ri += n
+
 	return n, nil
 }
 
@@ -105,6 +108,7 @@ func newByteBuffer(n, c int) *ByteBuffer {
 	if n > c {
 		panic("requested length is greater than capacity")
 	}
+
 	return &ByteBuffer{b: make([]byte, n, c)}
 }
 
@@ -138,6 +142,7 @@ func (bb *ByteBuffer) CopyFrom(data []byte) {
 
 func (bb *ByteBuffer) CopyTo(data []byte) []byte {
 	copy(data, bb.b)
+
 	return data
 }
 
@@ -147,6 +152,7 @@ func (bb *ByteBuffer) AppendFrom(data []byte) {
 
 func (bb *ByteBuffer) AppendTo(data []byte) []byte {
 	data = append(data, bb.b...)
+
 	return data
 }
 
@@ -176,6 +182,7 @@ func NewByteBuffer(min, max int) *byteBufferPool {
 	logarithmicRange(min, max, func(n int) {
 		p.pool[n] = &sync.Pool{}
 	})
+
 	return p
 }
 
@@ -192,6 +199,7 @@ func (p *byteBufferPool) Get(n, c int) *ByteBuffer {
 		if v != nil {
 			bb := v.(*ByteBuffer)
 			bb.b = bb.b[:n]
+
 			return bb
 		} else {
 			return newByteBuffer(n, size)
@@ -226,12 +234,14 @@ func (p *byteBufferPool) FromProto(m proto.Message) *ByteBuffer {
 	buf := p.GetCap(mo.Size(m))
 	bb, _ := mo.MarshalAppend(*buf.Bytes(), m)
 	buf.SetBytes(&bb)
+
 	return buf
 }
 
 func (p *byteBufferPool) FromBytes(b []byte) *ByteBuffer {
 	buf := p.GetCap(len(b))
 	buf.AppendFrom(b)
+
 	return buf
 }
 
@@ -258,6 +268,7 @@ func ceilToPowerOfTwo(n int) int {
 	n--
 	n = fillBits(n)
 	n++
+
 	return n
 }
 
@@ -268,5 +279,6 @@ func fillBits(n int) int {
 	n |= n >> 8
 	n |= n >> 16
 	n |= n >> 32
+
 	return n
 }

@@ -59,7 +59,6 @@ func (r *team) updateTeamMemberRemoved(u *msg.UpdateEnvelope) ([]*msg.UpdateEnve
 		}
 	}
 
-
 	return []*msg.UpdateEnvelope{u}, nil
 }
 

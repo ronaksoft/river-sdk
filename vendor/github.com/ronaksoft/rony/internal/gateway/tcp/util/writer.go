@@ -29,7 +29,6 @@ var (
 const (
 	len7  = int64(125) // 126 and 127 are reserved values
 	len16 = int64(^uint16(0))
-	len64 = int64((^uint64(0)) >> 1)
 )
 
 // ControlWriter is a wrapper around Writer that contains some guards for
@@ -76,6 +75,7 @@ func (c *ControlWriter) Write(p []byte) (n int, err error) {
 	if c.n+len(p) > c.limit {
 		return 0, ErrControlOverflow
 	}
+
 	return c.w.Write(p)
 }
 
@@ -132,6 +132,7 @@ func GetWriter(dest io.Writer, state ws.State, op ws.OpCode, n int) *Writer {
 	if x != nil {
 		w := x.(*Writer)
 		w.Reset(dest, state, op)
+
 		return w
 	}
 	// NOTE: we use m instead of n, because m is an attempt to reuse w of such
@@ -273,7 +274,7 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 		} else {
 			nn = copy(w.buf[w.n:], p)
 			w.n += nn
-			w.FlushFragment()
+			_ = w.FlushFragment()
 		}
 		n += nn
 		p = p[nn:]
@@ -322,6 +323,7 @@ func (w *Writer) ReadFrom(src io.Reader) (n int64, err error) {
 	for err == nil {
 		if w.Available() == 0 {
 			err = w.FlushFragment()
+
 			continue
 		}
 

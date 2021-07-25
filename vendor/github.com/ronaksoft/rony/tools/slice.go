@@ -44,6 +44,7 @@ func SliceInt64Diff(a, b []int64, cb func(int64)) {
 		for j := 0; j < len(b); j++ {
 			if a[i] == b[j] {
 				found = true
+
 				break
 			}
 		}
@@ -60,6 +61,7 @@ func SliceUint64Diff(a, b []uint64, cb func(uint64)) {
 		for j := 0; j < len(b); j++ {
 			if a[i] == b[j] {
 				found = true
+
 				break
 			}
 		}
@@ -76,6 +78,7 @@ func SliceInt32Diff(a, b []int32, cb func(int32)) {
 		for j := 0; j < len(b); j++ {
 			if a[i] == b[j] {
 				found = true
+
 				break
 			}
 		}
@@ -92,6 +95,7 @@ func SliceUint32Diff(a, b []uint32, cb func(uint32)) {
 		for j := 0; j < len(b); j++ {
 			if a[i] == b[j] {
 				found = true
+
 				break
 			}
 		}
@@ -108,6 +112,7 @@ func SliceIntDiff(a, b []int, cb func(int)) {
 		for j := 0; j < len(b); j++ {
 			if a[i] == b[j] {
 				found = true
+
 				break
 			}
 		}
@@ -124,6 +129,7 @@ func SliceUintDiff(a, b []uint, cb func(uint)) {
 		for j := 0; j < len(b); j++ {
 			if a[i] == b[j] {
 				found = true
+
 				break
 			}
 		}
@@ -133,13 +139,14 @@ func SliceUintDiff(a, b []uint, cb func(uint)) {
 	}
 }
 
-// SliceInt64Diff returns a - b and cb will be called on each found difference.
+// SliceStringDiff returns a - b and cb will be called on each found difference.
 func SliceStringDiff(a, b []string, cb func(string)) {
 	for i := 0; i < len(a); i++ {
 		found := false
 		for j := 0; j < len(b); j++ {
 			if a[i] == b[j] {
 				found = true
+
 				break
 			}
 		}
@@ -156,6 +163,7 @@ func SliceBytesDiff(a, b [][]byte, cb func([]byte)) {
 		for j := 0; j < len(b); j++ {
 			if bytes.Equal(a[i], b[j]) {
 				found = true
+
 				break
 			}
 		}

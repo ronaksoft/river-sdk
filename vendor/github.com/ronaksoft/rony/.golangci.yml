@@ -1,0 +1,34 @@
+linters:
+  enable-all: true
+  disable:
+    - lll
+    - wrapcheck
+    - interfacer
+    - golint
+    - scopelint
+    - maligned
+    - wsl
+    - tparallel
+    - gomnd
+    - godox
+    - forcetypeassert
+    - gochecknoglobals
+    - paralleltest
+    - gochecknoinits
+    - testpackage
+    - nestif
+    - nakedret
+    - gocognit
+    - funlen
+    - gofumpt
+    - goimports
+    - godot
+    - gci
+    - gocyclo
+    - forbidigo
+    - prealloc
+#  presets:
+#    - bugs
+#    - unused
+  fast: true
+

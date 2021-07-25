@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 )
 
 /*
@@ -18,7 +18,17 @@ var (
 	ErrInternalServer     = GenInternalErr("SERVER", nil)
 	ErrInvalidHandler     = GenInvalidErr("HANDLER", nil)
 	ErrUnavailableRequest = GenUnavailableErr("REQUEST", nil)
+)
 
-	ErrGatewayAlreadyInitialized = errors.New("gateway already initialized")
+var (
+	ErrClusterNotSet             = fmt.Errorf("cluster is not set")
+	ErrGatewayNotSet             = fmt.Errorf("gateway is not set")
+	ErrTunnelNotSet              = fmt.Errorf("tunnel is not set")
+	ErrUnexpectedResponse        = fmt.Errorf("unexpected response")
+	ErrUnexpectedTunnelResponse  = fmt.Errorf("unexpected tunnel response")
+	ErrMemberNotFound            = fmt.Errorf("member not found")
+	ErrGatewayAlreadyInitialized = fmt.Errorf("gateway already initialized")
+	ErrNoTunnelAddrs             = fmt.Errorf("tunnel address does not found")
 	ErrRetriesExceeded           = Wrap("maximum retries exceeded")
+	ErrConnectionNotExists       = fmt.Errorf("connection does not exists")
 )

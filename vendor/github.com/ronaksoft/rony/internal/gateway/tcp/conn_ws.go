@@ -164,7 +164,6 @@ func (wc *websocketConn) startEvent(event netpoll.Event) {
 			log.Warn("Error On StartEvent (Pool)", zap.Error(err))
 		}
 	}
-
 }
 
 func (wc *websocketConn) read(ms []wsutil.Message) ([]wsutil.Message, error) {
@@ -220,7 +219,7 @@ func (wc *websocketConn) SetClientIP(ip []byte) {
 // SendBinary
 // Make sure you don't use payload after calling this function, because its underlying
 // array will be put back into the pool to be reused.
-func (wc *websocketConn) SendBinary(streamID int64, payload []byte) error {
+func (wc *websocketConn) WriteBinary(streamID int64, payload []byte) error {
 	if wc == nil || wc.closed {
 		return ErrWriteToClosedConn
 	}

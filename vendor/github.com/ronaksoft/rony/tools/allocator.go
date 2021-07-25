@@ -84,6 +84,7 @@ func (bk *Allocator) Gen(v ...interface{}) []byte {
 	}
 
 	bk.blocks = append(bk.blocks, b)
+
 	return *b.Bytes()
 }
 
@@ -91,6 +92,7 @@ func (bk *Allocator) Gen(v ...interface{}) []byte {
 func (bk *Allocator) Marshal(m proto.Message) []byte {
 	buf := pools.Buffer.FromProto(m)
 	bk.blocks = append(bk.blocks, buf)
+
 	return *buf.Bytes()
 }
 
@@ -99,6 +101,7 @@ func (bk *Allocator) FillWith(v []byte) []byte {
 	b := pools.Buffer.GetCap(len(v))
 	b.AppendFrom(v)
 	bk.blocks = append(bk.blocks, b)
+
 	return *b.Bytes()
 }
 
@@ -127,7 +130,6 @@ func getSize(v ...interface{}) int {
 			default:
 				panic(fmt.Sprintf("unsupported slice type: %s", t.Elem().Kind().String()))
 			}
-
 		case reflect.String:
 			xb := StrToByte(reflect.ValueOf(x).String())
 			s += len(xb)
@@ -135,5 +137,6 @@ func getSize(v ...interface{}) int {
 			panic(fmt.Sprintf("unsupported type: %s", reflect.TypeOf(x).Kind()))
 		}
 	}
+
 	return s
 }

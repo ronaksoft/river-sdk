@@ -3,9 +3,8 @@ package edge
 import (
 	"fmt"
 	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/internal/cluster"
+	"github.com/ronaksoft/rony/errors"
 	"github.com/ronaksoft/rony/internal/log"
-	"github.com/ronaksoft/rony/store"
 	"github.com/ronaksoft/rony/tools"
 	"google.golang.org/protobuf/proto"
 	"reflect"
@@ -44,13 +43,14 @@ func (c MessageKind) String() string {
 // DispatchCtx holds the context of the dispatcher's request. Each DispatchCtx could holds one or many RequestCtx.
 // DispatchCtx lives until the last of its RequestCtx children.
 type DispatchCtx struct {
-	edge     *Server
-	streamID int64
-	serverID []byte
-	conn     rony.Conn
-	req      *rony.MessageEnvelope
-	kind     MessageKind
-	buf      *tools.LinkedList
+	edge      *Server
+	streamID  int64
+	serverID  []byte
+	conn      rony.Conn
+	req       *rony.MessageEnvelope
+	reqFilled bool
+	kind      MessageKind
+	buf       *tools.LinkedList
 	// KeyValue Store Parameters
 	mtx sync.RWMutex
 	kv  map[string]interface{}
@@ -66,6 +66,7 @@ func newDispatchCtx(edge *Server) *DispatchCtx {
 }
 
 func (ctx *DispatchCtx) reset() {
+	ctx.reqFilled = false
 	for k := range ctx.kv {
 		delete(ctx.kv, k)
 	}
@@ -92,22 +93,12 @@ func (ctx *DispatchCtx) StreamID() int64 {
 	return ctx.streamID
 }
 
-func (ctx *DispatchCtx) FillEnvelope(requestID uint64, constructor int64, payload []byte, auth []byte, kv ...*rony.KeyValue) {
-	ctx.req.RequestID = requestID
-	ctx.req.Constructor = constructor
-	ctx.req.Message = append(ctx.req.Message[:0], payload...)
-	ctx.req.Auth = append(ctx.req.Auth[:0], auth...)
-	if cap(ctx.req.Header) >= len(kv) {
-		ctx.req.Header = ctx.req.Header[:len(kv)]
-	} else {
-		ctx.req.Header = make([]*rony.KeyValue, len(kv))
+func (ctx *DispatchCtx) FillEnvelope(requestID uint64, constructor int64, p proto.Message, kv ...*rony.KeyValue) {
+	if ctx.reqFilled {
+		panic("BUG!!! request has been already filled")
 	}
-	for idx, kv := range kv {
-		if ctx.req.Header[idx] == nil {
-			ctx.req.Header[idx] = &rony.KeyValue{}
-		}
-		kv.DeepCopy(ctx.req.Header[idx])
-	}
+	ctx.reqFilled = true
+	ctx.req.Fill(requestID, constructor, p, kv...)
 }
 
 func (ctx *DispatchCtx) Set(key string, v interface{}) {
@@ -143,6 +134,8 @@ func (ctx *DispatchCtx) GetString(key string, defaultValue string) string {
 	}
 }
 
+// Kind identifies that this dispatch context is generated from Tunnel or Gateway. This helps
+// developer to apply different strategies based on the source of the incoming message
 func (ctx *DispatchCtx) Kind() MessageKind {
 	return ctx.kind
 }
@@ -171,13 +164,46 @@ func (ctx *DispatchCtx) BufferPush(m *rony.MessageEnvelope) {
 	ctx.buf.Append(m)
 }
 
-func (ctx *DispatchCtx) BufferPop() *rony.MessageEnvelope {
-	v, _ := ctx.buf.PickHeadData().(*rony.MessageEnvelope)
-	return v
+func (ctx *DispatchCtx) BufferPop(f func(envelope *rony.MessageEnvelope)) bool {
+	me, _ := ctx.buf.PickHeadData().(*rony.MessageEnvelope)
+	if me == nil {
+		return false
+	}
+	f(me)
+	return true
+}
+
+func (ctx *DispatchCtx) BufferPopAll(f func(envelope *rony.MessageEnvelope)) {
+	for ctx.BufferPop(f) {
+	}
 }
 
 func (ctx *DispatchCtx) BufferSize() int32 {
 	return ctx.buf.Size()
+}
+
+var dispatchCtxPool = sync.Pool{}
+
+func acquireDispatchCtx(edge *Server, conn rony.Conn, streamID int64, serverID []byte, kind MessageKind) *DispatchCtx {
+	var ctx *DispatchCtx
+	if v := dispatchCtxPool.Get(); v == nil {
+		ctx = newDispatchCtx(edge)
+	} else {
+		ctx = v.(*DispatchCtx)
+	}
+	ctx.conn = conn
+	ctx.kind = kind
+	ctx.streamID = streamID
+	ctx.serverID = append(ctx.serverID[:0], serverID...)
+	return ctx
+}
+
+func releaseDispatchCtx(ctx *DispatchCtx) {
+	// Reset the Key-Value store
+	ctx.reset()
+
+	// Put back the context into the pool
+	dispatchCtxPool.Put(ctx)
 }
 
 // RequestCtx holds the context of an RPC handler
@@ -234,7 +260,7 @@ func (ctx *RequestCtx) Stopped() bool {
 	return ctx.stop
 }
 
-func (ctx *RequestCtx) Store() store.Store {
+func (ctx *RequestCtx) Store() rony.Store {
 	return ctx.edge.store
 }
 
@@ -274,11 +300,12 @@ func (ctx *RequestCtx) pushRedirect(reason rony.RedirectReason, replicaSet uint6
 		ni := m.Proto(rony.PoolEdge.Get())
 		r.Edges = append(r.Edges, ni)
 	}
+
 	ctx.PushMessage(rony.C_Redirect, r)
 	rony.PoolRedirect.Put(r)
 }
 
-func (ctx *RequestCtx) PushRedirectSession(replicaSet uint64, wait time.Duration) {
+func (ctx *RequestCtx) PushRedirectSession(replicaSet uint64) {
 	ctx.pushRedirect(rony.RedirectReason_ReplicaSetSession, replicaSet)
 }
 
@@ -292,18 +319,17 @@ func (ctx *RequestCtx) PushMessage(constructor int64, proto proto.Message) {
 
 func (ctx *RequestCtx) PushCustomMessage(requestID uint64, constructor int64, message proto.Message, kvs ...*rony.KeyValue) {
 	envelope := rony.PoolMessageEnvelope.Get()
-	envelope.Fill(requestID, constructor, message)
-	envelope.Header = append(envelope.Header[:0], kvs...)
+	envelope.Fill(requestID, constructor, message, kvs...)
 
-	switch ctx.dispatchCtx.kind {
+	switch ctx.Kind() {
+	case TunnelMessage:
+		ctx.dispatchCtx.BufferPush(envelope.Clone())
 	case GatewayMessage:
 		if ctx.Conn().Persistent() {
 			ctx.edge.dispatcher.OnMessage(ctx.dispatchCtx, envelope)
 		} else {
 			ctx.dispatchCtx.BufferPush(envelope.Clone())
 		}
-	case TunnelMessage:
-		ctx.dispatchCtx.BufferPush(envelope.Clone())
 	}
 
 	rony.PoolMessageEnvelope.Put(envelope)
@@ -323,25 +349,17 @@ func (ctx *RequestCtx) PushCustomError(code, item string, desc string) {
 	ctx.stop = true
 }
 
-func (ctx *RequestCtx) Cluster() cluster.Cluster {
+func (ctx *RequestCtx) Cluster() rony.Cluster {
 	return ctx.dispatchCtx.edge.cluster
 }
 
-func (ctx *RequestCtx) TryExecuteRemote(attempts int, retryWait time.Duration, replicaSet uint64, req, res *rony.MessageEnvelope) error {
-	return ctx.edge.TryExecuteRemote(attempts, retryWait, replicaSet, req, res)
-}
-
-func (ctx *RequestCtx) ExecuteRemote(replicaSet uint64, req, res *rony.MessageEnvelope) error {
-	return ctx.edge.TryExecuteRemote(1, 0, replicaSet, req, res)
-}
-
-func (ctx *RequestCtx) ClusterView(replicaSet uint64, edges *rony.Edges) (*rony.Edges, error) {
+func (ctx *RequestCtx) ClusterEdges(replicaSet uint64, edges *rony.Edges) (*rony.Edges, error) {
 	req := rony.PoolMessageEnvelope.Get()
 	defer rony.PoolMessageEnvelope.Put(req)
 	res := rony.PoolMessageEnvelope.Get()
 	defer rony.PoolMessageEnvelope.Put(res)
 	req.Fill(tools.RandomUint64(0), rony.C_GetAllNodes, &rony.GetAllNodes{})
-	err := ctx.ExecuteRemote(replicaSet, req, res)
+	err := ctx.TunnelRequest(replicaSet, req, res)
 	if err != nil {
 		return nil, err
 	}
@@ -357,61 +375,53 @@ func (ctx *RequestCtx) ClusterView(replicaSet uint64, edges *rony.Edges) (*rony.
 		_ = x.Unmarshal(res.GetMessage())
 		return nil, x
 	default:
-		return nil, ErrUnexpectedTunnelResponse
+		return nil, errors.ErrUnexpectedTunnelResponse
 	}
+}
+
+func (ctx *RequestCtx) TryTunnelRequest(attempts int, retryWait time.Duration, replicaSet uint64, req, res *rony.MessageEnvelope) error {
+	return ctx.edge.TryTunnelRequest(attempts, retryWait, replicaSet, req, res)
+}
+
+func (ctx *RequestCtx) TunnelRequest(replicaSet uint64, req, res *rony.MessageEnvelope) error {
+	return ctx.edge.TryTunnelRequest(1, 0, replicaSet, req, res)
 }
 
 func (ctx *RequestCtx) Log() log.Logger {
 	return log.DefaultLogger
 }
 
-func (ctx *RequestCtx) FindReplicaSet(pageID uint32) (uint64, error) {
-	p := &rony.Page{}
-	_, err := rony.ReadPage(pageID, p)
-	if err == nil {
-		return p.GetReplicaSet(), nil
-	}
-	thisReplicaSet := ctx.Cluster().ReplicaSet()
-	p.ID = pageID
-	p.ReplicaSet = thisReplicaSet
-	if thisReplicaSet != 1 {
-		req := rony.PoolMessageEnvelope.Get()
-		defer rony.PoolMessageEnvelope.Put(req)
-		res := rony.PoolMessageEnvelope.Get()
-		defer rony.PoolMessageEnvelope.Put(res)
-		getPage := rony.PoolGetPage.Get()
-		defer rony.PoolGetPage.Put(getPage)
-		getPage.PageID = pageID
-		getPage.ReplicaSet = ctx.Cluster().ReplicaSet()
-		req.Fill(uint64(tools.FastRand()<<31|tools.FastRand()), rony.C_GetPage, getPage)
-		err = ctx.ExecuteRemote(1, req, res)
-		if err != nil {
-			return 0, err
-		}
-
-		switch res.GetConstructor() {
-		case rony.C_Page:
-			_ = p.Unmarshal(res.GetMessage())
-		case rony.C_Error:
-			x := &rony.Error{}
-			_ = x.Unmarshal(res.GetMessage())
-			return 0, x
-		default:
-			panic("BUG!! invalid response")
-		}
-
-	}
-
-	err = rony.SavePage(p)
-	if err != nil {
-		return 0, err
-	}
-	return p.ReplicaSet, nil
-}
-
-func (ctx *RequestCtx) LocalReplicaSet() uint64 {
+func (ctx *RequestCtx) ReplicaSet() uint64 {
 	if ctx.edge.cluster == nil {
 		return 0
 	}
 	return ctx.edge.cluster.ReplicaSet()
+}
+
+var requestCtxPool = sync.Pool{}
+
+func acquireRequestCtx(dispatchCtx *DispatchCtx, quickReturn bool) *RequestCtx {
+	var ctx *RequestCtx
+	if v := requestCtxPool.Get(); v == nil {
+		ctx = newRequestCtx(dispatchCtx.edge)
+	} else {
+		ctx = v.(*RequestCtx)
+	}
+	ctx.stop = false
+	ctx.quickReturn = quickReturn
+	ctx.dispatchCtx = dispatchCtx
+	return ctx
+}
+
+func releaseRequestCtx(ctx *RequestCtx) {
+	// Just to make sure channel is empty, or empty it if not
+	select {
+	case <-ctx.nextChan:
+	default:
+	}
+
+	ctx.reqID = 0
+
+	// Put back into the pool
+	requestCtxPool.Put(ctx)
 }

@@ -22,13 +22,15 @@
 package gnet
 
 import (
+	"context"
 	"runtime"
+	"sync/atomic"
 	"time"
 	"unsafe"
 
-	"github.com/panjf2000/gnet/pool/bytebuffer"
-
 	"github.com/panjf2000/gnet/errors"
+	"github.com/panjf2000/gnet/logging"
+	"github.com/panjf2000/gnet/pool/bytebuffer"
 )
 
 type eventloop struct {
@@ -39,14 +41,26 @@ type eventloop struct {
 	_ [64 - unsafe.Sizeof(internalEventloop{})%64]byte
 }
 
+//nolint:structcheck
 type internalEventloop struct {
-	ch                chan interface{}        // command channel
-	idx               int                     // loop index
-	svr               *server                 // server in loop
-	connCount         int32                   // number of active connections in event-loop
-	connections       map[*stdConn]struct{}   // track all the sockets bound to this loop
-	eventHandler      EventHandler            // user eventHandler
-	calibrateCallback func(*eventloop, int32) // callback func for re-adjusting connCount
+	ch           chan interface{}      // command channel
+	idx          int                   // loop index
+	svr          *server               // server in loop
+	connCount    int32                 // number of active connections in event-loop
+	connections  map[*stdConn]struct{} // track all the sockets bound to this loop
+	eventHandler EventHandler          // user eventHandler
+}
+
+func (el *eventloop) getLogger() logging.Logger {
+	return el.svr.opts.Logger
+}
+
+func (el *eventloop) addConn(delta int32) {
+	atomic.AddInt32(&el.connCount, delta)
+}
+
+func (el *eventloop) loadConn() int32 {
+	return atomic.LoadInt32(&el.connCount)
 }
 
 func (el *eventloop) loopRun(lockOSThread bool) {
@@ -63,8 +77,8 @@ func (el *eventloop) loopRun(lockOSThread bool) {
 		el.svr.loopWG.Done()
 	}()
 
-	for v := range el.ch {
-		switch v := v.(type) {
+	for i := range el.ch {
+		switch v := i.(type) {
 		case error:
 			err = v
 		case *stdConn:
@@ -76,23 +90,26 @@ func (el *eventloop) loopRun(lockOSThread bool) {
 			err = el.loopReadUDP(v.c)
 		case *stderr:
 			err = el.loopError(v.c, v.err)
-		case wakeReq:
-			err = el.loopWake(v.c)
-		case func() error:
-			err = v()
+		case *signalTask:
+			err = v.run(v.c)
+			signalTaskPool.Put(i)
+		case *dataTask:
+			_, err = v.run(v.buf)
+			dataTaskPool.Put(i)
 		}
 
 		if err == errors.ErrServerShutdown {
+			el.getLogger().Infof("event-loop(%d) is exiting in terms of the demand from user, %v", el.idx, err)
 			break
 		} else if err != nil {
-			el.svr.logger.Infof("Event-loop(%d) is exiting due to the error: %v", el.idx, err)
+			el.getLogger().Errorf("event-loop(%d) is exiting due to the error: %v", el.idx, err)
 		}
 	}
 }
 
 func (el *eventloop) loopAccept(c *stdConn) error {
 	el.connections[c] = struct{}{}
-	el.calibrateCallback(el, 1)
+	el.addConn(1)
 
 	out, action := el.eventHandler.OnOpened(c)
 	if out != nil {
@@ -103,13 +120,13 @@ func (el *eventloop) loopAccept(c *stdConn) error {
 	return el.handleAction(c, action)
 }
 
-func (el *eventloop) loopRead(c *stdConn) (err error) {
+func (el *eventloop) loopRead(c *stdConn) error {
 	for inFrame, _ := c.read(); inFrame != nil; inFrame, _ = c.read() {
 		out, action := el.eventHandler.React(inFrame, c)
 		if out != nil {
 			outFrame, _ := c.codec.Encode(c, out)
 			el.eventHandler.PreWrite()
-			if _, err = c.conn.Write(outFrame); err != nil {
+			if _, err := c.conn.Write(outFrame); err != nil {
 				return el.loopError(c, err)
 			}
 		}
@@ -125,14 +142,14 @@ func (el *eventloop) loopRead(c *stdConn) (err error) {
 	bytebuffer.Put(c.buffer)
 	c.buffer = nil
 
-	return
+	return nil
 }
 
-func (el *eventloop) loopCloseConn(c *stdConn) (err error) {
+func (el *eventloop) loopCloseConn(c *stdConn) error {
 	if c.conn != nil {
-		err = c.conn.SetReadDeadline(time.Now())
+		return c.conn.SetReadDeadline(time.Now())
 	}
-	return
+	return nil
 }
 
 func (el *eventloop) loopEgress() {
@@ -155,44 +172,59 @@ func (el *eventloop) loopEgress() {
 	}
 }
 
-func (el *eventloop) loopTicker() {
+func (el *eventloop) loopTicker(ctx context.Context) {
+	if el == nil {
+		return
+	}
 	var (
-		delay time.Duration
-		open  bool
+		action Action
+		delay  time.Duration
+		timer  *time.Timer
 	)
-	for {
-		el.ch <- func() (err error) {
-			delay, action := el.eventHandler.Tick()
-			el.svr.ticktock <- delay
-			switch action {
-			case Shutdown:
-				err = errors.ErrServerShutdown
-			}
-			return
+	defer func() {
+		if timer != nil {
+			timer.Stop()
 		}
-		if delay, open = <-el.svr.ticktock; open {
-			time.Sleep(delay)
+	}()
+	for {
+		delay, action = el.eventHandler.Tick()
+		if action == Shutdown {
+			el.ch <- errors.ErrServerShutdown
+			el.getLogger().Debugf("stopping ticker in event-loop(%d) from Tick()", el.idx)
+		}
+		if timer == nil {
+			timer = time.NewTimer(delay)
 		} else {
-			break
+			timer.Reset(delay)
+		}
+		select {
+		case <-ctx.Done():
+			el.getLogger().Debugf("stopping ticker in event-loop(%d) from Server, error:%v", el.idx, ctx.Err())
+			return
+		case <-timer.C:
 		}
 	}
 }
 
 func (el *eventloop) loopError(c *stdConn, err error) (e error) {
 	defer func() {
-		if err := c.conn.Close(); err != nil {
-			el.svr.logger.Warnf("Failed to close connection(%s), error: %v", c.remoteAddr.String(), err)
+		if _, ok := el.connections[c]; !ok {
+			return // ignore stale wakes.
+		}
+
+		if err = c.conn.Close(); err != nil {
+			el.getLogger().Errorf("failed to close connection(%s), error: %v", c.remoteAddr.String(), err)
 			if e == nil {
 				e = err
 			}
 		}
 		delete(el.connections, c)
-		el.calibrateCallback(el, -1)
+		el.addConn(-1)
+
 		c.releaseTCP()
 	}()
 
-	switch el.eventHandler.OnClosed(c, err) {
-	case Shutdown:
+	if el.eventHandler.OnClosed(c, err) == Shutdown {
 		return errors.ErrServerShutdown
 	}
 
@@ -200,9 +232,10 @@ func (el *eventloop) loopError(c *stdConn, err error) (e error) {
 }
 
 func (el *eventloop) loopWake(c *stdConn) error {
-	//if co, ok := el.connections[c]; !ok || co != c {
-	//	return nil // ignore stale wakes.
-	//}
+	if _, ok := el.connections[c]; !ok {
+		return nil // ignore stale wakes.
+	}
+
 	out, action := el.eventHandler.React(nil, c)
 	if out != nil {
 		if frame, err := c.codec.Encode(c, out); err != nil {
@@ -234,8 +267,7 @@ func (el *eventloop) loopReadUDP(c *stdConn) error {
 		el.eventHandler.PreWrite()
 		_, _ = el.svr.ln.pconn.WriteTo(out, c.remoteAddr)
 	}
-	switch action {
-	case Shutdown:
+	if action == Shutdown {
 		return errors.ErrServerShutdown
 	}
 	c.releaseUDP()

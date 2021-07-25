@@ -22,17 +22,18 @@
 package gnet
 
 import (
+	"context"
 	"errors"
 	"runtime"
 	"sync"
 	"sync/atomic"
-	"time"
 
-	errors2 "github.com/panjf2000/gnet/errors"
-	"github.com/panjf2000/gnet/internal/logging"
+	gerrors "github.com/panjf2000/gnet/errors"
 )
 
 var errCloseAllConns = errors.New("close all connections in event-loop")
+
+const TaskBufferCap = 256
 
 type server struct {
 	ln           *listener          // the listeners for accepting new connections
@@ -43,14 +44,12 @@ type server struct {
 	once         sync.Once          // make sure only signalShutdown once
 	codec        ICodec             // codec for TCP stream
 	loopWG       sync.WaitGroup     // loop close WaitGroup
-	logger       logging.Logger     // customized logger for logging info
-	ticktock     chan time.Duration // ticker channel
 	listenerWG   sync.WaitGroup     // listener close WaitGroup
 	inShutdown   int32              // whether the server is in shutdown
+	tickerCtx    context.Context    // context for ticker
+	cancelTicker context.CancelFunc // function to stop the ticker
 	eventHandler EventHandler       // user eventHandler
 }
-
-var serverFarm sync.Map
 
 func (svr *server) isInShutdown() bool {
 	return atomic.LoadInt32(&svr.inShutdown) == 1
@@ -89,18 +88,16 @@ func (svr *server) startListener() {
 }
 
 func (svr *server) startEventLoops(numEventLoop int) {
+	var striker *eventloop
 	for i := 0; i < numEventLoop; i++ {
 		el := new(eventloop)
-		el.ch = make(chan interface{}, channelBuffer)
+		el.ch = make(chan interface{}, channelBuffer(TaskBufferCap))
 		el.svr = svr
 		el.connections = make(map[*stdConn]struct{})
 		el.eventHandler = svr.eventHandler
-		el.calibrateCallback = svr.lb.calibrate
 		svr.lb.register(el)
-
-		// Start the ticker.
 		if el.idx == 0 && svr.opts.Ticker {
-			go el.loopTicker()
+			striker = el
 		}
 	}
 
@@ -109,11 +106,14 @@ func (svr *server) startEventLoops(numEventLoop int) {
 		go el.loopRun(svr.opts.LockOSThread)
 		return true
 	})
+
+	// Start the ticker.
+	go striker.loopTicker(svr.tickerCtx)
 }
 
 func (svr *server) stop(s Server) {
 	// Wait on a signal for shutdown.
-	svr.logger.Infof("Server is being shutdown on the signal error: %v", svr.waitForShutdown())
+	svr.opts.Logger.Infof("Server is being shutdown on the signal error: %v", svr.waitForShutdown())
 
 	svr.eventHandler.OnShutdown(s)
 
@@ -123,7 +123,7 @@ func (svr *server) stop(s Server) {
 
 	// Notify all loops to close.
 	svr.lb.iterate(func(i int, el *eventloop) bool {
-		el.ch <- errors2.ErrServerShutdown
+		el.ch <- gerrors.ErrServerShutdown
 		return true
 	})
 
@@ -140,7 +140,7 @@ func (svr *server) stop(s Server) {
 
 	// Stop the ticker.
 	if svr.opts.Ticker {
-		close(svr.ticktock)
+		svr.cancelTicker()
 	}
 
 	atomic.StoreInt32(&svr.inShutdown, 1)
@@ -170,9 +170,10 @@ func serve(eventHandler EventHandler, listener *listener, options *Options, prot
 		svr.lb = new(sourceAddrHashLoadBalancer)
 	}
 
-	svr.ticktock = make(chan time.Duration, 1)
+	if svr.opts.Ticker {
+		svr.tickerCtx, svr.cancelTicker = context.WithCancel(context.Background())
+	}
 	svr.cond = sync.NewCond(&sync.Mutex{})
-	svr.logger = logging.DefaultLogger
 	svr.codec = func() ICodec {
 		if options.Codec == nil {
 			return new(BuiltInFrameCodec)
@@ -202,7 +203,24 @@ func serve(eventHandler EventHandler, listener *listener, options *Options, prot
 
 	defer svr.stop(server)
 
-	serverFarm.Store(protoAddr, svr)
+	allServers.Store(protoAddr, svr)
 
 	return
+}
+
+// channelBuffer determines whether the channel should be a buffered channel to get the best performance.
+func channelBuffer(n int) int {
+	// Use blocking channel if GOMAXPROCS=1.
+	// This switches context from sender to receiver immediately,
+	// which results in higher performance.
+	if runtime.GOMAXPROCS(0) == 1 {
+		return 0
+	}
+
+	// Make channel non-blocking and set up its capacity with GOMAXPROCS if GOMAXPROCS>1,
+	// otherwise the sender might be dragged down if the receiver is CPU-bound.
+	//
+	// GOMAXPROCS determines how many goroutines can run in parallel,
+	// which makes it the best choice as the channel capacity,
+	return n
 }

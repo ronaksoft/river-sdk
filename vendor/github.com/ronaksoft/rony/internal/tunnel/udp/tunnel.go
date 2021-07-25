@@ -1,11 +1,12 @@
 package udpTunnel
 
 import (
+	"context"
 	"fmt"
 	"github.com/panjf2000/gnet"
-	"github.com/ronaksoft/rony"
 	"github.com/ronaksoft/rony/internal/log"
 	"github.com/ronaksoft/rony/internal/metrics"
+	"github.com/ronaksoft/rony/internal/msg"
 	"github.com/ronaksoft/rony/internal/tunnel"
 	"github.com/ronaksoft/rony/pools"
 	"github.com/ronaksoft/rony/tools"
@@ -24,7 +25,6 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-// Config
 type Config struct {
 	ServerID      string
 	ListenAddress string
@@ -59,6 +59,7 @@ func New(config Config) (*Tunnel, error) {
 
 	if ta.IP.IsUnspecified() {
 		addrs, err := net.InterfaceAddrs()
+
 		if err == nil {
 			for _, a := range addrs {
 				switch x := a.(type) {
@@ -99,10 +100,13 @@ func (t *Tunnel) Start() {
 }
 
 func (t *Tunnel) Run() {
+
 	err := gnet.Serve(t, fmt.Sprintf("udp://%s", t.cfg.ListenAddress),
 		gnet.WithReusePort(true),
 		gnet.WithMulticore(true),
 		gnet.WithLockOSThread(true),
+		gnet.WithLogLevel(log.WarnLevel),
+		gnet.WithLogger(log.DefaultLogger.Logger.Sugar()),
 	)
 
 	if err != nil {
@@ -112,6 +116,11 @@ func (t *Tunnel) Run() {
 
 func (t *Tunnel) Shutdown() {
 	atomic.StoreInt32(&t.shutdown, 1)
+	ctx, cf := context.WithTimeout(context.TODO(), time.Second*30)
+	defer cf()
+	if err := gnet.Stop(ctx, fmt.Sprintf("udp://%s", t.cfg.ListenAddress)); err != nil {
+		log.Warn("Error On Stopping Tunnel", zap.Error(err))
+	}
 }
 
 func (t *Tunnel) Addr() []string {
@@ -135,7 +144,7 @@ func (t *Tunnel) OnOpened(c gnet.Conn) (out []byte, action gnet.Action) {
 }
 
 func (t *Tunnel) OnClosed(c gnet.Conn, err error) (action gnet.Action) {
-	log.Info("Tunnel connection closed")
+	log.Info("Tunnel connection closed", zap.Error(err))
 	return gnet.None
 }
 
@@ -147,9 +156,8 @@ func (t *Tunnel) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Actio
 		return nil, gnet.Shutdown
 	}
 
-	req := rony.PoolTunnelMessage.Get()
-	err := req.Unmarshal(frame)
-	if err != nil {
+	req := msg.PoolTunnelMessage.Get()
+	if err := req.Unmarshal(frame); err != nil {
 		log.Warn("Error On Tunnel's data received", zap.Error(err))
 		return nil, gnet.Close
 	}
@@ -158,7 +166,7 @@ func (t *Tunnel) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Actio
 	pools.Go(func() {
 		metrics.IncCounter(metrics.CntTunnelIncomingMessage)
 		t.MessageHandler(conn, req)
-		rony.PoolTunnelMessage.Put(req)
+		msg.PoolTunnelMessage.Put(req)
 	})
 
 	return

@@ -24,13 +24,12 @@
 package gnet
 
 import (
+	"context"
 	"runtime"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/panjf2000/gnet/errors"
-	"github.com/panjf2000/gnet/internal/logging"
 	"github.com/panjf2000/gnet/internal/netpoll"
 )
 
@@ -42,14 +41,12 @@ type server struct {
 	once         sync.Once          // make sure only signalShutdown once
 	cond         *sync.Cond         // shutdown signaler
 	codec        ICodec             // codec for TCP stream
-	logger       logging.Logger     // customized logger for logging info
-	ticktock     chan time.Duration // ticker channel
 	mainLoop     *eventloop         // main event-loop for accepting connections
 	inShutdown   int32              // whether the server is in shutdown
+	tickerCtx    context.Context    // context for ticker
+	cancelTicker context.CancelFunc // function to stop the ticker
 	eventHandler EventHandler       // user eventHandler
 }
-
-var serverFarm sync.Map
 
 func (svr *server) isInShutdown() bool {
 	return atomic.LoadInt32(&svr.inShutdown) == 1
@@ -101,11 +98,12 @@ func (svr *server) startSubReactors() {
 }
 
 func (svr *server) activateEventLoops(numEventLoop int) (err error) {
+	var striker *eventloop
 	// Create loops locally and bind the listeners.
 	for i := 0; i < numEventLoop; i++ {
 		l := svr.ln
 		if i > 0 && svr.opts.ReusePort {
-			if l, err = initListener(svr.ln.network, svr.ln.addr, svr.ln.reusePort); err != nil {
+			if l, err = initListener(svr.ln.network, svr.ln.addr, svr.opts); err != nil {
 				return
 			}
 		}
@@ -116,16 +114,15 @@ func (svr *server) activateEventLoops(numEventLoop int) (err error) {
 			el.ln = l
 			el.svr = svr
 			el.poller = p
-			el.packet = make([]byte, svr.opts.ReadBufferCap)
+			el.buffer = make([]byte, svr.opts.ReadBufferCap)
 			el.connections = make(map[int]*conn)
 			el.eventHandler = svr.eventHandler
-			el.calibrateCallback = svr.lb.calibrate
 			_ = el.poller.AddRead(el.ln.fd)
 			svr.lb.register(el)
 
 			// Start the ticker.
 			if el.idx == 0 && svr.opts.Ticker {
-				go el.loopTicker()
+				striker = el
 			}
 		} else {
 			return
@@ -134,6 +131,8 @@ func (svr *server) activateEventLoops(numEventLoop int) (err error) {
 
 	// Start event-loops in background.
 	svr.startEventLoops()
+
+	go striker.loopTicker(svr.tickerCtx)
 
 	return
 }
@@ -145,16 +144,10 @@ func (svr *server) activateReactors(numEventLoop int) error {
 			el.ln = svr.ln
 			el.svr = svr
 			el.poller = p
-			el.packet = make([]byte, svr.opts.ReadBufferCap)
+			el.buffer = make([]byte, svr.opts.ReadBufferCap)
 			el.connections = make(map[int]*conn)
 			el.eventHandler = svr.eventHandler
-			el.calibrateCallback = svr.lb.calibrate
 			svr.lb.register(el)
-
-			// Start the ticker.
-			if el.idx == 0 && svr.opts.Ticker {
-				go el.loopTicker()
-			}
 		} else {
 			return err
 		}
@@ -169,6 +162,7 @@ func (svr *server) activateReactors(numEventLoop int) error {
 		el.idx = -1
 		el.svr = svr
 		el.poller = p
+		el.eventHandler = svr.eventHandler
 		_ = el.poller.AddRead(el.ln.fd)
 		svr.mainLoop = el
 
@@ -180,6 +174,11 @@ func (svr *server) activateReactors(numEventLoop int) error {
 		}()
 	} else {
 		return err
+	}
+
+	// Start the ticker.
+	if svr.opts.Ticker {
+		go svr.mainLoop.loopTicker(svr.tickerCtx)
 	}
 
 	return nil
@@ -201,17 +200,19 @@ func (svr *server) stop(s Server) {
 
 	// Notify all loops to close by closing all listeners
 	svr.lb.iterate(func(i int, el *eventloop) bool {
-		sniffErrorAndLog(el.poller.Trigger(func() error {
-			return errors.ErrServerShutdown
-		}))
+		err := el.poller.UrgentTrigger(func(_ interface{}) error { return errors.ErrServerShutdown }, nil)
+		if err != nil {
+			svr.opts.Logger.Errorf("failed to call UrgentTrigger on sub event-loop when stopping server")
+		}
 		return true
 	})
 
 	if svr.mainLoop != nil {
 		svr.ln.close()
-		sniffErrorAndLog(svr.mainLoop.poller.Trigger(func() error {
-			return errors.ErrServerShutdown
-		}))
+		err := svr.mainLoop.poller.UrgentTrigger(func(_ interface{}) error { return errors.ErrServerShutdown }, nil)
+		if err != nil {
+			svr.opts.Logger.Errorf("failed to call UrgentTrigger on main event-loop when stopping server")
+		}
 	}
 
 	// Wait on all loops to complete reading events
@@ -220,12 +221,15 @@ func (svr *server) stop(s Server) {
 	svr.closeEventLoops()
 
 	if svr.mainLoop != nil {
-		sniffErrorAndLog(svr.mainLoop.poller.Close())
+		err := svr.mainLoop.poller.Close()
+		if err != nil {
+			svr.opts.Logger.Errorf("failed to close poller when stopping server")
+		}
 	}
 
 	// Stop the ticker.
 	if svr.opts.Ticker {
-		close(svr.ticktock)
+		svr.cancelTicker()
 	}
 
 	atomic.StoreInt32(&svr.inShutdown, 1)
@@ -256,8 +260,9 @@ func serve(eventHandler EventHandler, listener *listener, options *Options, prot
 	}
 
 	svr.cond = sync.NewCond(&sync.Mutex{})
-	svr.ticktock = make(chan time.Duration, channelBuffer)
-	svr.logger = logging.DefaultLogger
+	if svr.opts.Ticker {
+		svr.tickerCtx, svr.cancelTicker = context.WithCancel(context.Background())
+	}
 	svr.codec = func() ICodec {
 		if options.Codec == nil {
 			return new(BuiltInFrameCodec)
@@ -281,12 +286,12 @@ func serve(eventHandler EventHandler, listener *listener, options *Options, prot
 
 	if err := svr.start(numEventLoop); err != nil {
 		svr.closeEventLoops()
-		svr.logger.Errorf("gnet server is stopping with error: %v", err)
+		svr.opts.Logger.Errorf("gnet server is stopping with error: %v", err)
 		return err
 	}
 	defer svr.stop(server)
 
-	serverFarm.Store(protoAddr, svr)
+	allServers.Store(protoAddr, svr)
 
 	return nil
 }

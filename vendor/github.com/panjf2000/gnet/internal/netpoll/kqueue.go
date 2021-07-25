@@ -28,17 +28,19 @@ import (
 	"runtime"
 	"sync/atomic"
 
-	"github.com/panjf2000/gnet/errors"
-	"github.com/panjf2000/gnet/internal/logging"
-	"github.com/panjf2000/gnet/internal/netpoll/queue"
 	"golang.org/x/sys/unix"
+
+	"github.com/panjf2000/gnet/errors"
+	"github.com/panjf2000/gnet/internal/queue"
+	"github.com/panjf2000/gnet/logging"
 )
 
 // Poller represents a poller which is in charge of monitoring file-descriptors.
 type Poller struct {
-	fd             int
-	netpollWakeSig int32
-	asyncTaskQueue queue.AsyncTaskQueue
+	fd                  int
+	netpollWakeSig      int32
+	asyncTaskQueue      queue.AsyncTaskQueue // queue with low priority
+	priorAsyncTaskQueue queue.AsyncTaskQueue // queue with high priority
 }
 
 // OpenPoller instantiates a poller.
@@ -60,6 +62,7 @@ func OpenPoller() (poller *Poller, err error) {
 		return
 	}
 	poller.asyncTaskQueue = queue.NewLockFreeQueue()
+	poller.priorAsyncTaskQueue = queue.NewLockFreeQueue()
 	return
 }
 
@@ -74,8 +77,29 @@ var wakeChanges = []unix.Kevent_t{{
 	Fflags: unix.NOTE_TRIGGER,
 }}
 
-// Trigger wakes up the poller blocked in waiting for network-events and runs jobs in asyncTaskQueue.
-func (p *Poller) Trigger(task queue.Task) (err error) {
+// UrgentTrigger puts task into priorAsyncTaskQueue and wakes up the poller which is waiting for network-events,
+// then the poller will get tasks from priorAsyncTaskQueue and run them.
+//
+// Note that priorAsyncTaskQueue is a queue with high-priority and its size is expected to be small,
+// so only those urgent tasks should be put into this queue.
+func (p *Poller) UrgentTrigger(fn queue.TaskFunc, arg interface{}) (err error) {
+	task := queue.GetTask()
+	task.Run, task.Arg = fn, arg
+	p.priorAsyncTaskQueue.Enqueue(task)
+	if atomic.CompareAndSwapInt32(&p.netpollWakeSig, 0, 1) {
+		for _, err = unix.Kevent(p.fd, wakeChanges, nil, nil); err == unix.EINTR || err == unix.EAGAIN; _, err = unix.Kevent(p.fd, wakeChanges, nil, nil) {
+		}
+	}
+	return os.NewSyscallError("kevent trigger", err)
+}
+
+// Trigger is like UrgentTrigger but it puts task into asyncTaskQueue,
+// call this method when the task is not so urgent, for instance writing data back to client.
+//
+// Note that asyncTaskQueue is a queue with low-priority whose size may grow large and tasks in it may backlog.
+func (p *Poller) Trigger(fn queue.TaskFunc, arg interface{}) (err error) {
+	task := queue.GetTask()
+	task.Run, task.Arg = fn, arg
 	p.asyncTaskQueue.Enqueue(task)
 	if atomic.CompareAndSwapInt32(&p.netpollWakeSig, 0, 1) {
 		for _, err = unix.Kevent(p.fd, wakeChanges, nil, nil); err == unix.EINTR || err == unix.EAGAIN; _, err = unix.Kevent(p.fd, wakeChanges, nil, nil) {
@@ -100,7 +124,7 @@ func (p *Poller) Polling(callback func(fd int, filter int16) error) error {
 			runtime.Gosched()
 			continue
 		} else if err != nil {
-			logging.DefaultLogger.Warnf("Error occurs in kqueue: %v", os.NewSyscallError("kevent wait", err))
+			logging.Errorf("error occurs in kqueue: %v", os.NewSyscallError("kevent wait", err))
 			return err
 		}
 		tsp = &ts
@@ -117,30 +141,41 @@ func (p *Poller) Polling(callback func(fd int, filter int16) error) error {
 				case errors.ErrAcceptSocket, errors.ErrServerShutdown:
 					return err
 				default:
-					logging.DefaultLogger.Warnf("Error occurs in event-loop: %v", err)
+					logging.Warnf("error occurs in event-loop: %v", err)
 				}
-			} else {
+			} else { // poller is awaken to run tasks in queues.
 				wakenUp = true
 			}
 		}
 
 		if wakenUp {
 			wakenUp = false
-			var task queue.Task
-			for i := 0; i < AsyncTasks; i++ {
-				if task = p.asyncTaskQueue.Dequeue(); task == nil {
-					break
-				}
-				switch err = task(); err {
+			task := p.priorAsyncTaskQueue.Dequeue()
+			for ; task != nil; task = p.priorAsyncTaskQueue.Dequeue() {
+				switch err = task.Run(task.Arg); err {
 				case nil:
 				case errors.ErrServerShutdown:
 					return err
 				default:
-					logging.DefaultLogger.Warnf("Error occurs in user-defined function, %v", err)
+					logging.Warnf("error occurs in user-defined function, %v", err)
 				}
+				queue.PutTask(task)
+			}
+			for i := 0; i < MaxAsyncTasksAtOneTime; i++ {
+				if task = p.asyncTaskQueue.Dequeue(); task == nil {
+					break
+				}
+				switch err = task.Run(task.Arg); err {
+				case nil:
+				case errors.ErrServerShutdown:
+					return err
+				default:
+					logging.Warnf("error occurs in user-defined function, %v", err)
+				}
+				queue.PutTask(task)
 			}
 			atomic.StoreInt32(&p.netpollWakeSig, 0)
-			if !p.asyncTaskQueue.Empty() {
+			if !p.asyncTaskQueue.Empty() || !p.priorAsyncTaskQueue.Empty() {
 				for _, err = unix.Kevent(p.fd, wakeChanges, nil, nil); err == unix.EINTR || err == unix.EAGAIN; _, err = unix.Kevent(p.fd, wakeChanges, nil, nil) {
 				}
 			}

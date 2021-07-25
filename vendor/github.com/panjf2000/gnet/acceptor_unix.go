@@ -25,9 +25,10 @@ package gnet
 import (
 	"os"
 
-	"github.com/panjf2000/gnet/errors"
-	"github.com/panjf2000/gnet/internal/netpoll"
 	"golang.org/x/sys/unix"
+
+	"github.com/panjf2000/gnet/errors"
+	"github.com/panjf2000/gnet/internal/socket"
 )
 
 func (svr *server) acceptNewConnection(fd int) error {
@@ -36,26 +37,18 @@ func (svr *server) acceptNewConnection(fd int) error {
 		if err == unix.EAGAIN {
 			return nil
 		}
+		svr.opts.Logger.Errorf("Accept() fails due to error: %v", err)
 		return errors.ErrAcceptSocket
 	}
 	if err = os.NewSyscallError("fcntl nonblock", unix.SetNonblock(nfd, true)); err != nil {
 		return err
 	}
 
-	netAddr := netpoll.SockaddrToTCPOrUnixAddr(sa)
+	netAddr := socket.SockaddrToTCPOrUnixAddr(sa)
 	el := svr.lb.next(netAddr)
 	c := newTCPConn(nfd, el, sa, netAddr)
 
-	err = el.poller.Trigger(func() (err error) {
-		if err = el.poller.AddRead(nfd); err != nil {
-			_ = unix.Close(nfd)
-			c.releaseTCP()
-			return
-		}
-		el.connections[nfd] = c
-		err = el.loopOpen(c)
-		return
-	})
+	err = el.poller.UrgentTrigger(el.loopInsert, c)
 	if err != nil {
 		_ = unix.Close(nfd)
 		c.releaseTCP()

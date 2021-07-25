@@ -26,7 +26,7 @@ import (
    Copyright Ronak Software Group 2020
 */
 
-// helper function to create a cert template with a serial number and other required fields
+// CertTemplate is a helper function to create a cert template with a serial number and other required fields
 func CertTemplate() (*x509.Certificate, error) {
 	// generate a random serial number (a real cert authority would have some logic behind this)
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
@@ -37,12 +37,13 @@ func CertTemplate() (*x509.Certificate, error) {
 
 	tmpl := x509.Certificate{
 		SerialNumber:          serialNumber,
-		Subject:               pkix.Name{Organization: []string{"Yacht, Inc."}},
+		Subject:               pkix.Name{Organization: []string{"RSG"}},
 		SignatureAlgorithm:    x509.SHA256WithRSA,
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Hour), // valid for an hour
 		BasicConstraintsValid: true,
 	}
+
 	return &tmpl, nil
 }
 
@@ -59,6 +60,7 @@ func CreateCert(template, parent *x509.Certificate, pub interface{}, parentPriv 
 	// PEM encode the certificate (this is a standard TLS encoding)
 	b := pem.Block{Type: "CERTIFICATE", Bytes: certDER}
 	certPEM = pem.EncodeToMemory(&b)
+
 	return
 }
 
@@ -104,6 +106,6 @@ func GetCertificate(keyPath, certPath string) tls.Certificate {
 	if err != nil {
 		log.Fatal("invalid key pair", zap.Error(err))
 	}
-	return rootTLSCert
 
+	return rootTLSCert
 }
