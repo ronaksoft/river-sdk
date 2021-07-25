@@ -97,16 +97,12 @@ github.com/c-bata/go-prompt/internal/term
 github.com/cespare/xxhash
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
-# github.com/chzyer/logex v1.1.10
-## explicit
-# github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1
-## explicit
 # github.com/couchbase/vellum v1.0.2
 github.com/couchbase/vellum
 github.com/couchbase/vellum/levenshtein
 github.com/couchbase/vellum/regexp
 github.com/couchbase/vellum/utf8
-# github.com/dgraph-io/badger/v2 v2.2007.2
+# github.com/dgraph-io/badger/v2 v2.2007.3
 ## explicit
 github.com/dgraph-io/badger/v2
 github.com/dgraph-io/badger/v2/options
@@ -153,7 +149,6 @@ github.com/glycerine/go-unsnap-stream
 # github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee
 github.com/gobwas/httphead
 # github.com/gobwas/pool v0.2.1
-## explicit
 github.com/gobwas/pool
 github.com/gobwas/pool/internal/pmath
 github.com/gobwas/pool/pbufio
@@ -501,5 +496,3 @@ gopkg.in/ini.v1
 gopkg.in/natefinch/lumberjack.v2
 # gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2
-# honnef.co/go/tools v0.0.1-2020.1.4
-## explicit

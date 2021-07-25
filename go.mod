@@ -9,15 +9,12 @@ require (
 	github.com/beeker1121/goque v2.1.0+incompatible
 	github.com/blevesearch/bleve v1.0.14
 	github.com/boltdb/bolt v1.3.1
-	github.com/chzyer/logex v1.1.10 // indirect
-	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
-	github.com/dgraph-io/badger/v2 v2.2007.2
+	github.com/dgraph-io/badger/v2 v2.2007.3
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.11.0
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/getsentry/sentry-go v0.11.0
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
-	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.0.4
 	github.com/juju/ratelimit v1.0.1
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
@@ -38,7 +35,6 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
-	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 )
 
 go 1.15
