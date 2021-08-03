@@ -8,6 +8,7 @@ echo "DST = $dst"
 echo "RIVER_IOS_PATH = $RIVER_IOS_PATH"
 
 if [ "$currentDir" != "$dst" ]; then
+  rm -r "$dst"
   mkdir -p "$dst"
   cp -r ./* "$dst"
 fi

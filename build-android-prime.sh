@@ -8,6 +8,7 @@ echo "DST = $dst"
 echo "RIVER_ANDROID_PATH = $RIVER_ANDROID_PATH"
 
 if [ "$currentDir" != "$dst" ]; then
+  rm -r "$dst"
   mkdir -p "$dst"
   cp -r ./* "$dst"
 fi
