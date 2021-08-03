@@ -21,7 +21,7 @@ require (
 	github.com/nyaruka/phonenumbers v1.0.70
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
-	github.com/ronaksoft/rony v0.12.15
+	github.com/ronaksoft/rony v0.12.29
 	github.com/siongui/instago v0.0.0-20200627103523-54424cb565ea
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.2.1

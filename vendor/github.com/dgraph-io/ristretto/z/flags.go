@@ -2,12 +2,15 @@ package z
 
 import (
 	"fmt"
-	"log"
+	"os"
+	"os/user"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/pkg/errors"
 )
 
@@ -80,19 +83,23 @@ func (h *SuperFlagHelp) String() string {
 	return h.head + "\n" + dls + ols
 }
 
-func parseFlag(flag string) map[string]string {
+func parseFlag(flag string) (map[string]string, error) {
 	kvm := make(map[string]string)
 	for _, kv := range strings.Split(flag, ";") {
 		if strings.TrimSpace(kv) == "" {
 			continue
 		}
+		// For a non-empty separator, 0 < len(splits) ≤ 2.
 		splits := strings.SplitN(kv, "=", 2)
 		k := strings.TrimSpace(splits[0])
+		if len(splits) < 2 {
+			return nil, fmt.Errorf("superflag: missing value for '%s' in flag: %s", k, flag)
+		}
 		k = strings.ToLower(k)
 		k = strings.ReplaceAll(k, "_", "-")
 		kvm[k] = strings.TrimSpace(splits[1])
 	}
-	return kvm
+	return kvm, nil
 }
 
 type SuperFlag struct {
@@ -100,16 +107,26 @@ type SuperFlag struct {
 }
 
 func NewSuperFlag(flag string) *SuperFlag {
-	return &SuperFlag{
-		m: parseFlag(flag),
+	sf, err := newSuperFlagImpl(flag)
+	if err != nil {
+		glog.Fatal(err)
 	}
+	return sf
+}
+
+func newSuperFlagImpl(flag string) (*SuperFlag, error) {
+	m, err := parseFlag(flag)
+	if err != nil {
+		return nil, err
+	}
+	return &SuperFlag{m}, nil
 }
 
 func (sf *SuperFlag) String() string {
 	if sf == nil {
 		return ""
 	}
-	var kvs []string
+	kvs := make([]string, 0, len(sf.m))
 	for k, v := range sf.m {
 		kvs = append(kvs, fmt.Sprintf("%s=%s", k, v))
 	}
@@ -117,13 +134,27 @@ func (sf *SuperFlag) String() string {
 }
 
 func (sf *SuperFlag) MergeAndCheckDefault(flag string) *SuperFlag {
-	if sf == nil {
-		sf = &SuperFlag{
-			m: parseFlag(flag),
-		}
-		return sf
+	sf, err := sf.mergeAndCheckDefaultImpl(flag)
+	if err != nil {
+		glog.Fatal(err)
 	}
-	src := parseFlag(flag)
+	return sf
+}
+
+func (sf *SuperFlag) mergeAndCheckDefaultImpl(flag string) (*SuperFlag, error) {
+	if sf == nil {
+		m, err := parseFlag(flag)
+		if err != nil {
+			return nil, err
+		}
+		return &SuperFlag{m}, nil
+	}
+
+	src, err := parseFlag(flag)
+	if err != nil {
+		return nil, err
+	}
+
 	numKeys := len(sf.m)
 	for k := range src {
 		if _, ok := sf.m[k]; ok {
@@ -131,14 +162,14 @@ func (sf *SuperFlag) MergeAndCheckDefault(flag string) *SuperFlag {
 		}
 	}
 	if numKeys != 0 {
-		panic(fmt.Sprintf("Found invalid options in %s. Valid options: %v", sf, flag))
+		return nil, fmt.Errorf("superflag: found invalid options in flag: %s.\nvalid options: %v", sf, flag)
 	}
 	for k, v := range src {
 		if _, ok := sf.m[k]; !ok {
 			sf.m[k] = v
 		}
 	}
-	return sf
+	return sf, nil
 }
 
 func (sf *SuperFlag) Has(opt string) bool {
@@ -176,7 +207,7 @@ func (sf *SuperFlag) GetBool(opt string) bool {
 		err = errors.Wrapf(err,
 			"Unable to parse %s as bool for key: %s. Options: %s\n",
 			val, opt, sf)
-		log.Fatalf("%+v", err)
+		glog.Fatalf("%+v", err)
 	}
 	return b
 }
@@ -191,7 +222,7 @@ func (sf *SuperFlag) GetFloat64(opt string) float64 {
 		err = errors.Wrapf(err,
 			"Unable to parse %s as float64 for key: %s. Options: %s\n",
 			val, opt, sf)
-		log.Fatalf("%+v", err)
+		glog.Fatalf("%+v", err)
 	}
 	return f
 }
@@ -206,7 +237,7 @@ func (sf *SuperFlag) GetInt64(opt string) int64 {
 		err = errors.Wrapf(err,
 			"Unable to parse %s as int64 for key: %s. Options: %s\n",
 			val, opt, sf)
-		log.Fatalf("%+v", err)
+		glog.Fatalf("%+v", err)
 	}
 	return i
 }
@@ -221,7 +252,7 @@ func (sf *SuperFlag) GetUint64(opt string) uint64 {
 		err = errors.Wrapf(err,
 			"Unable to parse %s as uint64 for key: %s. Options: %s\n",
 			val, opt, sf)
-		log.Fatalf("%+v", err)
+		glog.Fatalf("%+v", err)
 	}
 	return u
 }
@@ -236,7 +267,7 @@ func (sf *SuperFlag) GetUint32(opt string) uint32 {
 		err = errors.Wrapf(err,
 			"Unable to parse %s as uint32 for key: %s. Options: %s\n",
 			val, opt, sf)
-		log.Fatalf("%+v", err)
+		glog.Fatalf("%+v", err)
 	}
 	return uint32(u)
 }
@@ -246,4 +277,35 @@ func (sf *SuperFlag) GetString(opt string) string {
 		return ""
 	}
 	return sf.m[opt]
+}
+
+func (sf *SuperFlag) GetPath(opt string) string {
+	p := sf.GetString(opt)
+	path, err := expandPath(p)
+	if err != nil {
+		glog.Fatalf("Failed to get path: %+v", err)
+	}
+	return path
+}
+
+// expandPath expands the paths containing ~ to /home/user. It also computes the absolute path
+// from the relative paths. For example: ~/abc/../cef will be transformed to /home/user/cef.
+func expandPath(path string) (string, error) {
+	if len(path) == 0 {
+		return "", nil
+	}
+	if path[0] == '~' && (len(path) == 1 || os.IsPathSeparator(path[1])) {
+		usr, err := user.Current()
+		if err != nil {
+			return "", errors.Wrap(err, "Failed to get the home directory of the user")
+		}
+		path = filepath.Join(usr.HomeDir, path[1:])
+	}
+
+	var err error
+	path, err = filepath.Abs(path)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to generate absolute path")
+	}
+	return path, nil
 }

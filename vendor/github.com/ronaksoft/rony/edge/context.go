@@ -93,6 +93,14 @@ func (ctx *DispatchCtx) StreamID() int64 {
 	return ctx.streamID
 }
 
+func (ctx *DispatchCtx) CopyEnvelope(e *rony.MessageEnvelope) {
+	if ctx.reqFilled {
+		panic("BUG!!! request has been already filled")
+	}
+	ctx.reqFilled = true
+	e.DeepCopy(ctx.req)
+}
+
 func (ctx *DispatchCtx) FillEnvelope(requestID uint64, constructor int64, p proto.Message, kv ...*rony.KeyValue) {
 	if ctx.reqFilled {
 		panic("BUG!!! request has been already filled")
