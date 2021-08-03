@@ -924,6 +924,7 @@ func (c *call) initConnection(remote bool, connId int32, sdp *msg.PhoneActionSDP
 	conn := &Connection{
 		CallConnection: msg.CallConnection{
 			Accepted:            remote,
+			ConnId:              connId,
 			RTCPeerConnectionID: rtcConnId,
 			IceConnectionState:  "",
 			IceQueue:            nil,
