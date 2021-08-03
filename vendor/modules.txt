@@ -1,4 +1,4 @@
-# git.ronaksoft.com/river/msg v0.0.0-20210803070214-79492f89c247
+# git.ronaksoft.com/river/msg v0.0.0-20210803111706-69c45391ba2d
 ## explicit
 git.ronaksoft.com/river/msg/go/msg
 # github.com/DataDog/zstd v1.4.5
@@ -195,6 +195,7 @@ github.com/hashicorp/go-multierror
 # github.com/hashicorp/go-sockaddr v1.0.2
 github.com/hashicorp/go-sockaddr
 # github.com/hashicorp/golang-lru v0.5.4
+## explicit
 github.com/hashicorp/golang-lru/simplelru
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl

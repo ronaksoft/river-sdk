@@ -1,7 +1,7 @@
 module git.ronaksoft.com/river/sdk
 
 require (
-	git.ronaksoft.com/river/msg v0.0.0-20210803070214-79492f89c247
+	git.ronaksoft.com/river/msg v0.0.0-20210803111706-69c45391ba2d
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
 	github.com/Workiva/go-datastructures v1.0.53
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
@@ -16,6 +16,7 @@ require (
 	github.com/getsentry/sentry-go v0.11.0
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
 	github.com/gobwas/ws v1.0.4
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/monnand/dhkx v0.0.0-20180522003156-9e5b033f1ac4
 	github.com/nyaruka/phonenumbers v1.0.70
