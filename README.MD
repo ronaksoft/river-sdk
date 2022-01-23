@@ -18,8 +18,8 @@ is useful when we don't need the full functionality.
    3. run `sh build-ios-mini.sh`
 
 ### Android
-1. `git clone https://git.ronaksoft.com/river/android`
-2. `cd ./android`
+1. `git clone https://github.com/ronaksoft/river-android-core`
+2. `cd ./river-android-core`
 3. `git submodule update --init --remote`
 4. `export RIVER_ANDROID_PATH=$(pwd)` to make it permanent you can add it your rc file, or prepend the build command with correct env value.
 5. build SDK for iOS:
