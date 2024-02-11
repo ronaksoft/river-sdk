@@ -1,8 +1,8 @@
 package riversdk
 
 import (
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"go.uber.org/zap"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "go.uber.org/zap"
 )
 
 /*
@@ -15,27 +15,27 @@ import (
 */
 
 func (r *River) StartNetwork(country string) {
-	if country != "" {
-		r.networkCtrl.UpdateEndpoint(country)
-	}
-	r.networkCtrl.Connect()
+    if country != "" {
+        r.networkCtrl.UpdateEndpoint(country)
+    }
+    r.networkCtrl.Connect()
 }
 
 func (r *River) StopNetwork() {
-	r.networkCtrl.Disconnect()
+    r.networkCtrl.Disconnect()
 }
 
 // NetworkChange accepts possible values: cellular (2), wifi (1), none (0)
 func (r *River) NetworkChange(connection int) {
-	logger.Debug("NetworkChange called", zap.Int("C", connection))
-	switch connection {
-	case domain.ConnectionNone:
-		r.networkCtrl.Disconnect()
-	default:
-		r.networkCtrl.Reconnect()
-	}
+    logger.Debug("NetworkChange called", zap.Int("C", connection))
+    switch connection {
+    case domain.ConnectionNone:
+        r.networkCtrl.Disconnect()
+    default:
+        r.networkCtrl.Reconnect()
+    }
 }
 
 func (r *River) GetNetworkStatus() int32 {
-	return int32(r.networkCtrl.GetStatus())
+    return int32(r.networkCtrl.GetStatus())
 }

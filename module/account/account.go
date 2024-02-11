@@ -1,10 +1,10 @@
 package account
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/module"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/request"
+    "github.com/ronaksoft/river-sdk/module"
 )
 
 /*
@@ -17,28 +17,28 @@ import (
 */
 
 type account struct {
-	module.Base
+    module.Base
 }
 
 func New() *account {
-	r := &account{}
-	r.RegisterHandlers(
-		map[int64]request.LocalHandler{
-			msg.C_AccountGetTeams:          r.accountsGetTeams,
-			msg.C_AccountRegisterDevice:    r.accountRegisterDevice,
-			msg.C_AccountRemovePhoto:       r.accountRemovePhoto,
-			msg.C_AccountSetNotifySettings: r.accountSetNotifySettings,
-			msg.C_AccountUnregisterDevice:  r.accountUnregisterDevice,
-			msg.C_AccountUpdateProfile:     r.accountUpdateProfile,
-			msg.C_AccountUpdateUsername:    r.accountUpdateUsername,
-		},
-	)
-	r.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{
-		msg.C_UpdateAccountPrivacy: r.updateAccountPrivacy,
-	})
-	return r
+    r := &account{}
+    r.RegisterHandlers(
+        map[int64]request.LocalHandler{
+            msg.C_AccountGetTeams:          r.accountsGetTeams,
+            msg.C_AccountRegisterDevice:    r.accountRegisterDevice,
+            msg.C_AccountRemovePhoto:       r.accountRemovePhoto,
+            msg.C_AccountSetNotifySettings: r.accountSetNotifySettings,
+            msg.C_AccountUnregisterDevice:  r.accountUnregisterDevice,
+            msg.C_AccountUpdateProfile:     r.accountUpdateProfile,
+            msg.C_AccountUpdateUsername:    r.accountUpdateUsername,
+        },
+    )
+    r.RegisterUpdateAppliers(map[int64]domain.UpdateApplier{
+        msg.C_UpdateAccountPrivacy: r.updateAccountPrivacy,
+    })
+    return r
 }
 
 func (r *account) Name() string {
-	return module.Account
+    return module.Account
 }

@@ -1,11 +1,11 @@
 package team
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/repo"
-	"git.ronaksoft.com/river/sdk/internal/request"
-	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/errors"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/repo"
+    "github.com/ronaksoft/river-sdk/internal/request"
+    "github.com/ronaksoft/rony"
+    "github.com/ronaksoft/rony/errors"
 )
 
 /*
@@ -18,38 +18,38 @@ import (
 */
 
 func (r *team) teamEdit(da request.Callback) {
-	req := &msg.TeamEdit{}
-	if err := da.RequestData(req); err != nil {
-		return
-	}
+    req := &msg.TeamEdit{}
+    if err := da.RequestData(req); err != nil {
+        return
+    }
 
-	team, _ := repo.Teams.Get(req.TeamID)
+    team, _ := repo.Teams.Get(req.TeamID)
 
-	if team != nil {
-		team.Name = req.Name
-		_ = repo.Teams.Save(team)
-	}
+    if team != nil {
+        team.Name = req.Name
+        _ = repo.Teams.Save(team)
+    }
 
-	r.SDK().QueueCtrl().EnqueueCommand(da)
+    r.SDK().QueueCtrl().EnqueueCommand(da)
 }
 
 func (r *team) clientGetTeamCounters(da request.Callback) {
-	req := &msg.ClientGetTeamCounters{}
-	if err := da.RequestData(req); err != nil {
-		return
-	}
+    req := &msg.ClientGetTeamCounters{}
+    if err := da.RequestData(req); err != nil {
+        return
+    }
 
-	unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.SDK().GetConnInfo().PickupUserID(), req.Team.ID, req.WithMutes)
+    unreadCount, mentionCount, err := repo.Dialogs.CountAllUnread(r.SDK().GetConnInfo().PickupUserID(), req.Team.ID, req.WithMutes)
 
-	if err != nil {
-		da.Response(rony.C_Error, errors.New("00", err.Error()))
-		return
-	}
+    if err != nil {
+        da.Response(rony.C_Error, errors.New("00", err.Error()))
+        return
+    }
 
-	res := &msg.ClientTeamCounters{
-		UnreadCount:  int64(unreadCount),
-		MentionCount: int64(mentionCount),
-	}
+    res := &msg.ClientTeamCounters{
+        UnreadCount:  int64(unreadCount),
+        MentionCount: int64(mentionCount),
+    }
 
-	da.Response(msg.C_ClientTeamCounters, res)
+    da.Response(msg.C_ClientTeamCounters, res)
 }

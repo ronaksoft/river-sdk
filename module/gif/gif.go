@@ -1,10 +1,10 @@
 package gif
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/module"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/request"
+    "github.com/ronaksoft/river-sdk/module"
 )
 
 /*
@@ -17,26 +17,26 @@ import (
 */
 
 type gif struct {
-	module.Base
+    module.Base
 }
 
 func New() *gif {
-	r := &gif{}
-	r.RegisterHandlers(
-		map[int64]request.LocalHandler{
-			msg.C_GifDelete:   r.gifDelete,
-			msg.C_GifGetSaved: r.gifGetSaved,
-			msg.C_GifSave:     r.gifSave,
-		},
-	)
-	r.RegisterMessageAppliers(
-		map[int64]domain.MessageApplier{
-			msg.C_SavedGifs: r.savedGifs,
-		},
-	)
-	return r
+    r := &gif{}
+    r.RegisterHandlers(
+        map[int64]request.LocalHandler{
+            msg.C_GifDelete:   r.gifDelete,
+            msg.C_GifGetSaved: r.gifGetSaved,
+            msg.C_GifSave:     r.gifSave,
+        },
+    )
+    r.RegisterMessageAppliers(
+        map[int64]domain.MessageApplier{
+            msg.C_SavedGifs: r.savedGifs,
+        },
+    )
+    return r
 }
 
 func (r *gif) Name() string {
-	return module.Gif
+    return module.Gif
 }

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"github.com/ronaksoft/rony"
-	"gopkg.in/abiosoft/ishell.v2"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/rony"
+    "gopkg.in/abiosoft/ishell.v2"
 )
 
 /*
@@ -16,136 +16,136 @@ import (
 */
 
 func init() {
-	Mini.AddCmd(MiniMessageGetDialogs)
-	Mini.AddCmd(MiniAccountGetTeams)
-	Mini.AddCmd(MiniMessageSendMediaToSelf)
-	Mini.AddCmd(MiniContactsGet)
-	Mini.AddCmd(MiniClientSearch)
+    Mini.AddCmd(MiniMessageGetDialogs)
+    Mini.AddCmd(MiniAccountGetTeams)
+    Mini.AddCmd(MiniMessageSendMediaToSelf)
+    Mini.AddCmd(MiniContactsGet)
+    Mini.AddCmd(MiniClientSearch)
 }
 
 var Mini = &ishell.Cmd{
-	Name: "Mini",
+    Name: "Mini",
 }
 
 var MiniMessageGetDialogs = &ishell.Cmd{
-	Name: "GetDialogs",
-	Func: func(c *ishell.Context) {
-		req := msg.MessagesGetDialogs{}
-		req.Limit = int32(100)
-		req.Offset = fnGetOffset(c)
+    Name: "GetDialogs",
+    Func: func(c *ishell.Context) {
+        req := msg.MessagesGetDialogs{}
+        req.Limit = int32(100)
+        req.Offset = fnGetOffset(c)
 
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _MiniSDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, reqDelegate); err != nil {
-			c.Println("Command Failed:", err)
-		} else {
-			reqDelegate.RequestID = reqID
-		}
+        reqBytes, _ := req.Marshal()
+        reqDelegate := new(RequestDelegate)
+        if reqID, err := _MiniSDK.ExecuteCommand(msg.C_MessagesGetDialogs, reqBytes, reqDelegate); err != nil {
+            c.Println("Command Failed:", err)
+        } else {
+            reqDelegate.RequestID = reqID
+        }
 
-	},
+    },
 }
 
 var MiniAccountGetTeams = &ishell.Cmd{
-	Name: "GetTeams",
-	Func: func(c *ishell.Context) {
-		req := msg.AccountGetTeams{}
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
+    Name: "GetTeams",
+    Func: func(c *ishell.Context) {
+        req := msg.AccountGetTeams{}
+        reqBytes, _ := req.Marshal()
+        reqDelegate := new(RequestDelegate)
 
-		if reqID, err := _MiniSDK.ExecuteCommand(msg.C_AccountGetTeams, reqBytes, reqDelegate); err != nil {
-			c.Println("Command Failed:", err)
-		} else {
-			reqDelegate.RequestID = reqID
-		}
-	},
+        if reqID, err := _MiniSDK.ExecuteCommand(msg.C_AccountGetTeams, reqBytes, reqDelegate); err != nil {
+            c.Println("Command Failed:", err)
+        } else {
+            reqDelegate.RequestID = reqID
+        }
+    },
 }
 
 var MiniContactsGet = &ishell.Cmd{
-	Name: "GetContacts",
-	Func: func(c *ishell.Context) {
-		req := msg.ContactsGet{}
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _MiniSDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {
-			c.Println("Command Failed:", err)
-		} else {
-			reqDelegate.RequestID = reqID
-		}
+    Name: "GetContacts",
+    Func: func(c *ishell.Context) {
+        req := msg.ContactsGet{}
+        reqBytes, _ := req.Marshal()
+        reqDelegate := new(RequestDelegate)
+        if reqID, err := _MiniSDK.ExecuteCommand(msg.C_ContactsGet, reqBytes, reqDelegate); err != nil {
+            c.Println("Command Failed:", err)
+        } else {
+            reqDelegate.RequestID = reqID
+        }
 
-	},
+    },
 }
 
 var MiniClientSearch = &ishell.Cmd{
-	Name: "ClientSearch",
-	Func: func(c *ishell.Context) {
-		req := msg.ClientGlobalSearch{}
-		req.Text = fnGetString(c, "Phrase:")
-		req.Limit = 10
-		reqBytes, _ := req.Marshal()
-		reqDelegate := new(RequestDelegate)
-		if reqID, err := _MiniSDK.ExecuteCommand(msg.C_ClientGlobalSearch, reqBytes, reqDelegate); err != nil {
-			c.Println("Command Failed:", err)
-		} else {
-			reqDelegate.RequestID = reqID
-		}
+    Name: "ClientSearch",
+    Func: func(c *ishell.Context) {
+        req := msg.ClientGlobalSearch{}
+        req.Text = fnGetString(c, "Phrase:")
+        req.Limit = 10
+        reqBytes, _ := req.Marshal()
+        reqDelegate := new(RequestDelegate)
+        if reqID, err := _MiniSDK.ExecuteCommand(msg.C_ClientGlobalSearch, reqBytes, reqDelegate); err != nil {
+            c.Println("Command Failed:", err)
+        } else {
+            reqDelegate.RequestID = reqID
+        }
 
-	},
+    },
 }
 
 var MiniMessageSendMediaToSelf = &ishell.Cmd{
-	Name: "SendMediaToMe",
-	Func: func(c *ishell.Context) {
-		attrFile := &msg.DocumentAttributeFile{
-			Filename: "File.jpg",
-		}
-		attrFileBytes, _ := attrFile.Marshal()
-		attrPhoto := &msg.DocumentAttributePhoto{
-			Width:  720,
-			Height: 720,
-		}
-		attrPhotoBytes, _ := attrPhoto.Marshal()
-		req := msg.ClientSendMessageMedia{
-			Peer: &msg.InputPeer{
-				ID:         _MiniSDK.ConnInfo.UserID,
-				Type:       msg.PeerType_PeerUser,
-				AccessHash: 0,
-			},
-			MediaType:  msg.InputMediaType_InputMediaTypeUploadedDocument,
-			Caption:    "Some Random Caption",
-			FileName:   "Uploaded File",
-			FileMIME:   "image/jpeg",
-			ThumbMIME:  "",
-			ReplyTo:    0,
-			ClearDraft: false,
-			Attributes: []*msg.DocumentAttribute{
-				{
-					Type: msg.DocumentAttributeType_AttributeTypePhoto,
-					Data: attrPhotoBytes,
-				},
-				{
-					Type: msg.DocumentAttributeType_AttributeTypeFile,
-					Data: attrFileBytes,
-				},
-			},
-		}
-		// _ = exec.Command("cp", "./_testdata/T.jpg", "./_testdata/F.jpg").Run()
-		// req.FilePath = "./_testdata/F.jpg"
-		// req.ThumbFilePath = "./_testdata/T.jpg"
-		req.FilePath = fnGetFilePath(c)
-		req.ThumbFilePath = fnGetThumbFilePath(c)
-		req.Entities = nil
-		reqBytes, _ := req.Marshal()
-		reqDelegate := NewCustomDelegate()
-		reqDelegate.OnCompleteFunc = func(b []byte) {
-			x := &rony.MessageEnvelope{}
-			_ = x.Unmarshal(b)
-			MessagePrinter(x)
-		}
-		if reqID, err := _MiniSDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, reqDelegate); err != nil {
-			c.Println("Command Failed:", err)
-		} else {
-			reqDelegate.RequestID = reqID
-		}
+    Name: "SendMediaToMe",
+    Func: func(c *ishell.Context) {
+        attrFile := &msg.DocumentAttributeFile{
+            Filename: "File.jpg",
+        }
+        attrFileBytes, _ := attrFile.Marshal()
+        attrPhoto := &msg.DocumentAttributePhoto{
+            Width:  720,
+            Height: 720,
+        }
+        attrPhotoBytes, _ := attrPhoto.Marshal()
+        req := msg.ClientSendMessageMedia{
+            Peer: &msg.InputPeer{
+                ID:         _MiniSDK.ConnInfo.UserID,
+                Type:       msg.PeerType_PeerUser,
+                AccessHash: 0,
+            },
+            MediaType:  msg.InputMediaType_InputMediaTypeUploadedDocument,
+            Caption:    "Some Random Caption",
+            FileName:   "Uploaded File",
+            FileMIME:   "image/jpeg",
+            ThumbMIME:  "",
+            ReplyTo:    0,
+            ClearDraft: false,
+            Attributes: []*msg.DocumentAttribute{
+                {
+                    Type: msg.DocumentAttributeType_AttributeTypePhoto,
+                    Data: attrPhotoBytes,
+                },
+                {
+                    Type: msg.DocumentAttributeType_AttributeTypeFile,
+                    Data: attrFileBytes,
+                },
+            },
+        }
+        // _ = exec.Command("cp", "./_testdata/T.jpg", "./_testdata/F.jpg").Run()
+        // req.FilePath = "./_testdata/F.jpg"
+        // req.ThumbFilePath = "./_testdata/T.jpg"
+        req.FilePath = fnGetFilePath(c)
+        req.ThumbFilePath = fnGetThumbFilePath(c)
+        req.Entities = nil
+        reqBytes, _ := req.Marshal()
+        reqDelegate := NewCustomDelegate()
+        reqDelegate.OnCompleteFunc = func(b []byte) {
+            x := &rony.MessageEnvelope{}
+            _ = x.Unmarshal(b)
+            MessagePrinter(x)
+        }
+        if reqID, err := _MiniSDK.ExecuteCommand(msg.C_ClientSendMessageMedia, reqBytes, reqDelegate); err != nil {
+            c.Println("Command Failed:", err)
+        } else {
+            reqDelegate.RequestID = reqID
+        }
 
-	},
+    },
 }

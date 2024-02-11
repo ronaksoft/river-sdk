@@ -1,7 +1,7 @@
 package request
 
 import (
-	"git.ronaksoft.com/river/sdk/internal/logs"
+    "github.com/ronaksoft/river-sdk/internal/logs"
 )
 
 /*
@@ -14,11 +14,11 @@ import (
 */
 
 var (
-	logger *logs.Logger
+    logger *logs.Logger
 )
 
 func init() {
-	logger = logs.With("Request")
+    logger = logs.With("Request")
 }
 
 // LocalHandler SDK commands that handle user request from client cache

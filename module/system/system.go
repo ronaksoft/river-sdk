@@ -1,10 +1,10 @@
 package system
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/module"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/request"
+    "github.com/ronaksoft/river-sdk/module"
 )
 
 /*
@@ -17,24 +17,24 @@ import (
 */
 
 type system struct {
-	module.Base
+    module.Base
 }
 
 func New() *system {
-	r := &system{}
-	r.RegisterHandlers(
-		map[int64]request.LocalHandler{
-			msg.C_SystemGetConfig: r.systemGetConfig,
-		},
-	)
-	r.RegisterMessageAppliers(
-		map[int64]domain.MessageApplier{
-			msg.C_SystemConfig: r.systemConfig,
-		},
-	)
-	return r
+    r := &system{}
+    r.RegisterHandlers(
+        map[int64]request.LocalHandler{
+            msg.C_SystemGetConfig: r.systemGetConfig,
+        },
+    )
+    r.RegisterMessageAppliers(
+        map[int64]domain.MessageApplier{
+            msg.C_SystemConfig: r.systemConfig,
+        },
+    )
+    return r
 }
 
 func (r *system) Name() string {
-	return module.System
+    return module.System
 }

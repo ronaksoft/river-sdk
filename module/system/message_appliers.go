@@ -1,11 +1,11 @@
 package system
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/repo"
-	"github.com/ronaksoft/rony"
-	"go.uber.org/zap"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/repo"
+    "github.com/ronaksoft/rony"
+    "go.uber.org/zap"
 )
 
 /*
@@ -18,23 +18,23 @@ import (
 */
 
 func (r *system) systemConfig(e *rony.MessageEnvelope) {
-	u := &msg.SystemConfig{}
-	err := u.Unmarshal(e.Message)
-	if err != nil {
-		r.Log().Error("SystemModule couldn't unmarshal SystemConfig", zap.Error(err))
-		return
-	}
+    u := &msg.SystemConfig{}
+    err := u.Unmarshal(e.Message)
+    if err != nil {
+        r.Log().Error("SystemModule couldn't unmarshal SystemConfig", zap.Error(err))
+        return
+    }
 
-	r.Log().Debug("SystemModule applies SystemConfig")
+    r.Log().Debug("SystemModule applies SystemConfig")
 
-	sysConfBytes, _ := u.Marshal()
-	domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
-	err = domain.SysConfig.Unmarshal(sysConfBytes)
-	if err != nil {
-		r.Log().Error("SystemModule got error on unmarshalling SystemConfig", zap.Error(err))
-	}
-	err = repo.System.SaveBytes("SysConfig", sysConfBytes)
-	if err != nil {
-		r.Log().Error("SystemModule got error on saving SystemConfig", zap.Error(err))
-	}
+    sysConfBytes, _ := u.Marshal()
+    domain.SysConfig.Reactions = domain.SysConfig.Reactions[:0]
+    err = domain.SysConfig.Unmarshal(sysConfBytes)
+    if err != nil {
+        r.Log().Error("SystemModule got error on unmarshalling SystemConfig", zap.Error(err))
+    }
+    err = repo.System.SaveBytes("SysConfig", sysConfBytes)
+    if err != nil {
+        r.Log().Error("SystemModule got error on saving SystemConfig", zap.Error(err))
+    }
 }

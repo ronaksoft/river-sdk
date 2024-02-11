@@ -1,9 +1,9 @@
 package search
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/module"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/request"
+    "github.com/ronaksoft/river-sdk/module"
 )
 
 /*
@@ -16,23 +16,23 @@ import (
 */
 
 type search struct {
-	module.Base
+    module.Base
 }
 
 func New() *search {
-	r := &search{}
-	r.RegisterHandlers(
-		map[int64]request.LocalHandler{
-			msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
-			msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
-			msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,
-			msg.C_ClientRemoveAllRecentSearches: r.clientRemoveAllRecentSearches,
-			msg.C_ClientRemoveRecentSearch:      r.clientRemoveRecentSearch,
-		},
-	)
-	return r
+    r := &search{}
+    r.RegisterHandlers(
+        map[int64]request.LocalHandler{
+            msg.C_ClientGetRecentSearch:         r.clientGetRecentSearch,
+            msg.C_ClientGlobalSearch:            r.clientGlobalSearch,
+            msg.C_ClientPutRecentSearch:         r.clientPutRecentSearch,
+            msg.C_ClientRemoveAllRecentSearches: r.clientRemoveAllRecentSearches,
+            msg.C_ClientRemoveRecentSearch:      r.clientRemoveRecentSearch,
+        },
+    )
+    return r
 }
 
 func (r *search) Name() string {
-	return module.Search
+    return module.Search
 }

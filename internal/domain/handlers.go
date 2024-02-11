@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"github.com/ronaksoft/rony"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/rony"
 )
 
 // UpdateReceivedCallback used as relay to pass getDifference updates to UI

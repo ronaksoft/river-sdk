@@ -1,12 +1,12 @@
 package auth
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/repo"
-	"git.ronaksoft.com/river/sdk/module"
-	"github.com/ronaksoft/rony"
-	"go.uber.org/zap"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/repo"
+    "github.com/ronaksoft/river-sdk/module"
+    "github.com/ronaksoft/rony"
+    "go.uber.org/zap"
 )
 
 /*
@@ -19,64 +19,64 @@ import (
 */
 
 type auth struct {
-	module.Base
+    module.Base
 }
 
 func New() *auth {
-	r := &auth{}
-	r.RegisterMessageAppliers(
-		map[int64]domain.MessageApplier{
-			msg.C_AuthAuthorization: r.authAuthorization,
-			msg.C_AuthSentCode:      r.authSentCode,
-		},
-	)
-	return r
+    r := &auth{}
+    r.RegisterMessageAppliers(
+        map[int64]domain.MessageApplier{
+            msg.C_AuthAuthorization: r.authAuthorization,
+            msg.C_AuthSentCode:      r.authSentCode,
+        },
+    )
+    return r
 }
 
 func (r *auth) Name() string {
-	return module.Auth
+    return module.Auth
 }
 
 func (r *auth) authAuthorization(e *rony.MessageEnvelope) {
-	x := new(msg.AuthAuthorization)
-	if err := x.Unmarshal(e.Message); err != nil {
-		r.Log().Error("AuthModule couldn't unmarshal AuthAuthorization", zap.Error(err))
-		return
-	}
-	r.Log().Debug("AuthModule applies AuthAuthorization",
-		zap.String("FirstName", x.User.FirstName),
-		zap.String("LastName", x.User.LastName),
-		zap.Int64("UserID", x.User.ID),
-		zap.String("Bio", x.User.Bio),
-		zap.String("Username", x.User.Username),
-	)
+    x := new(msg.AuthAuthorization)
+    if err := x.Unmarshal(e.Message); err != nil {
+        r.Log().Error("AuthModule couldn't unmarshal AuthAuthorization", zap.Error(err))
+        return
+    }
+    r.Log().Debug("AuthModule applies AuthAuthorization",
+        zap.String("FirstName", x.User.FirstName),
+        zap.String("LastName", x.User.LastName),
+        zap.Int64("UserID", x.User.ID),
+        zap.String("Bio", x.User.Bio),
+        zap.String("Username", x.User.Username),
+    )
 
-	r.SDK().GetConnInfo().ChangeFirstName(x.User.FirstName)
-	r.SDK().GetConnInfo().ChangeLastName(x.User.LastName)
-	r.SDK().GetConnInfo().ChangeUserID(x.User.ID)
-	r.SDK().GetConnInfo().ChangeBio(x.User.Bio)
-	r.SDK().GetConnInfo().ChangeUsername(x.User.Username)
-	if x.User.Phone != "" {
-		r.SDK().GetConnInfo().ChangePhone(x.User.Phone)
-	}
-	r.SDK().GetConnInfo().Save()
-	r.SDK().SyncCtrl().SetUserID(x.User.ID)
+    r.SDK().GetConnInfo().ChangeFirstName(x.User.FirstName)
+    r.SDK().GetConnInfo().ChangeLastName(x.User.LastName)
+    r.SDK().GetConnInfo().ChangeUserID(x.User.ID)
+    r.SDK().GetConnInfo().ChangeBio(x.User.Bio)
+    r.SDK().GetConnInfo().ChangeUsername(x.User.Username)
+    if x.User.Phone != "" {
+        r.SDK().GetConnInfo().ChangePhone(x.User.Phone)
+    }
+    r.SDK().GetConnInfo().Save()
+    r.SDK().SyncCtrl().SetUserID(x.User.ID)
 
-	repo.SetSelfUserID(x.User.ID)
+    repo.SetSelfUserID(x.User.ID)
 
-	go func() {
-		r.SDK().SyncCtrl().Sync()
-	}()
+    go func() {
+        r.SDK().SyncCtrl().Sync()
+    }()
 }
 
 func (r *auth) authSentCode(e *rony.MessageEnvelope) {
-	x := new(msg.AuthSentCode)
-	if err := x.Unmarshal(e.Message); err != nil {
-		r.Log().Error("AuthModule couldn't unmarshal AuthSentCode", zap.Error(err))
-		return
-	}
+    x := new(msg.AuthSentCode)
+    if err := x.Unmarshal(e.Message); err != nil {
+        r.Log().Error("AuthModule couldn't unmarshal AuthSentCode", zap.Error(err))
+        return
+    }
 
-	r.Log().Debug("AuthModule applies AuthSentCode")
+    r.Log().Debug("AuthModule applies AuthSentCode")
 
-	r.SDK().GetConnInfo().ChangePhone(x.Phone)
+    r.SDK().GetConnInfo().ChangePhone(x.Phone)
 }

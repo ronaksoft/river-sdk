@@ -1,7 +1,7 @@
 package testenv
 
 import (
-	"git.ronaksoft.com/river/sdk/internal/logs"
+    "github.com/ronaksoft/river-sdk/internal/logs"
 )
 
 /*
@@ -16,9 +16,9 @@ import (
 var logger *logs.Logger
 
 func init() {
-	logger = logs.With("TEST")
+    logger = logs.With("TEST")
 }
 
 func Log() *logs.Logger {
-	return logger
+    return logger
 }

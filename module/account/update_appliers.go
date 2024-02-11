@@ -1,9 +1,9 @@
 package account
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/repo"
-	"go.uber.org/zap"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/repo"
+    "go.uber.org/zap"
 )
 
 /*
@@ -16,43 +16,43 @@ import (
 */
 
 func (r *account) updateAccountPrivacy(u *msg.UpdateEnvelope) ([]*msg.UpdateEnvelope, error) {
-	x := new(msg.UpdateAccountPrivacy)
-	err := x.Unmarshal(u.Update)
-	if err != nil {
-		return nil, err
-	}
+    x := new(msg.UpdateAccountPrivacy)
+    err := x.Unmarshal(u.Update)
+    if err != nil {
+        return nil, err
+    }
 
-	r.Log().Debug("applies UpdateAccountPrivacy",
-		zap.Int64("UpdateID", x.UpdateID),
-	)
+    r.Log().Debug("applies UpdateAccountPrivacy",
+        zap.Int64("UpdateID", x.UpdateID),
+    )
 
-	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyChatInvite, x.ChatInvite)
-	if err != nil {
-		r.Log().Error("got error on set privacy (ChatInvite)", zap.Error(err))
-	}
+    err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyChatInvite, x.ChatInvite)
+    if err != nil {
+        r.Log().Error("got error on set privacy (ChatInvite)", zap.Error(err))
+    }
 
-	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyLastSeen, x.LastSeen)
-	if err != nil {
-		r.Log().Error("got error on set privacy (LastSeen)", zap.Error(err))
-	}
+    err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyLastSeen, x.LastSeen)
+    if err != nil {
+        r.Log().Error("got error on set privacy (LastSeen)", zap.Error(err))
+    }
 
-	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyPhoneNumber, x.PhoneNumber)
-	if err != nil {
-		r.Log().Error("got error on set privacy (PhoneNumber)", zap.Error(err))
-	}
+    err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyPhoneNumber, x.PhoneNumber)
+    if err != nil {
+        r.Log().Error("got error on set privacy (PhoneNumber)", zap.Error(err))
+    }
 
-	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyProfilePhoto, x.ProfilePhoto)
-	if err != nil {
-		r.Log().Error("got error on set privacy (ProfilePhoto)", zap.Error(err))
-	}
+    err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyProfilePhoto, x.ProfilePhoto)
+    if err != nil {
+        r.Log().Error("got error on set privacy (ProfilePhoto)", zap.Error(err))
+    }
 
-	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyForwardedMessage, x.ForwardedMessage)
-	if err != nil {
-		r.Log().Error("got error on set privacy (ForwardedMessage)", zap.Error(err))
-	}
+    err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyForwardedMessage, x.ForwardedMessage)
+    if err != nil {
+        r.Log().Error("got error on set privacy (ForwardedMessage)", zap.Error(err))
+    }
 
-	err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyCall, x.Call)
-	r.Log().Error("got error on set privacy (Call)", zap.Error(err))
-	res := []*msg.UpdateEnvelope{u}
-	return res, nil
+    err = repo.Account.SetPrivacy(msg.PrivacyKey_PrivacyKeyCall, x.Call)
+    r.Log().Error("got error on set privacy (Call)", zap.Error(err))
+    res := []*msg.UpdateEnvelope{u}
+    return res, nil
 }

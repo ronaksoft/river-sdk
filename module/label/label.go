@@ -1,10 +1,10 @@
 package label
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/module"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/request"
+    "github.com/ronaksoft/river-sdk/module"
 )
 
 /*
@@ -17,37 +17,37 @@ import (
 */
 
 type label struct {
-	module.Base
+    module.Base
 }
 
 func New() *label {
-	r := &label{}
-	r.RegisterHandlers(
-		map[int64]request.LocalHandler{
-			msg.C_LabelsAddToMessage:      r.labelAddToMessage,
-			msg.C_LabelsDelete:            r.labelsDelete,
-			msg.C_LabelsGet:               r.labelsGet,
-			msg.C_LabelsListItems:         r.labelsListItems,
-			msg.C_LabelsRemoveFromMessage: r.labelRemoveFromMessage,
-		},
-	)
-	r.RegisterUpdateAppliers(
-		map[int64]domain.UpdateApplier{
-			msg.C_UpdateLabelDeleted:      r.updateLabelDeleted,
-			msg.C_UpdateLabelItemsAdded:   r.updateLabelItemsAdded,
-			msg.C_UpdateLabelItemsRemoved: r.updateLabelItemsRemoved,
-			msg.C_UpdateLabelSet:          r.updateLabelSet,
-		},
-	)
-	r.RegisterMessageAppliers(
-		map[int64]domain.MessageApplier{
-			msg.C_LabelItems: r.labelItems,
-			msg.C_LabelsMany: r.labelsMany,
-		},
-	)
-	return r
+    r := &label{}
+    r.RegisterHandlers(
+        map[int64]request.LocalHandler{
+            msg.C_LabelsAddToMessage:      r.labelAddToMessage,
+            msg.C_LabelsDelete:            r.labelsDelete,
+            msg.C_LabelsGet:               r.labelsGet,
+            msg.C_LabelsListItems:         r.labelsListItems,
+            msg.C_LabelsRemoveFromMessage: r.labelRemoveFromMessage,
+        },
+    )
+    r.RegisterUpdateAppliers(
+        map[int64]domain.UpdateApplier{
+            msg.C_UpdateLabelDeleted:      r.updateLabelDeleted,
+            msg.C_UpdateLabelItemsAdded:   r.updateLabelItemsAdded,
+            msg.C_UpdateLabelItemsRemoved: r.updateLabelItemsRemoved,
+            msg.C_UpdateLabelSet:          r.updateLabelSet,
+        },
+    )
+    r.RegisterMessageAppliers(
+        map[int64]domain.MessageApplier{
+            msg.C_LabelItems: r.labelItems,
+            msg.C_LabelsMany: r.labelsMany,
+        },
+    )
+    return r
 }
 
 func (r *label) Name() string {
-	return module.Label
+    return module.Label
 }

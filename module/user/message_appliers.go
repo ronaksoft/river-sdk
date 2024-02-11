@@ -1,10 +1,10 @@
 package user
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/repo"
-	"github.com/ronaksoft/rony"
-	"go.uber.org/zap"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/repo"
+    "github.com/ronaksoft/rony"
+    "go.uber.org/zap"
 )
 
 /*
@@ -17,14 +17,14 @@ import (
 */
 
 func (r *user) usersMany(e *rony.MessageEnvelope) {
-	x := new(msg.UsersMany)
-	err := x.Unmarshal(e.Message)
-	if err != nil {
-		r.Log().Error("couldn't unmarshal UsersMany", zap.Error(err))
-		return
-	}
-	r.Log().Debug("applies usersMany",
-		zap.Int("Users", len(x.Users)),
-	)
-	_ = repo.Users.Save(x.Users...)
+    x := new(msg.UsersMany)
+    err := x.Unmarshal(e.Message)
+    if err != nil {
+        r.Log().Error("couldn't unmarshal UsersMany", zap.Error(err))
+        return
+    }
+    r.Log().Debug("applies usersMany",
+        zap.Int("Users", len(x.Users)),
+    )
+    _ = repo.Users.Save(x.Users...)
 }

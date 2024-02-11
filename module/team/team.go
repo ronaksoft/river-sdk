@@ -1,10 +1,10 @@
 package team
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/request"
-	"git.ronaksoft.com/river/sdk/module"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/request"
+    "github.com/ronaksoft/river-sdk/module"
 )
 
 /*
@@ -17,35 +17,35 @@ import (
 */
 
 type team struct {
-	module.Base
+    module.Base
 }
 
 func New() *team {
-	r := &team{}
-	r.RegisterHandlers(
-		map[int64]request.LocalHandler{
-			msg.C_TeamEdit:              r.teamEdit,
-			msg.C_ClientGetTeamCounters: r.clientGetTeamCounters,
-		},
-	)
-	r.RegisterUpdateAppliers(
-		map[int64]domain.UpdateApplier{
-			msg.C_UpdateTeam:              r.updateTeam,
-			msg.C_UpdateTeamCreated:       r.updateTeamCreated,
-			msg.C_UpdateTeamMemberAdded:   r.updateTeamMemberAdded,
-			msg.C_UpdateTeamMemberRemoved: r.updateTeamMemberRemoved,
-			msg.C_UpdateTeamMemberStatus:  r.updateTeamMemberStatus,
-		},
-	)
-	r.RegisterMessageAppliers(
-		map[int64]domain.MessageApplier{
-			msg.C_TeamMembers: r.teamMembers,
-			msg.C_TeamsMany:   r.teamsMany,
-		},
-	)
-	return r
+    r := &team{}
+    r.RegisterHandlers(
+        map[int64]request.LocalHandler{
+            msg.C_TeamEdit:              r.teamEdit,
+            msg.C_ClientGetTeamCounters: r.clientGetTeamCounters,
+        },
+    )
+    r.RegisterUpdateAppliers(
+        map[int64]domain.UpdateApplier{
+            msg.C_UpdateTeam:              r.updateTeam,
+            msg.C_UpdateTeamCreated:       r.updateTeamCreated,
+            msg.C_UpdateTeamMemberAdded:   r.updateTeamMemberAdded,
+            msg.C_UpdateTeamMemberRemoved: r.updateTeamMemberRemoved,
+            msg.C_UpdateTeamMemberStatus:  r.updateTeamMemberStatus,
+        },
+    )
+    r.RegisterMessageAppliers(
+        map[int64]domain.MessageApplier{
+            msg.C_TeamMembers: r.teamMembers,
+            msg.C_TeamsMany:   r.teamsMany,
+        },
+    )
+    return r
 }
 
 func (r *team) Name() string {
-	return module.Team
+    return module.Team
 }

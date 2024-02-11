@@ -1,9 +1,9 @@
 package system
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/request"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/request"
 )
 
 /*
@@ -16,5 +16,5 @@ import (
 */
 
 func (r *system) systemGetConfig(da request.Callback) {
-	da.Response(msg.C_SystemConfig, domain.SysConfig)
+    da.Response(msg.C_SystemConfig, domain.SysConfig)
 }

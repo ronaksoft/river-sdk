@@ -1,12 +1,12 @@
 package wallpaper
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/repo"
-	"git.ronaksoft.com/river/sdk/module"
-	"github.com/ronaksoft/rony"
-	"go.uber.org/zap"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/repo"
+    "github.com/ronaksoft/river-sdk/module"
+    "github.com/ronaksoft/rony"
+    "go.uber.org/zap"
 )
 
 /*
@@ -19,33 +19,33 @@ import (
 */
 
 type wallpaper struct {
-	module.Base
+    module.Base
 }
 
 func New() *wallpaper {
-	r := &wallpaper{}
-	r.RegisterMessageAppliers(
-		map[int64]domain.MessageApplier{
-			msg.C_WallPapersMany: r.wallpapersMany,
-		},
-	)
-	return r
+    r := &wallpaper{}
+    r.RegisterMessageAppliers(
+        map[int64]domain.MessageApplier{
+            msg.C_WallPapersMany: r.wallpapersMany,
+        },
+    )
+    return r
 }
 
 func (r *wallpaper) Name() string {
-	return module.Wallpaper
+    return module.Wallpaper
 }
 
 func (r *wallpaper) wallpapersMany(e *rony.MessageEnvelope) {
-	u := &msg.WallPapersMany{}
-	err := u.Unmarshal(e.Message)
-	if err != nil {
-		r.Log().Error("couldn't unmarshal wallpapersMany", zap.Error(err))
-		return
-	}
+    u := &msg.WallPapersMany{}
+    err := u.Unmarshal(e.Message)
+    if err != nil {
+        r.Log().Error("couldn't unmarshal wallpapersMany", zap.Error(err))
+        return
+    }
 
-	err = repo.Wallpapers.SaveWallpapers(u)
-	if err != nil {
-		r.Log().Error("got error on saving wallpapersMany", zap.Error(err))
-	}
+    err = repo.Wallpapers.SaveWallpapers(u)
+    if err != nil {
+        r.Log().Error("got error on saving wallpapersMany", zap.Error(err))
+    }
 }

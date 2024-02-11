@@ -1,118 +1,119 @@
 package main
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	riversdk "git.ronaksoft.com/river/sdk/sdk/prime"
-	"github.com/ronaksoft/rony"
-	"github.com/ronaksoft/rony/registry"
-	"go.uber.org/zap"
-	"io/ioutil"
-	"os"
+    "io/ioutil"
+    "os"
+
+    "github.com/ronaksoft/river-msg/go/msg"
+    riversdk "github.com/ronaksoft/river-sdk/sdk/prime"
+    "github.com/ronaksoft/rony"
+    "github.com/ronaksoft/rony/registry"
+    "go.uber.org/zap"
 )
 
 type ConnInfoDelegates struct {
-	dbPath   string
-	filePath string
+    dbPath   string
+    filePath string
 }
 
 func (c *ConnInfoDelegates) Get(key string) string {
-	panic("implement me")
+    panic("implement me")
 }
 
 func (c *ConnInfoDelegates) Set(key, value string) {
-	panic("implement me")
+    panic("implement me")
 }
 
 func (c *ConnInfoDelegates) SaveConnInfo(connInfo []byte) {
-	_ = os.MkdirAll(c.dbPath, os.ModePerm)
-	err := ioutil.WriteFile(c.filePath, connInfo, 0666)
-	if err != nil {
-		_Shell.Println(err)
-	}
+    _ = os.MkdirAll(c.dbPath, os.ModePerm)
+    err := ioutil.WriteFile(c.filePath, connInfo, 0666)
+    if err != nil {
+        _Shell.Println(err)
+    }
 }
 
 type MainDelegate struct{}
 
 func (d *MainDelegate) OnSearchComplete(b []byte) {
-	result := new(msg.ClientSearchResult)
-	err := result.Unmarshal(b)
-	if err != nil {
-		_Shell.Println("Error On OnSearchComplete:", err.Error())
-		return
-	}
-	_Shell.Println("OnSearchComplete::Messages", result.Messages)
-	_Shell.Println("OnSearchComplete::Groups", result.Groups)
-	_Shell.Println("OnSearchComplete::MatchedGroups", result.MatchedGroups)
-	_Shell.Println("OnSearchComplete::MatchedUsers", result.MatchedUsers)
+    result := new(msg.ClientSearchResult)
+    err := result.Unmarshal(b)
+    if err != nil {
+        _Shell.Println("Error On OnSearchComplete:", err.Error())
+        return
+    }
+    _Shell.Println("OnSearchComplete::Messages", result.Messages)
+    _Shell.Println("OnSearchComplete::Groups", result.Groups)
+    _Shell.Println("OnSearchComplete::MatchedGroups", result.MatchedGroups)
+    _Shell.Println("OnSearchComplete::MatchedUsers", result.MatchedUsers)
 }
 
 func (d *MainDelegate) OnUpdates(constructor int64, b []byte) {
-	switch constructor {
-	case msg.C_UpdateContainer:
-		updateContainer := new(msg.UpdateContainer)
-		err := updateContainer.Unmarshal(b)
-		if err != nil {
-			_Shell.Println("Failed To Unmarshal UpdateContainer:", err)
-			return
-		}
-		// _Shell.Println("Processing UpdateContainer:", updateContainer.MinUpdateID, updateContainer.MaxUpdateID)
-		for _, update := range updateContainer.Updates {
-			// _Shell.Println("Processing Update", update.GetUpdateID, registry.ConstructorName(update.Constructor))
-			UpdatePrinter(update)
-		}
-	case msg.C_ClientUpdatePendingMessageDelivery:
-		// wrapping it to update envelop to pass UpdatePrinter
-		udp := new(msg.UpdateEnvelope)
-		udp.Constructor = constructor
-		udp.Update = b
-		// _Shell.Println("Processing ClientUpdatePendingMessageDelivery")
-		UpdatePrinter(udp)
-	case msg.C_UpdateEnvelope:
-		update := new(msg.UpdateEnvelope)
-		err := update.Unmarshal(b)
-		if err != nil {
-			_Shell.Println("Error On Unmarshal UpdateEnvelope:", err)
-			return
-		} else {
-			// _Shell.Println("Processing UpdateEnvelop", update.GetUpdateID, registry.ConstructorName(update.Constructor))
-			UpdatePrinter(update)
-		}
-	}
+    switch constructor {
+    case msg.C_UpdateContainer:
+        updateContainer := new(msg.UpdateContainer)
+        err := updateContainer.Unmarshal(b)
+        if err != nil {
+            _Shell.Println("Failed To Unmarshal UpdateContainer:", err)
+            return
+        }
+        // _Shell.Println("Processing UpdateContainer:", updateContainer.MinUpdateID, updateContainer.MaxUpdateID)
+        for _, update := range updateContainer.Updates {
+            // _Shell.Println("Processing Update", update.GetUpdateID, registry.ConstructorName(update.Constructor))
+            UpdatePrinter(update)
+        }
+    case msg.C_ClientUpdatePendingMessageDelivery:
+        // wrapping it to update envelop to pass UpdatePrinter
+        udp := new(msg.UpdateEnvelope)
+        udp.Constructor = constructor
+        udp.Update = b
+        // _Shell.Println("Processing ClientUpdatePendingMessageDelivery")
+        UpdatePrinter(udp)
+    case msg.C_UpdateEnvelope:
+        update := new(msg.UpdateEnvelope)
+        err := update.Unmarshal(b)
+        if err != nil {
+            _Shell.Println("Error On Unmarshal UpdateEnvelope:", err)
+            return
+        } else {
+            // _Shell.Println("Processing UpdateEnvelop", update.GetUpdateID, registry.ConstructorName(update.Constructor))
+            UpdatePrinter(update)
+        }
+    }
 
 }
 
 func (d *MainDelegate) OnDeferredRequests(requestID int64, b []byte) {
-	envelope := new(rony.MessageEnvelope)
-	envelope.Unmarshal(b)
-	_Shell.Println("Deferred Request received",
-		zap.Uint64("ReqID", envelope.RequestID),
-		zap.String("C", registry.ConstructorName(envelope.Constructor)),
-	)
-	// MessagePrinter(envelope)
+    envelope := new(rony.MessageEnvelope)
+    envelope.Unmarshal(b)
+    _Shell.Println("Deferred Request received",
+        zap.Uint64("ReqID", envelope.RequestID),
+        zap.String("C", registry.ConstructorName(envelope.Constructor)),
+    )
+    // MessagePrinter(envelope)
 }
 
 func (d *MainDelegate) OnNetworkStatusChanged(quality int) {
-	// state := domain.NetworkStatus(quality)
-	// _Shell.Println("Network status changed:", state.ToString())
+    // state := domain.NetworkStatus(quality)
+    // _Shell.Println("Network status changed:", state.ToString())
 }
 
 func (d *MainDelegate) OnSyncStatusChanged(newStatus int) {
-	// state := domain.SyncStatus(newStatus)
-	// _Shell.Println("Sync status changed:", state.ToString())
+    // state := domain.SyncStatus(newStatus)
+    // _Shell.Println("Sync status changed:", state.ToString())
 }
 
 func (d *MainDelegate) OnAuthKeyCreated(authID int64) {
-	_Shell.Println("Auth Key Created", zap.Int64("AuthID", authID))
+    _Shell.Println("Auth Key Created", zap.Int64("AuthID", authID))
 }
 
 func (d *MainDelegate) OnGeneralError(b []byte) {
-	e := new(rony.Error)
-	e.Unmarshal(b)
-	_Shell.Println("Received general error", zap.String("Code", e.Code), zap.String("Items", e.Items))
+    e := new(rony.Error)
+    e.Unmarshal(b)
+    _Shell.Println("Received general error", zap.String("Code", e.Code), zap.String("Items", e.Items))
 }
 
 func (d *MainDelegate) OnSessionClosed(res int) {
-	_Shell.Println("Session Closed:", res)
+    _Shell.Println("Session Closed:", res)
 }
 
 func (d *MainDelegate) ShowLoggerAlert() {}
@@ -126,163 +127,163 @@ func (d *MainDelegate) DataSynced(dialogs, contacts, gifs bool) {}
 type PrintDelegate struct{}
 
 func (d *PrintDelegate) Log(logLevel int, msg string) {
-	switch logLevel {
-	case int(zap.DebugLevel):
-		_Shell.Println("DBG : \t", msg)
-	case int(zap.WarnLevel):
-		_Shell.Println(yellow("WRN : \t %s", msg))
-	case int(zap.InfoLevel):
-		_Shell.Println(green("INF : \t %s", msg))
-	case int(zap.ErrorLevel):
-		_Shell.Println(red("ERR : \t %s", msg))
-	case int(zap.FatalLevel):
-		_Shell.Println(red("FTL : \t %s", msg))
-	default:
-		_Shell.Println(blue("MSG : \t %s", msg))
-	}
+    switch logLevel {
+    case int(zap.DebugLevel):
+        _Shell.Println("DBG : \t", msg)
+    case int(zap.WarnLevel):
+        _Shell.Println(yellow("WRN : \t %s", msg))
+    case int(zap.InfoLevel):
+        _Shell.Println(green("INF : \t %s", msg))
+    case int(zap.ErrorLevel):
+        _Shell.Println(red("ERR : \t %s", msg))
+    case int(zap.FatalLevel):
+        _Shell.Println(red("FTL : \t %s", msg))
+    default:
+        _Shell.Println(blue("MSG : \t %s", msg))
+    }
 }
 
 type FileDelegate struct{}
 
 func (d *FileDelegate) OnProgressChanged(reqID string, clusterID int32, fileID, accessHash int64, percent int64, peerID int64) {
-	// _Shell.Println("File Progress Changed", reqID, fileID, percent)
+    // _Shell.Println("File Progress Changed", reqID, fileID, percent)
 }
 
 func (d *FileDelegate) OnCompleted(reqID string, clusterID int32, fileID, accessHash int64, filePath string, peerID int64) {
-	// _Shell.Println("File Progress Completed", reqID, filePath)
+    // _Shell.Println("File Progress Completed", reqID, filePath)
 }
 
 func (d *FileDelegate) OnCancel(reqID string, clusterID int32, fileID, accessHash int64, hasError bool, peerID int64) {
-	// _Shell.Println("File Progress Canceled", reqID, hasError)
+    // _Shell.Println("File Progress Canceled", reqID, hasError)
 }
 
 type CallDelegate struct{}
 
 func (c *CallDelegate) OnUpdate(action int32, b []byte) {
-	_Log.Info("CallDelegate On UpdateReceived", zap.String("C", msg.CallUpdate(action).String()))
-	a := msg.CallUpdate(action)
-	switch a {
-	case msg.CallUpdate_CallRequested:
-		x := msg.CallUpdateCallRequested{}
-		err := x.Unmarshal(b)
-		if err == nil {
-			_Log.Info("CallUpdateCallRequested", zap.Int64("CallID", x.CallID), zap.Any("Peer", x.Peer))
-		}
-	}
+    _Log.Info("CallDelegate On UpdateReceived", zap.String("C", msg.CallUpdate(action).String()))
+    a := msg.CallUpdate(action)
+    switch a {
+    case msg.CallUpdate_CallRequested:
+        x := msg.CallUpdateCallRequested{}
+        err := x.Unmarshal(b)
+        if err == nil {
+            _Log.Info("CallUpdateCallRequested", zap.Int64("CallID", x.CallID), zap.Any("Peer", x.Peer))
+        }
+    }
 }
 
 func (c *CallDelegate) InitStream(audio, video bool) bool {
-	_Log.Info("CallDelegate On InitStream", zap.Bool("Audio", audio), zap.Bool("Video", video))
-	return true
+    _Log.Info("CallDelegate On InitStream", zap.Bool("Audio", audio), zap.Bool("Video", video))
+    return true
 }
 
 func (c *CallDelegate) InitConnection(connId int32, b []byte) int64 {
-	_Log.Info("CallDelegate On InitConnection", zap.Int32("ConnID", connId))
-	return 1
+    _Log.Info("CallDelegate On InitConnection", zap.Int32("ConnID", connId))
+    return 1
 }
 
 func (c *CallDelegate) CloseConnection(connId int32) bool {
-	_Log.Info("CallDelegate On CloseConnection", zap.Int32("ConnID", connId))
-	return true
+    _Log.Info("CallDelegate On CloseConnection", zap.Int32("ConnID", connId))
+    return true
 }
 
 func (c *CallDelegate) GetOfferSDP(connId int32) []byte {
-	_Log.Info("CallDelegate On GetOfferSDP", zap.Int32("ConnID", connId))
-	offerSdp := &msg.PhoneActionSDPOffer{
-		SDP:  "",
-		Type: "",
-	}
-	d, err := offerSdp.Marshal()
-	if err != nil {
-		return nil
-	}
+    _Log.Info("CallDelegate On GetOfferSDP", zap.Int32("ConnID", connId))
+    offerSdp := &msg.PhoneActionSDPOffer{
+        SDP:  "",
+        Type: "",
+    }
+    d, err := offerSdp.Marshal()
+    if err != nil {
+        return nil
+    }
 
-	me := &rony.MessageEnvelope{
-		Constructor: msg.C_PhoneActionSDPOffer,
-		Message:     d,
-	}
-	d, err = me.Marshal()
-	if err != nil {
-		return nil
-	}
+    me := &rony.MessageEnvelope{
+        Constructor: msg.C_PhoneActionSDPOffer,
+        Message:     d,
+    }
+    d, err = me.Marshal()
+    if err != nil {
+        return nil
+    }
 
-	return d
+    return d
 }
 
 func (c *CallDelegate) SetOfferGetAnswerSDP(connId int32, req []byte) []byte {
-	_Log.Info("CallDelegate On SetOfferGetAnswerSDP", zap.Int32("ConnID", connId))
-	return nil
+    _Log.Info("CallDelegate On SetOfferGetAnswerSDP", zap.Int32("ConnID", connId))
+    return nil
 
 }
 
 func (c *CallDelegate) SetAnswerSDP(connId int32, b []byte) bool {
-	_Log.Info("CallDelegate On SetAnswerSDP", zap.Int32("ConnID", connId))
-	return true
+    _Log.Info("CallDelegate On SetAnswerSDP", zap.Int32("ConnID", connId))
+    return true
 }
 
 func (c *CallDelegate) AddIceCandidate(connId int32, b []byte) bool {
-	_Log.Info("CallDelegate On AddIceCandidate", zap.Int32("ConnID", connId))
-	return true
+    _Log.Info("CallDelegate On AddIceCandidate", zap.Int32("ConnID", connId))
+    return true
 }
 
 type RequestDelegate struct {
-	RequestID int64
-	Envelope  rony.MessageEnvelope
-	FlagsVal  riversdk.RequestDelegateFlag
+    RequestID int64
+    Envelope  rony.MessageEnvelope
+    FlagsVal  riversdk.RequestDelegateFlag
 }
 
 func (d *RequestDelegate) OnComplete(b []byte) {
-	err := d.Envelope.Unmarshal(b)
-	if err != nil {
-		_Shell.Println("Error On OnComplete:", err)
-		return
-	}
-	_Shell.Println("Request Completed:", d.RequestID, registry.ConstructorName(d.Envelope.Constructor))
-	MessagePrinter(&d.Envelope)
+    err := d.Envelope.Unmarshal(b)
+    if err != nil {
+        _Shell.Println("Error On OnComplete:", err)
+        return
+    }
+    _Shell.Println("Request Completed:", d.RequestID, registry.ConstructorName(d.Envelope.Constructor))
+    MessagePrinter(&d.Envelope)
 }
 
 func (d *RequestDelegate) OnTimeout(err error) {
-	_Shell.Println("Request TimedOut:", d.RequestID, err)
+    _Shell.Println("Request TimedOut:", d.RequestID, err)
 }
 
 func (d *RequestDelegate) OnProgress(percent int64) {
-	_Shell.Println("Progress:", d.RequestID, percent)
+    _Shell.Println("Progress:", d.RequestID, percent)
 }
 
 func (d *RequestDelegate) Flags() riversdk.RequestDelegateFlag {
-	return d.FlagsVal
+    return d.FlagsVal
 }
 
 type CustomRequestDelegate struct {
-	RequestID      int64
-	OnCompleteFunc func(b []byte)
-	OnTimeoutFunc  func(err error)
-	OnProgressFunc func(int64)
-	FlagsFunc      func() riversdk.RequestDelegateFlag
+    RequestID      int64
+    OnCompleteFunc func(b []byte)
+    OnTimeoutFunc  func(err error)
+    OnProgressFunc func(int64)
+    FlagsFunc      func() riversdk.RequestDelegateFlag
 }
 
 func (c CustomRequestDelegate) OnComplete(b []byte) {
-	c.OnCompleteFunc(b)
+    c.OnCompleteFunc(b)
 }
 
 func (c CustomRequestDelegate) OnTimeout(err error) {
-	c.OnTimeoutFunc(err)
+    c.OnTimeoutFunc(err)
 }
 
 func (c *CustomRequestDelegate) OnProgress(percent int64) {
-	c.OnProgressFunc(percent)
+    c.OnProgressFunc(percent)
 }
 
 func (c CustomRequestDelegate) Flags() riversdk.RequestDelegateFlag {
-	return c.FlagsFunc()
+    return c.FlagsFunc()
 }
 
 func NewCustomDelegate() *CustomRequestDelegate {
-	c := &CustomRequestDelegate{}
-	d := &RequestDelegate{}
-	c.OnCompleteFunc = d.OnComplete
-	c.OnTimeoutFunc = d.OnTimeout
-	c.OnProgressFunc = d.OnProgress
-	c.FlagsFunc = d.Flags
-	return c
+    c := &CustomRequestDelegate{}
+    d := &RequestDelegate{}
+    c.OnCompleteFunc = d.OnComplete
+    c.OnTimeoutFunc = d.OnTimeout
+    c.OnProgressFunc = d.OnProgress
+    c.FlagsFunc = d.Flags
+    return c
 }

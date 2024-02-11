@@ -1,11 +1,11 @@
 package label
 
 import (
-	"git.ronaksoft.com/river/msg/go/msg"
-	"git.ronaksoft.com/river/sdk/internal/domain"
-	"git.ronaksoft.com/river/sdk/internal/repo"
-	"github.com/ronaksoft/rony"
-	"go.uber.org/zap"
+    "github.com/ronaksoft/river-msg/go/msg"
+    "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/repo"
+    "github.com/ronaksoft/rony"
+    "go.uber.org/zap"
 )
 
 /*
@@ -18,30 +18,30 @@ import (
 */
 
 func (r *label) labelsMany(e *rony.MessageEnvelope) {
-	u := &msg.LabelsMany{}
-	err := u.Unmarshal(e.Message)
-	if err != nil {
-		r.Log().Error("couldn't unmarshal LabelsMany", zap.Error(err))
-		return
-	}
+    u := &msg.LabelsMany{}
+    err := u.Unmarshal(e.Message)
+    if err != nil {
+        r.Log().Error("couldn't unmarshal LabelsMany", zap.Error(err))
+        return
+    }
 
-	r.Log().Debug("applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
+    r.Log().Debug("applies LabelsMany", zap.Any("TeamID", e.Get("TeamID", "0")))
 
-	err = repo.Labels.Save(domain.GetTeamID(e), u.Labels...)
-	r.Log().WarnOnErr("got error on applying LabelsMany", err)
+    err = repo.Labels.Save(domain.GetTeamID(e), u.Labels...)
+    r.Log().WarnOnErr("got error on applying LabelsMany", err)
 }
 
 func (r *label) labelItems(e *rony.MessageEnvelope) {
-	u := &msg.LabelItems{}
-	err := u.Unmarshal(e.Message)
-	if err != nil {
-		r.Log().Error("couldn't unmarshal LabelItems", zap.Error(err))
-		return
-	}
+    u := &msg.LabelItems{}
+    err := u.Unmarshal(e.Message)
+    if err != nil {
+        r.Log().Error("couldn't unmarshal LabelItems", zap.Error(err))
+        return
+    }
 
-	r.Log().Debug("applies LabelItems")
+    r.Log().Debug("applies LabelItems")
 
-	_ = repo.Messages.Save(u.Messages...)
-	_ = repo.Users.Save(u.Users...)
-	_ = repo.Groups.Save(u.Groups...)
+    _ = repo.Messages.Save(u.Messages...)
+    _ = repo.Users.Save(u.Users...)
+    _ = repo.Groups.Save(u.Groups...)
 }
