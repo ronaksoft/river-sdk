@@ -4,12 +4,12 @@ import (
     "fmt"
     "time"
 
+    "github.com/abiosoft/ishell/v2"
     "github.com/ronaksoft/river-msg/go/msg"
     "github.com/ronaksoft/river-sdk/internal/domain"
     "github.com/ronaksoft/river-sdk/internal/logs"
     mon "github.com/ronaksoft/river-sdk/internal/monitoring"
     riversdk "github.com/ronaksoft/river-sdk/sdk/prime"
-    "gopkg.in/abiosoft/ishell.v2"
 )
 
 var SDK = &ishell.Cmd{

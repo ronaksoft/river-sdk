@@ -7,8 +7,8 @@ import (
     "strings"
     "time"
 
+    "github.com/abiosoft/ishell/v2"
     "github.com/ronaksoft/river-msg/go/msg"
-    "gopkg.in/abiosoft/ishell.v2"
 )
 
 func fnGetString(c *ishell.Context, prompt string) string {

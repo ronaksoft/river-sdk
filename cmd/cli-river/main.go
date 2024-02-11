@@ -8,13 +8,13 @@ import (
     "path/filepath"
     "strings"
 
+    "github.com/abiosoft/ishell/v2"
     "github.com/fatih/color"
     "github.com/ronaksoft/river-msg/go/msg"
     "github.com/ronaksoft/river-sdk/internal/logs"
     "github.com/ronaksoft/river-sdk/sdk/mini"
     riversdk "github.com/ronaksoft/river-sdk/sdk/prime"
     "go.uber.org/zap/zapcore"
-    "gopkg.in/abiosoft/ishell.v2"
 )
 
 var (

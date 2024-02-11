@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/Workiva/go-datastructures v1.1.1
+	github.com/abiosoft/ishell/v2 v2.0.2
 	github.com/beeker1121/goque v2.1.0+incompatible
 	github.com/blevesearch/bleve/v2 v2.3.10
 	github.com/boltdb/bolt v1.3.1
@@ -30,7 +31,6 @@ require (
 	golang.org/x/mobile v0.0.0-20210527171505-7e972142eb43
 	golang.org/x/sync v0.6.0
 	google.golang.org/protobuf v1.32.0
-	gopkg.in/abiosoft/ishell.v2 v2.0.0
 )
 
 require (

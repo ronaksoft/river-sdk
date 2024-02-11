@@ -1,10 +1,10 @@
 package main
 
 import (
+    "github.com/abiosoft/ishell/v2"
     "github.com/ronaksoft/river-msg/go/msg"
     "github.com/ronaksoft/river-sdk/internal/domain"
     "github.com/ronaksoft/rony"
-    "gopkg.in/abiosoft/ishell.v2"
 )
 
 var Message = &ishell.Cmd{

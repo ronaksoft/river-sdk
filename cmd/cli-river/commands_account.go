@@ -1,8 +1,8 @@
 package main
 
 import (
+    "github.com/abiosoft/ishell/v2"
     "github.com/ronaksoft/river-msg/go/msg"
-    "gopkg.in/abiosoft/ishell.v2"
 )
 
 var Account = &ishell.Cmd{

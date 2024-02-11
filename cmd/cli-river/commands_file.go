@@ -5,9 +5,9 @@ import (
     "os"
     "path"
 
+    "github.com/abiosoft/ishell/v2"
     "github.com/ronaksoft/river-msg/go/msg"
     "github.com/ronaksoft/river-sdk/internal/domain"
-    "gopkg.in/abiosoft/ishell.v2"
 )
 
 var File = &ishell.Cmd{

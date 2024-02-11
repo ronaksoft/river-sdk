@@ -1,11 +1,11 @@
 package main
 
 import (
+    "github.com/abiosoft/ishell/v2"
     "github.com/ronaksoft/river-msg/go/msg"
     "github.com/ronaksoft/river-sdk/internal/domain"
     "github.com/ronaksoft/river-sdk/internal/request"
     riversdk "github.com/ronaksoft/river-sdk/sdk/prime"
-    "gopkg.in/abiosoft/ishell.v2"
 )
 
 var Contact = &ishell.Cmd{

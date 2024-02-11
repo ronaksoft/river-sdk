@@ -7,9 +7,9 @@ import (
     "path/filepath"
     "strings"
 
+    "github.com/abiosoft/ishell/v2"
     "github.com/ronaksoft/river-msg/go/msg"
     riversdk "github.com/ronaksoft/river-sdk/sdk/prime"
-    "gopkg.in/abiosoft/ishell.v2"
 )
 
 var Auth = &ishell.Cmd{
