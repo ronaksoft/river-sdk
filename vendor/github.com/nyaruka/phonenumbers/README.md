@@ -1,6 +1,4 @@
-phonenumbers 
-==============
-
+# phonenumbers 
 [![Build Status](https://github.com/nyaruka/phonenumbers/workflows/CI/badge.svg)](https://github.com/nyaruka/phonenumbers/actions?query=workflow%3ACI) 
 [![codecov](https://codecov.io/gh/nyaruka/phonenumbers/branch/main/graph/badge.svg)](https://codecov.io/gh/nyaruka/phonenumbers)
 [![GoDoc](https://godoc.org/github.com/nyaruka/phonenumbers?status.svg)](https://godoc.org/github.com/nyaruka/phonenumbers)
@@ -29,21 +27,19 @@ formattedNum := phonenumbers.Format(num, phonenumbers.NATIONAL)
 
 # Rebuilding Metadata and Maps
 
-The `buildmetadata` command will fetch the latest XML file from the official Google repo and rebuild the go source files containing all the territory metadata, timezone and region maps. (you will need `svn` installed on your path)
+The `buildmetadata` command will fetch the latest XML file from the official Google repo and rebuild the go source files 
+containing all the territory metadata, timezone and region maps.
 
 It will rebuild the following files:
 
-`metadata_bin.go` - contains the protocol buffer definitions for all the various formats across countries etc..
-
-`countrycode_to_region_bin.go` - contains the information needed to map a contrycode to a region
-
-`prefix_to_carrier_bin.go` - contains the information needed to map a phone number prefix to a carrier
-
-`prefix_to_geocoding_bin.go` - contains the information needed to map a phone number prefix to a city or region
-
-`prefix_to_timezone_bin.go` - contains the information needed to map a phone number prefix to a city or region
+ * `gen/metadata_bin.go` - protocol buffer definitions for all the various formats across countries etc..
+ * `gen/shortnumber_metadata_bin.go` - protocol buffer definitions for ShortNumberMetadata.xml
+ * `gen/countrycode_to_region_bin.go` - information needed to map a contry code to a region
+ * `gen/prefix_to_carrier_bin.go` - information needed to map a phone number prefix to a carrier
+ * `gen/prefix_to_geocoding_bin.go` - information needed to map a phone number prefix to a city or region
+ * `gen/prefix_to_timezone_bin.go` - information needed to map a phone number prefix to a city or region
 
 ```bash
-% cd cmd/buildmetadata && go install . && cd -
+% go install github.com/nyaruka/phonenumbers/cmd/buildmetadata
 % $GOPATH/bin/buildmetadata
 ```

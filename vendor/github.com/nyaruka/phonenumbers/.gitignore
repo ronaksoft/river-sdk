@@ -1,13 +1,13 @@
 *.cov
+.DS_Store
 .vscode
 *~
-fabric
+deploy
 fabfile.py
 fabfile.pyc
-fabconfig.py
-fabconfig.pyc
 carrier
 geocoding
 buildmetadata
 functions/*
 dist/
+_build

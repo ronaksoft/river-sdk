@@ -1,3 +1,104 @@
+v1.3.1 (2024-01-26)
+-------------------------
+ * Update metadata
+
+v1.3.0 (2023-12-14)
+-------------------------
+ * Refactor buildmetadata, no longer requires SVN
+ * Update metadata
+
+v1.2.3 (2023-12-12)
+-------------------------
+ * Update metadata
+ * Update dependencies and go version to 1.19
+
+v1.2.2 (2023-11-24)
+-------------------------
+ * Update metadata
+ * Update support for phone-context
+
+v1.2.1 (2023-11-20)
+-------------------------
+ * Update metadata
+ * Replace github.com/golang/protobuf with google.golang.org/protobuf
+
+v1.2.0 (2023-11-17)
+-------------------------
+ * Update metadata
+ * Fix regex matching in GetLengthOfNationalDestinationCode
+ * Implement carrier GetSafeDisplayName
+
+v1.1.9 (2023-11-08)
+-------------------------
+ * Update metadata
+
+v1.1.8 (2023-08-09)
+-------------------------
+ * Update metadata
+
+v1.1.7 (2023-05-10)
+-------------------------
+ * Merge pull request #137 from nyaruka/updates
+ * Add isValid display to phoneparser
+ * Update metadata
+ * Merge pull request #133 from nyaruka/dependabot/go_modules/golang.org/x/text-0.3.8
+ * Merge pull request #134 from nyaruka/dependabot/go_modules/cmd/phoneparser/golang.org/x/text-0.3.8
+ * Merge pull request #135 from nyaruka/dependabot/go_modules/cmd/phoneserver/golang.org/x/text-0.3.8
+ * Bump golang.org/x/text from 0.3.7 to 0.3.8 in /cmd/phoneserver
+ * Bump golang.org/x/text from 0.3.7 to 0.3.8 in /cmd/phoneparser
+ * Bump golang.org/x/text from 0.3.7 to 0.3.8
+
+v1.1.6 (2023-02-13)
+-------------------------
+ * Update metadata
+
+v1.1.5 (2023-01-27)
+-------------------------
+ * Update metadata
+
+v1.1.4 (2022-11-28)
+-------------------------
+ * Bump required go version to 1.18
+
+v1.1.3 (2022-11-28)
+-------------------------
+ * Update metadata
+
+v1.1.2
+----------
+ * Update metadata
+ * Fix slice out of bounds in GetTimezonesForPrefix
+
+v1.1.1
+----------
+ * Update metadata
+
+v1.1.0
+----------
+ * Update to latest metadata
+ * Port initial short number support
+
+v1.0.75
+----------
+ * Cleanup some of the unit tests using testify library
+ * Update metadata and add test for new 0326 PK numbers
+
+v1.0.74
+----------
+ * Update to latest metadata
+
+v1.0.73
+----------
+ * Added fallback to region for GetGeocodingForNumber
+
+v1.0.72
+----------
+ * Update metadata to v8.12.33
+
+v1.0.71
+----------
+ * Update metadata to v8.12.31
+
 v1.0.70
 ----------
  * Update metadata to v8.12.24

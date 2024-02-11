@@ -64,6 +64,26 @@ func removePride(b []byte) []byte {
 	return []byte(pattern.ReplaceAllString(string(b), ""))
 }
 
+func removeLunar(b []byte) []byte {
+	pattern := regexp.MustCompile(`{"id":"election:lunar_new_year:.+?"ring_spec":null},`)
+	return []byte(pattern.ReplaceAllString(string(b), ""))
+}
+
+func removeValentinesDay(b []byte) []byte {
+	pattern := regexp.MustCompile(`{"id":"election:valentines_day:.+?"ring_spec":null},`)
+	return []byte(pattern.ReplaceAllString(string(b), ""))
+}
+
+func removeRamadan(b []byte) []byte {
+	pattern := regexp.MustCompile(`{"id":"election:ramadan_2021:.+?"hide_from_feed_unit":true},`)
+	return []byte(pattern.ReplaceAllString(string(b), ""))
+}
+
+func removeWomensDay(b []byte) []byte {
+	pattern := regexp.MustCompile(`{"id":"election:international_womens_day:.+?"is_cacheable":true},`)
+	return []byte(pattern.ReplaceAllString(string(b), ""))
+}
+
 func (m *IGApiManager) GetReelsTray() (r IGReelsTray, err error) {
 	b, err := m.getHTTPResponse(urlReelsTray, "GET")
 	if err != nil {
@@ -75,6 +95,6 @@ func (m *IGApiManager) GetReelsTray() (r IGReelsTray, err error) {
 		SaveRawJsonByte("reels_tray-", b)
 	}
 
-	err = json.Unmarshal(removePride(b), &r)
+	err = json.Unmarshal(removeWomensDay(b), &r)
 	return
 }

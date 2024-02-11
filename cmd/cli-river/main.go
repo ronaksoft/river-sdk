@@ -3,7 +3,7 @@ package main
 import (
     "encoding/json"
     "fmt"
-    "io/ioutil"
+    "io"
     "os"
     "path/filepath"
     "strings"
@@ -54,7 +54,7 @@ func main() {
     connInfoPath := filepath.Join(_DbPath, fmt.Sprintf("connInfo.%s", _DbID))
     file, err := os.Open(connInfoPath)
     if err == nil {
-        b, _ := ioutil.ReadAll(file)
+        b, _ := io.ReadAll(file)
         err := json.Unmarshal(b, connInfo)
         if err != nil {
             _Shell.Print(err.Error())

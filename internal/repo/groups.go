@@ -5,8 +5,8 @@ import (
     "strings"
     "time"
 
-    "github.com/blevesearch/bleve"
-    "github.com/blevesearch/bleve/search/query"
+    "github.com/blevesearch/bleve/v2"
+    "github.com/blevesearch/bleve/v2/search/query"
     "github.com/dgraph-io/badger/v2"
     "github.com/ronaksoft/river-msg/go/msg"
     "github.com/ronaksoft/river-sdk/internal/domain"
@@ -459,6 +459,7 @@ func (r *repoGroups) Search(teamID int64, searchPhrase string) []*msg.Group {
     if r.peerSearch == nil {
         return groups
     }
+
     t1 := bleve.NewTermQuery("group")
     t1.SetField("type")
     terms := strings.Fields(searchPhrase)

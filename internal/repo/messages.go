@@ -9,8 +9,8 @@ import (
     "sync"
     "time"
 
-    "github.com/blevesearch/bleve"
-    "github.com/blevesearch/bleve/search/query"
+    "github.com/blevesearch/bleve/v2"
+    "github.com/blevesearch/bleve/v2/search/query"
     "github.com/dgraph-io/badger/v2"
     "github.com/dgraph-io/badger/v2/pb"
     "github.com/ronaksoft/river-msg/go/msg"

@@ -8,18 +8,17 @@ import (
     "sync"
     "time"
 
-    "github.com/blevesearch/bleve"
-    "github.com/blevesearch/bleve/analysis/analyzer/keyword"
-    "github.com/blevesearch/bleve/analysis/lang/en"
-    "github.com/blevesearch/bleve/mapping"
+    "github.com/blevesearch/bleve/v2"
+    "github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
+    "github.com/blevesearch/bleve/v2/analysis/lang/en"
+    "github.com/blevesearch/bleve/v2/mapping"
+    "github.com/dgraph-io/badger/v2"
     "github.com/dgraph-io/badger/v2/options"
     "github.com/pkg/errors"
     "github.com/ronaksoft/river-sdk/internal/domain"
+    "github.com/ronaksoft/river-sdk/internal/logs"
     "github.com/ronaksoft/rony/tools"
     "github.com/tidwall/buntdb"
-
-    "github.com/dgraph-io/badger/v2"
-    "github.com/ronaksoft/river-sdk/internal/logs"
     "go.uber.org/zap"
 )
 
@@ -62,6 +61,7 @@ type repository struct {
 }
 
 func MustInit(dbPath string, lowMemory bool) {
+    bleve.NewIndexMapping()
     err := Init(dbPath, lowMemory)
     if err != nil {
         panic(err)

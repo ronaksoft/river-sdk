@@ -6,8 +6,8 @@ import (
     "strings"
     "time"
 
-    "github.com/blevesearch/bleve"
-    "github.com/blevesearch/bleve/search/query"
+    "github.com/blevesearch/bleve/v2"
+    "github.com/blevesearch/bleve/v2/search/query"
     "github.com/dgraph-io/badger/v2"
     "github.com/ronaksoft/river-msg/go/msg"
     "github.com/ronaksoft/river-sdk/internal/domain"
