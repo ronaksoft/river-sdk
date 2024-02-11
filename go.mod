@@ -26,10 +26,10 @@ require (
 	github.com/tidwall/buntdb v1.3.0
 	github.com/valyala/fasthttp v1.40.0
 	github.com/valyala/tcplisten v1.0.0
-	go.uber.org/zap v1.21.0
+	go.uber.org/zap v1.26.0
 	golang.org/x/mobile v0.0.0-20210527171505-7e972142eb43
-	golang.org/x/sync v0.5.0
-	google.golang.org/protobuf v1.31.0
+	golang.org/x/sync v0.6.0
+	google.golang.org/protobuf v1.32.0
 	gopkg.in/abiosoft/ishell.v2 v2.0.0
 )
 
@@ -133,8 +133,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/multierr v1.9.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
